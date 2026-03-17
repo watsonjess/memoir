@@ -17,7 +17,7 @@ public class MomentController {
 
 // Cloudinary upload code:
 // if (!file.isEmpty()) {
-//		Map uploadResult = cloudinary.uploader().upload(file.getBytes(), ObjectUtils.emptyMap());
-//		String publicUrl = (String) uploadResult.get("secure_url");
-//            user.setFileUrl(publicUrl);
-//        }
+//	 Map uploadResult = cloudinary.uploader().upload(file.getBytes(), ObjectUtils.emptyMap());
+//	 String publicUrl = (String) uploadResult.get("secure_url");
+//	 moment.setImageUrl(publicUrl);
+// }
