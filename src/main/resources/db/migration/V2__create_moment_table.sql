@@ -8,7 +8,7 @@ CREATE TABLE moments (
     image_url varchar(255),
     image_caption varchar(255),
     location text,
-    created_at timestamptz NOT NULL DEFAULT now(),
+    created_at TIMESTAMP NOT NULL DEFAULT now(),
 
     CONSTRAINT check_photo CHECK (type != 'PHOTO' OR image_url IS NOT NULL),
     CONSTRAINT check_note  CHECK (type != 'NOTE'  OR content  IS NOT NULL)

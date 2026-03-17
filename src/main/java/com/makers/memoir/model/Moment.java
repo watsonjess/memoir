@@ -5,8 +5,9 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.Check;
 
-import java.time.OffsetDateTime;
+import java.time.LocalDateTime;
 
 @Data
 @Builder
@@ -14,14 +15,17 @@ import java.time.OffsetDateTime;
 @AllArgsConstructor
 @Entity
 @Table(name = "moments")
+@Check(name = "check_photo", constraints = "type != 'PHOTO' OR image_url IS NOT NULL")
+@Check(name = "check_note",  constraints = "type != 'NOTE'  OR content IS NOT NULL")
 public class Moment {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "created_by", nullable = false)
-    private Long createdBy;
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "created_by", nullable = false)
+    private User createdBy;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 255)
@@ -40,11 +44,11 @@ public class Moment {
     private String location;
 
     @Column(name = "created_at", nullable = false, updatable = false)
-    private OffsetDateTime createdAt;
+    private LocalDateTime createdAt;
 
     @PrePersist
     protected void onCreate() {
-        createdAt = OffsetDateTime.now();
+        createdAt = LocalDateTime.now();
     }
 
     public enum MomentType {
