@@ -30,10 +30,10 @@ public class WeeklyController {
     public ModelAndView index(@PathVariable Long groupId) {
         List<Weekly> weeklies = weeklyRepository.findByGroupIdOrderByWeekStartDesc(groupId);
 
-        ModelAndView mav = new ModelAndView("weeklies/index");
-        mav.addObject("weeklies", weeklies);
-        mav.addObject("groupId", groupId);
-        return mav;
+        ModelAndView modelAndView = new ModelAndView("weeklies/index");
+        modelAndView.addObject("weeklies", weeklies);
+        modelAndView.addObject("groupId", groupId);
+        return modelAndView;
     }
 
     // Show a single weekly digest and its moments
@@ -44,10 +44,10 @@ public class WeeklyController {
                 .orElseThrow(() -> new RuntimeException("Weekly not found"));
         List<Moment> moments = weeklyMomentRepository.findMomentsByWeeklyId(id);
 
-        ModelAndView mav = new ModelAndView("weeklies/show");
-        mav.addObject("weekly", weekly);
-        mav.addObject("moments", moments);
-        return mav;
+        ModelAndView modelAndView = new ModelAndView("weeklies/show");
+        modelAndView.addObject("weekly", weekly);
+        modelAndView.addObject("moments", moments);
+        return modelAndView;
     }
 
     // Show the currently open digest for a group
@@ -57,9 +57,9 @@ public class WeeklyController {
                 .orElseThrow(() -> new RuntimeException("No open digest found"));
         List<Moment> moments = weeklyMomentRepository.findMomentsByWeeklyId(weekly.getId());
 
-        ModelAndView mav = new ModelAndView("weeklies/show");
-        mav.addObject("weekly", weekly);
-        mav.addObject("moments", moments);
-        return mav;
+        ModelAndView modelAndView = new ModelAndView("weeklies/show");
+        modelAndView.addObject("weekly", weekly);
+        modelAndView.addObject("moments", moments);
+        return modelAndView;
     }
 }

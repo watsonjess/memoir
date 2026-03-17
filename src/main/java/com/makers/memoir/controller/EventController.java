@@ -38,10 +38,10 @@ public class EventController {
     public ModelAndView index(@PathVariable Long groupId) {
         List<Event> events = eventRepository.findByGroupIdOrderByStartDateDesc(groupId);
 
-        ModelAndView mav = new ModelAndView("events/index");
-        mav.addObject("events", events);
-        mav.addObject("groupId", groupId);
-        return mav;
+        ModelAndView modelAndView = new ModelAndView("events/index");
+        modelAndView.addObject("events", events);
+        modelAndView.addObject("groupId", groupId);
+        return modelAndView;
     }
 
     // Show a single event and its moments
@@ -52,19 +52,19 @@ public class EventController {
                 .orElseThrow(() -> new RuntimeException("Event not found"));
         List<Moment> moments = eventMomentRepository.findMomentsByEventId(id);
 
-        ModelAndView mav = new ModelAndView("events/show");
-        mav.addObject("event", event);
-        mav.addObject("moments", moments);
-        return mav;
+        ModelAndView modelAndView = new ModelAndView("events/show");
+        modelAndView.addObject("event", event);
+        modelAndView.addObject("moments", moments);
+        return modelAndView;
     }
 
     // Show create event form
     @GetMapping("/new")
     public ModelAndView newEvent(@PathVariable Long groupId) {
-        ModelAndView mav = new ModelAndView("events/new");
-        mav.addObject("event", new Event());
-        mav.addObject("groupId", groupId);
-        return mav;
+        ModelAndView modelAndView = new ModelAndView("events/new");
+        modelAndView.addObject("event", new Event());
+        modelAndView.addObject("groupId", groupId);
+        return modelAndView;
     }
 
     // Create a new event
@@ -89,10 +89,10 @@ public class EventController {
         Event event = eventRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Event not found"));
 
-        ModelAndView mav = new ModelAndView("events/edit");
-        mav.addObject("event", event);
-        mav.addObject("groupId", groupId);
-        return mav;
+        ModelAndView modelAndView = new ModelAndView("events/edit");
+        modelAndView.addObject("event", event);
+        modelAndView.addObject("groupId", groupId);
+        return modelAndView;
     }
 
     // Update an event
