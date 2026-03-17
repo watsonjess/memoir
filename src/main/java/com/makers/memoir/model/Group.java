@@ -41,12 +41,12 @@ public class Group {
         createdAt = LocalDateTime.now();
     }
 
-    /**
+
 
     @OneToMany(mappedBy = "group", cascade = CascadeType.ALL)
     @ToString.Exclude
     private List<GroupMember> members = new ArrayList<>();
-
+    /**
     @OneToMany(mappedBy = "group", cascade = CascadeType.ALL)
     @ToString.Exclude
     private List<Weekly> weeklies = new ArrayList<>();
