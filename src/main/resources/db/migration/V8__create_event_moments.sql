@@ -1,4 +1,4 @@
-CREATE TABLE event_items (
+CREATE TABLE event_moments (
     id          BIGSERIAL PRIMARY KEY,
     event_id    BIGINT    NOT NULL REFERENCES events(id) ON DELETE CASCADE,
     moment_id     BIGINT    NOT NULL REFERENCES moments(id) ON DELETE CASCADE,
