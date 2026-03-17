@@ -19,6 +19,7 @@ public class NewsletterService {
 
     private final RestTemplate restTemplate = new RestTemplate();
 
+//    A helper to ensure that theres no problems with file type
     private String getMimeType(String imageUrl) {
         if (imageUrl.endsWith(".png")) return "image/png";
         if (imageUrl.endsWith(".jpg") || imageUrl.endsWith(".jpeg")) return "image/jpeg";
@@ -26,6 +27,7 @@ public class NewsletterService {
         return "image/jpeg";
     }
 
+//    The input to the LLM cant be an image URL it has to actually be the image in base64
     private List<Map<String, Object>> buildPartsForMoment(Moment moment) {
         List<Map<String, Object>> parts = new ArrayList<>();
 
@@ -57,7 +59,7 @@ public class NewsletterService {
     @SuppressWarnings("unchecked")
     public String generateUserSummary(String username, List<Moment> moments) {
 
-        // Build a content turn per moment plus a final instruction turn
+        // Build a content turn per moment plus a final instruction turn at the end
         List<Map<String, Object>> contents = new ArrayList<>();
 
         for (Moment moment : moments) {
@@ -68,6 +70,7 @@ public class NewsletterService {
         }
 
         // Final instruction turn
+//         Did some prompt engineering around this
         contents.add(Map.of(
                 "role", "user",
                 "parts", List.of(Map.of("text",
