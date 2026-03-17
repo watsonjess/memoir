@@ -1,7 +1,7 @@
 package com.makers.memoir.repository;
 
-import com.makers.memoir.Model.Friend;
-import com.makers.memoir.Model.FriendId;
+import com.makers.memoir.model.Friend;
+import com.makers.memoir.model.FriendId;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;

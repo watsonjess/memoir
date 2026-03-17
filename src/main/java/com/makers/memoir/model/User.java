@@ -1,4 +1,4 @@
-package com.makers.memoir.Model;
+package com.makers.memoir.model;
 
 import jakarta.persistence.*;
 import lombok.Data;

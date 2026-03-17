@@ -1,8 +1,7 @@
-package com.makers.memoir.Model;
+package com.makers.memoir.model;
 
 import lombok.Data;
 import jakarta.persistence.*;
-import lombok.Data;
 
 @Data
 @Entity

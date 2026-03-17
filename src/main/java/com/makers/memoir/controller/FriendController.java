@@ -1,7 +1,7 @@
 package com.makers.memoir.Controller;
 
-import com.makers.memoir.Model.Friend;
-import com.makers.memoir.Model.User;
+import com.makers.memoir.model.Friend;
+import com.makers.memoir.model.User;
 import com.makers.memoir.repository.FriendRepository;
 import com.makers.memoir.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;

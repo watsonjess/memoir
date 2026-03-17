@@ -1,6 +1,6 @@
 package com.makers.memoir.repository;
 
-import com.makers.memoir.Model.User;
+import com.makers.memoir.model.User;
 import org.springframework.data.repository.CrudRepository;
 
 import java.util.Optional;
