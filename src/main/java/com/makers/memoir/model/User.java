@@ -6,7 +6,6 @@ import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 
 import jakarta.persistence.*;
-import java.time.OffsetDateTime;
 
 @Data
 @Builder
@@ -30,7 +29,7 @@ public class User {
     private String profileImage;
 
     @Column(name = "created_at", nullable = false, updatable = false)
-    private OffsetDateTime createdAt;
+    private java.time.LocalDateTime createdAt;
 
     @Column(length = 255)
     private String firstname;
@@ -38,8 +37,4 @@ public class User {
     @Column(length = 255)
     private String lastname;
 
-    @PrePersist
-    protected void onCreate() {
-        createdAt = OffsetDateTime.now();
-    }
 }
