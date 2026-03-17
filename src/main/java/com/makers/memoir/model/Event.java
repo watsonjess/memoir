@@ -14,20 +14,29 @@ import java.util.List;
 @Entity
 @Getter
 @Setter
-@Table(name = "groups")
-public class Group {
+@Table(name = "events")
+public class Event {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
+    @ManyToOne
+    @JoinColumn(name = "group_id", nullable = false)
+    private Group group;
+
+    @Column(nullable = false, length = 100)
     private String name;
 
     private String description;
 
-    @Column(nullable = false)
-    private String type = "weekly"; // weekly / event
+    @Column(name = "start_date", nullable = false)
+    private LocalDateTime startDate;
+
+    @Column(name = "end_date", nullable = false)
+    private LocalDateTime endDate;
+
+    private String location;
 
     @ManyToOne
     @JoinColumn(name = "created_by", nullable = false)
@@ -41,26 +50,17 @@ public class Group {
         createdAt = LocalDateTime.now();
     }
 
-
-
-    @OneToMany(mappedBy = "group", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "event", cascade = CascadeType.ALL)
     @ToString.Exclude
-    private List<GroupMember> members = new ArrayList<>();
+    private List<EventMoment> eventMoments = new ArrayList<>();
 
-    @OneToMany(mappedBy = "group", cascade = CascadeType.ALL)
-    @ToString.Exclude
-    private List<Weekly> weeklies = new ArrayList<>();
+    public Event() {}
 
-    @OneToMany(mappedBy = "group", cascade = CascadeType.ALL)
-    @ToString.Exclude
-    private List<Event> events = new ArrayList<>();
-
-
-    public Group() {}
-
-    public Group(String name, String type, User createdBy) {
+    public Event(Group group, String name, LocalDateTime startDate, LocalDateTime endDate, User createdBy) {
+        this.group = group;
         this.name = name;
-        this.type = type;
+        this.startDate = startDate;
+        this.endDate = endDate;
         this.createdBy = createdBy;
     }
 }
