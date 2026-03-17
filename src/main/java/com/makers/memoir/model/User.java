@@ -29,9 +29,13 @@ public class User {
     @Column(name = "profile_image", length = 255)
     private String profileImage;
 
-    @Builder.Default
     @Column(name = "created_at", nullable = false, updatable = false)
-    private LocalDateTime createdAt = LocalDateTime.now();
+    private LocalDateTime createdAt;
+
+    @PrePersist
+    protected void onCreate() {
+        createdAt = LocalDateTime.now();
+    }
 
     @Column(length = 255)
     private String firstname;
