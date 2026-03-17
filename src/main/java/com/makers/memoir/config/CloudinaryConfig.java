@@ -8,7 +8,7 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class CloudinaryConfig {
 
-    @Value("${CLOUDINARY_URL}")
+    @Value("cloudinary://126482828115599:usJ391GaTO2y6nCLyIDYxvbN33s@makers-bootcamp")
     private String cloudinaryURL;
 
     @Bean
