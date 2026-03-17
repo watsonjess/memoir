@@ -9,5 +9,9 @@
 
 <p>You are logged in.</p>
 
+<p>Name: <span th:text="${#authentication.principal.attributes['nickname']}"></span></p>
+<p>Email: <span th:text="${#authentication.principal.attributes['email']}"></span></p>
+
+
 </body>
 </html>
