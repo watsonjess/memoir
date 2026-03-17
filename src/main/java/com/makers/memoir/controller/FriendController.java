@@ -149,15 +149,15 @@ public class FriendController {
 
     @PostMapping("/unfriend/{username}")
     public RedirectView unfriend(@PathVariable String username, Principal principal) {
-        User user = userRepository.findByEmail(getUsernameFromPrincipal(principal));
+        User currentUser = userRepository.findByEmail(getUsernameFromPrincipal(principal));
         User other = userRepository.findByUsername(username).orElseThrow();
 
         Optional<Friend> friendship = friendRepository
-                .findByIdRequesterIdAndIdAddresseeId(user.getId(), other.getId());
+                .findByIdRequesterIdAndIdAddresseeId(currentUser.getId(), other.getId());
 
         if (friendship.isEmpty()) {
             friendship = friendRepository
-                    .findByIdRequesterIdAndIdAddresseeId(other.getId(), user.getId());
+                    .findByIdRequesterIdAndIdAddresseeId(other.getId(), currentUser.getId());
         }
 
         friendship.ifPresent(f -> friendRepository.delete(f));
