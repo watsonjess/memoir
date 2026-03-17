@@ -15,8 +15,6 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Entity
 @Table(name = "moments")
-@Check(name = "check_photo", constraints = "type != 'PHOTO' OR image_url IS NOT NULL")
-@Check(name = "check_note",  constraints = "type != 'NOTE'  OR content IS NOT NULL")
 public class Moment {
 
     @Id
@@ -27,18 +25,11 @@ public class Moment {
     @JoinColumn(name = "created_by", nullable = false)
     private User createdBy;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 255)
-    private MomentType type;
+    @Column(name = "image_url", length = 255, nullable = false)
+    private String imageUrl;
 
     @Column(columnDefinition = "text")
     private String content;
-
-    @Column(name = "image_url", length = 255)
-    private String imageUrl;
-
-    @Column(name = "image_caption", length = 255)
-    private String imageCaption;
 
     @Column(columnDefinition = "text")
     private String location;
@@ -49,9 +40,5 @@ public class Moment {
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
-    }
-
-    public enum MomentType {
-        PHOTO, NOTE
     }
 }
