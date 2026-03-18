@@ -22,12 +22,6 @@ public class SearchController {
     @Autowired
     private UserRepository userRepository;
 
-    @Autowired
-    private GroupRepository groupRepository;
-
-    @Autowired
-    private EventRepository eventRepository;
-
     private String getEmailFromPrincipal(Principal principal) {
         if (principal instanceof OAuth2AuthenticationToken token) {
             return token.getPrincipal().getAttribute("email");
