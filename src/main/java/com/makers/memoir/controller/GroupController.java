@@ -31,11 +31,13 @@ public class GroupController {
     // List all groups the current user belongs to
     @GetMapping
     public ModelAndView index(@AuthenticationPrincipal OAuth2User principal) {
-        User user = getCurrentUser(principal);
+        /*User user = getCurrentUser(principal);
         List<GroupMember> memberships = groupMemberRepository.findByUserId(user.getId());
 
         ModelAndView modelAndView = new ModelAndView("groups/index");
-        modelAndView.addObject("memberships", memberships);
+        modelAndView.addObject("pageTitle", "Groups");
+        modelAndView.addObject("memberships", memberships);*/
+        ModelAndView modelAndView = new ModelAndView("groups/index");
         return modelAndView;
     }
 
@@ -57,6 +59,7 @@ public class GroupController {
     public ModelAndView newGroup() {
         ModelAndView modelAndView = new ModelAndView("groups/new");
         modelAndView.addObject("group", new Group());
+        modelAndView.addObject("pageTitle", "New Group");
         return modelAndView;
     }
 

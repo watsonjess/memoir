@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/layout}">
+<head>
+    <title>Groups</title>
+</head>
+<body>
+
+<div layout:fragment="content">
+
+    <!-- Page header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="memoir-page-title">Groups</h1>
+            <p class="memoir-page-subtitle">Manage your newsletter and event groups</p>
+        </div>
+        <a th:href="@{/groups/new}" class="btn btn-memoir">
+            <i class="bi bi-plus-lg"></i> New group
+        </a>
+    </div>
+
+    <!-- Pending invitations -->
+    <div th:if="${#lists.isEmpty(memberships) == false}">
+        <div th:each="m : ${memberships}" th:if="${m.status == 'pending'}">
+            <div class="alert d-flex justify-content-between align-items-center mb-2"
+                 style="background: #fff8f0; border: 1px solid #f0d9c8; border-radius: 10px;">
+                <div>
+                    <i class="bi bi-envelope me-2" style="color: var(--memoir-accent)"></i>
+                    <strong th:text="${m.group.name}">Group name</strong>
+                    <span class="text-muted ms-2 small">invited you to join</span>
+                </div>
+                <form th:action="@{/groups/{id}/accept(id=${m.group.id})}" method="post">
+                    <button type="submit" class="btn btn-memoir btn-sm">Accept</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Joined groups -->
+    <div class="row g-3 mt-1">
+
+        <!-- No groups state -->
+        <div class="col-12" th:if="${#lists.isEmpty(memberships)}">
+            <div class="memoir-card text-center py-5">
+                <i class="bi bi-people fs-1 d-block mb-3" style="color: var(--memoir-muted)"></i>
+                <p class="mb-3" style="color: var(--memoir-muted)">You're not in any groups yet</p>
+                <a th:href="@{/groups/new}" class="btn btn-memoir">Create your first group</a>
+            </div>
+        </div>
+
+        <!-- Group cards -->
+        <div class="col-md-6 col-lg-4"
+             th:each="m : ${memberships}"
+             th:if="${m.status == 'joined'}">
+            <div class="memoir-card h-100 d-flex flex-column">
+
+                <!-- Card header -->
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <h5 class="mb-0" th:text="${m.group.name}">Group name</h5>
+                    <!-- Type badge -->
+                    <span class="badge rounded-pill"
+                          th:classappend="${m.group.type == 'weekly'} ? 'bg-success' : 'bg-warning text-dark'"
+                          th:text="${m.group.type == 'weekly'} ? 'Weekly' : 'Event'">
+                        Type
+                    </span>
+                </div>
+
+                <!-- Description -->
+                <p class="small mb-3"
+                   style="color: var(--memoir-muted)"
+                   th:text="${m.group.description}"
+                   th:if="${m.group.description}">
+                </p>
+
+                <!-- Member count -->
+                <p class="small mb-3" style="color: var(--memoir-muted)">
+                    <i class="bi bi-people me-1"></i>
+                    <span th:text="${m.group.members.size()}">0</span> members
+                    <span class="ms-2">
+                        <i class="bi bi-person-badge me-1"></i>
+                        <span th:text="${m.role}">member</span>
+                    </span>
+                </p>
+
+                <!-- Actions -->
+                <div class="mt-auto d-flex gap-2">
+
+                    <!-- Weekly group actions -->
+                    <th:block th:if="${m.group.type == 'weekly'}">
+                        <a th:href="@{/groups/{id}/weeklies/current(id=${m.group.id})}"
+                           class="btn btn-sm btn-outline-secondary flex-grow-1">
+                            <i class="bi bi-newspaper me-1"></i> Latest newsletter
+                        </a>
+                        <a th:href="@{/groups/{id}/weeklies(id=${m.group.id})}"
+                           class="btn btn-sm btn-outline-secondary">
+                            <i class="bi bi-calendar3"></i>
+                        </a>
+                    </th:block>
+
+                    <!-- Event group actions -->
+                    <th:block th:if="${m.group.type == 'event'}">
+                        <a th:href="@{/groups/{id}/events(id=${m.group.id})}"
+                           class="btn btn-sm btn-outline-secondary flex-grow-1">
+                            <i class="bi bi-calendar-event me-1"></i> View events
+                        </a>
+                    </th:block>
+
+                    <!-- Group detail -->
+                    <a th:href="@{/groups/{id}(id=${m.group.id})}"
+                       class="btn btn-sm btn-outline-secondary">
+                        <i class="bi bi-gear"></i>
+                    </a>
+
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+</body>
+</html>
