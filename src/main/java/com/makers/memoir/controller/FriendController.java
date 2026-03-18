@@ -1,4 +1,4 @@
-package com.makers.memoir.Controller;
+package com.makers.memoir.controller;
 
 import com.makers.memoir.model.Friend;
 import com.makers.memoir.model.User;
