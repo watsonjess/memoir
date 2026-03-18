@@ -18,7 +18,12 @@ public class SecurityConfiguration {
                 .authorizeHttpRequests(authorize -> authorize
                         .anyRequest().authenticated()
                 )
-                .oauth2Login(withDefaults());
+                .oauth2Login(oauth -> oauth
+                        .successHandler((request, response, authentication) -> {
+                            response.sendRedirect("/after-login");
+                        })
+                );
+
         return http.build();
     }
 }
