@@ -7,6 +7,7 @@ import com.makers.memoir.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.core.oidc.user.DefaultOidcUser;
+import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -17,6 +18,7 @@ import org.springframework.web.servlet.view.RedirectView;
 import java.io.IOException;
 import java.util.Map;
 
+@Controller
 public class UserController {
 
     @Autowired
@@ -32,11 +34,16 @@ public class UserController {
                 .getPrincipal();
 
         String email = (String) principal.getAttributes().get("email");
-        User user = userRepository
-                .findUserByEmail(email)
-                .orElseGet(() -> userRepository.save(new User(email)));
 
-        if (user.getFirstname() == null || user.getFirstname().isEmpty()) {
+        User currentUser = userRepository
+                .findUserByEmail(email)
+                .orElseGet(() -> {
+                    User user = new User();
+                    user.setEmail(email);
+                    return userRepository.save(user);
+                });
+
+        if (currentUser.getFirstname() == null || currentUser.getFirstname().isEmpty()) {
             return new RedirectView("/setup");
         }
 
