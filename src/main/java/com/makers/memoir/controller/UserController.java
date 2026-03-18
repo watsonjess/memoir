@@ -67,13 +67,13 @@ public class UserController {
             URI uri = URI.create(targetUrl);
 
             if (uri.getPath().equals("/")) {
-                return new RedirectView("/profile/" + currentUser.getUsername());
+                return new RedirectView("/profile");
             }
 
             return new RedirectView(targetUrl);
         }
 
-        return new RedirectView("/profile/" + currentUser.getUsername());
+        return new RedirectView("/profile");
     }
 
     @GetMapping("/setup")
@@ -119,7 +119,7 @@ public class UserController {
         if (isFirstSetup) {
             return new RedirectView("/");
         } else {
-            return new RedirectView("/profile/" + user.getUsername());
+            return new RedirectView("/profile");
         }
     }
 
