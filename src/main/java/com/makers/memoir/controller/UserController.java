@@ -20,6 +20,7 @@ import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 
 import java.io.IOException;
+import java.net.URI;
 import java.util.Map;
 
 @Controller
@@ -40,6 +41,7 @@ public class UserController {
 
         String email = (String) principal.getAttributes().get("email");
 
+        // check if user exists in database, if not, add them
         User currentUser = userRepository
                 .findUserByEmail(email)
                 .orElseGet(() -> {
@@ -49,18 +51,29 @@ public class UserController {
                     user.setUsername(nickname);
                     return userRepository.save(user);
                 });
-
+        // if the user doesn't have their information filled out, take to setup page
         if (currentUser.getFirstname() == null || currentUser.getFirstname().isEmpty()) {
             return new RedirectView("/setup");
         }
 
+        // save current page they are on
         SavedRequest savedRequest = new HttpSessionRequestCache().getRequest(request, response);
 
         if (savedRequest != null) {
-            return new RedirectView(savedRequest.getRedirectUrl());
+            String targetUrl = savedRequest.getRedirectUrl();
+
+            // if they come from home ( via login button), send to profile
+            // if they come from any other page, return them to the page they were on
+            URI uri = URI.create(targetUrl);
+
+            if (uri.getPath().equals("/")) {
+                return new RedirectView("/profile/" + currentUser.getUsername());
+            }
+
+            return new RedirectView(targetUrl);
         }
 
-        return new RedirectView("/");
+        return new RedirectView("/profile/" + currentUser.getUsername());
     }
 
     @GetMapping("/setup")

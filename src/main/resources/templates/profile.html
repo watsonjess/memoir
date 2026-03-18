@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html layout:decorate="~{layout/layout}" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.w3.org/1999/xhtml">
+<head>
+  <title>Home</title>
+</head>
+<body>
+<div layout:fragment="content">
+  <h1>Hello</h1>
+
+  <p>You are logged in.</p>
+
+  <p>Name: <span th:text="${#authentication.principal.attributes['nickname']}"></span></p>
+  <p>Email: <span th:text="${#authentication.principal.attributes['email']}"></span></p>
+
+</div>
+</body>
+</html>
