@@ -16,4 +16,3 @@ public class CloudinaryConfig {
         return new Cloudinary(this.cloudinaryURL);
     }
 }
-

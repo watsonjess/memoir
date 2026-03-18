@@ -37,6 +37,5 @@ build/
 
 src/main/resources/env.properties
 
-
 application.yaml
 env.properties
