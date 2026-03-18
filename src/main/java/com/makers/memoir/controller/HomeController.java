@@ -14,6 +14,6 @@ public class HomeController {
 
     @GetMapping("/")
     public String home(Model model, @AuthenticationPrincipal OidcUser principal) {
-        return "Index";
+        return "index";
     }
 }
