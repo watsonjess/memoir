@@ -40,6 +40,8 @@ public class UserController {
                 .orElseGet(() -> {
                     User user = new User();
                     user.setEmail(email);
+                    String nickname = (String) principal.getAttributes().get("nickname");
+                    user.setUsername(nickname);
                     return userRepository.save(user);
                 });
 
