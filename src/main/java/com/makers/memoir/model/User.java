@@ -1,11 +1,12 @@
 package com.makers.memoir.model;
 
-import lombok.Data;
-import lombok.Builder;
-import lombok.NoArgsConstructor;
-import lombok.AllArgsConstructor;
+import lombok.*;
 
 import jakarta.persistence.*;
+
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Data
 @Builder
@@ -29,12 +30,25 @@ public class User {
     private String profileImage;
 
     @Column(name = "created_at", nullable = false, updatable = false)
-    private java.time.LocalDateTime createdAt;
+    private LocalDateTime createdAt;
+
+    @PrePersist
+    protected void onCreate() {
+        createdAt = LocalDateTime.now();
+    }
 
     @Column(length = 255)
     private String firstname;
 
     @Column(length = 255)
     private String lastname;
+
+    @OneToMany(mappedBy = "createdBy", cascade = CascadeType.ALL)
+    @ToString.Exclude
+    private List<Moment> items = new ArrayList<>();
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    @ToString.Exclude
+    private List<GroupMember> groupMemberships = new ArrayList<>();
 
 }
