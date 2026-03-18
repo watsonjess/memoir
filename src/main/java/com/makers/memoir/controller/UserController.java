@@ -36,7 +36,7 @@ public class UserController {
                 .findUserByEmail(email)
                 .orElseGet(() -> userRepository.save(new User(email)));
 
-        if (user.getFirstName() == null || user.getFirstName().isEmpty()) {
+        if (user.getFirstname() == null || user.getFirstname().isEmpty()) {
             return new RedirectView("/setup");
         }
 
@@ -72,14 +72,14 @@ public class UserController {
         String email = (String) principal.getAttributes().get("email");
         User user = userRepository.findByEmail(email);
 
-        user.setFirstName(firstName);
-        user.setLastName(lastName);
+        user.setFirstname(firstName);
+        user.setLastname(lastName);
         user.setUsername(username);
 
         if (!profilePicture.isEmpty()) {
             Map uploadResult = cloudinary.uploader().upload(profilePicture.getBytes(), ObjectUtils.emptyMap());
             String publicUrl = (String) uploadResult.get("secure_url");
-            user.setProfilePictureUrl(publicUrl);
+            user.setProfileImage(publicUrl);
         }
 
         userRepository.save(user);
