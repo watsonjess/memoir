@@ -123,7 +123,7 @@
 			<version>1.2</version>
 		</dependency>
 		<dependency>
-		<groupId>com.okta</groupId>
+		<groupId>com.okta.spring</groupId>
 		<artifactId>okta-spring-boot-starter</artifactId>
 		<version>3.0.5</version>
 	</dependency>
@@ -158,6 +158,10 @@
 		<dependency>
 			<groupId>org.thymeleaf.extras</groupId>
 			<artifactId>thymeleaf-extras-springsecurity6</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>nz.net.ultraq.thymeleaf</groupId>
+			<artifactId>thymeleaf-layout-dialect</artifactId>
 		</dependency>
 	</dependencies>
 
