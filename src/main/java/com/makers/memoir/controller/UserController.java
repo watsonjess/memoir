@@ -61,7 +61,7 @@ public class UserController {
         String email = (String) principal.getAttributes().get("email");
         User user = userRepository.findByEmail(email);
 
-        ModelAndView setupPage = new ModelAndView("/setup");
+        ModelAndView setupPage = new ModelAndView("setup");
         setupPage.addObject("isFirstSetup", true);
         setupPage.addObject("user", user);
         return setupPage;
@@ -109,7 +109,7 @@ public class UserController {
         String email = (String) principal.getAttributes().get("email");
         User user = userRepository.findByEmail(email);
 
-        ModelAndView editProfile = new ModelAndView("/setup");
+        ModelAndView editProfile = new ModelAndView("setup");
         editProfile.addObject("isFirstSetup", false);
         editProfile.addObject("user", user);
         return editProfile;

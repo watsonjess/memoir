@@ -14,37 +14,19 @@
 
         <form class="form-container" th:action="@{/setup}" enctype="multipart/form-data" method="post">
             <input type="hidden" name="isFirstSetup" th:value="${isFirstSetup}">
-            <div class="profile-picture-div">
 
-                <!-- Button to select profile picture -->
-                <div id="add-profile-pic-div">
-                    <label id="add-profile-pic-btn" for="profile-picture" style="cursor: pointer">
-                        <img alt="add-profile-picture"
-                             th:src="${user.profilePictureUrl != null ? user.profilePictureUrl : 'https://static.vecteezy.com/system/resources/thumbnails/036/594/092/small/man-empty-avatar-photo-placeholder-for-social-networks-resumes-forforums-and-dating-sites-male-and-female-no-photo-images-for-unfilled-user-profile-free-vector.jpg'}"/>
-                    </label>
-                    <input hidden id="profile-picture" name="profile-picture" type="file" accept="image/*">
-
-                    <i class="fa-solid fa-plus center-overlay" style="color: dimgrey; font-size: 40px"></i>
-                </div>
-
-                <!--  Profile pic preview with button to remove -->
-                <div id="rmv-profile-pic-div" style="display: none">
-                    <img id="profile-pic-img"
-                         alt="remove-profile-picture"
-                         src=""/>
-                    <button type="button" id="rmv-profile-pic-btn" class="remove-img-btn">✕</button>
-                </div>
+            <div class="create-profile-form-div">
+                <p>(+ Add profile picture here - placeholder)</p>
             </div>
-
             <div class="create-profile-form-div">
                 <label for="firstName">First Name:</label>
                 <input class="create-profile-input" type="text" id="firstName" name="firstName"
-                       th:value="${user != null ? user.firstName : ''}" required>
+                        th:value="${user != null ? user.firstname : ''}" required>
             </div>
             <div class="create-profile-form-div">
                 <label for="lastName">Last Name:</label>
                 <input class="create-profile-input" type="text" id="lastName" name="lastName"
-                       th:value="${user != null ? user.lastName : ''}" required>
+                       th:value="${user != null ? user.lastname : ''}" required>
             </div>
             <div class="create-profile-form-div">
                 <label for="username">Username:</label>
