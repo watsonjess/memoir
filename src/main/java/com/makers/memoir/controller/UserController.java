@@ -4,6 +4,10 @@ import com.cloudinary.Cloudinary;
 import com.cloudinary.utils.ObjectUtils;
 import com.makers.memoir.model.User;
 import com.makers.memoir.repository.UserRepository;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.security.web.savedrequest.SavedRequest;
+import org.springframework.security.web.savedrequest.HttpSessionRequestCache;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.core.oidc.user.DefaultOidcUser;
@@ -27,7 +31,8 @@ public class UserController {
     private Cloudinary cloudinary;
 
     @GetMapping("/after-login")
-    public RedirectView afterLogin() {
+    public RedirectView afterLogin(HttpServletRequest request,
+                                   HttpServletResponse response) {
         DefaultOidcUser principal = (DefaultOidcUser) SecurityContextHolder
                 .getContext()
                 .getAuthentication()
@@ -47,6 +52,12 @@ public class UserController {
 
         if (currentUser.getFirstname() == null || currentUser.getFirstname().isEmpty()) {
             return new RedirectView("/setup");
+        }
+
+        SavedRequest savedRequest = new HttpSessionRequestCache().getRequest(request, response);
+
+        if (savedRequest != null) {
+            return new RedirectView(savedRequest.getRedirectUrl());
         }
 
         return new RedirectView("/");

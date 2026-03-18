@@ -51,7 +51,10 @@
                 <input class="create-profile-input" type="text" id="username" name="username"
                        th:value="${user != null ? user.username : ''}" required>
             </div>
-            <p>Email: <span th:text="${user.email}"></span></p>
+            <div class="create-profile-form-div">
+                <label for="email">Email:</label>
+                <input class="create-profile-input" type="text" id="email" name="email" th:value="${user.email}" readonly>
+            </div>
             <div class="create-profile-button-div">
                 <button class="create-profile-button" name="updateUserBtn" type="submit"
                     th:text="${isFirstSetup} ? 'Continue' : 'Update'"> </button>
