@@ -24,6 +24,7 @@ h1, h2, h3, h4, h5 {
     height: var(--memoir-nav-h);
     background-color: var(--memoir-surface);
     border-bottom: 1px solid var(--memoir-border);
+    overflow: visible;
 }
 
 .memoir-nav .navbar-brand {
@@ -139,6 +140,110 @@ h1, h2, h3, h4, h5 {
     padding: 1rem 0;
     font-size: 0.8rem;
     color: var(--memoir-muted);
+}
+
+/* ── Search box ── */
+.memoir-search-trigger {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--memoir-cream);
+    border: 1px solid var(--memoir-border);
+    border-radius: 8px;
+    padding: 6px 12px;
+    min-width: 190px;
+    cursor: text;
+    transition: border-color 0.15s;
+}
+
+.memoir-search-trigger:focus-within {
+    border-color: var(--memoir-accent);
+    background: var(--memoir-surface);
+}
+
+.memoir-search-bi-icon {
+    font-size: 0.78rem;
+    color: var(--memoir-muted);
+    flex-shrink: 0;
+}
+
+.memoir-search-inline-input {
+    border: none;
+    background: transparent;
+    outline: none;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.82rem;
+    color: var(--memoir-ink);
+    width: 100%;
+    min-width: 0;
+}
+
+.memoir-search-inline-input::placeholder {
+    color: var(--memoir-muted);
+}
+
+.memoir-search-dropdown {
+    border: 1px solid var(--memoir-border) !important;
+    border-radius: 10px !important;
+    padding: 6px 0;
+}
+
+.memoir-drop-section-label {
+    font-size: 0.68rem;
+    font-weight: 500;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: var(--memoir-muted);
+    padding: 8px 14px 2px;
+}
+
+.memoir-drop-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 7px 14px;
+    text-decoration: none;
+    color: var(--memoir-ink);
+    transition: background 0.1s;
+}
+
+.memoir-drop-row:hover {
+    background: var(--memoir-cream);
+    color: var(--memoir-ink);
+}
+
+.memoir-drop-avatar {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.72rem;
+    font-weight: 500;
+    border: 1px solid var(--memoir-border);
+    background: var(--memoir-cream);
+    color: var(--memoir-accent);
+    overflow: hidden;
+}
+
+.memoir-drop-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.memoir-drop-avatar.group { background: #E1F5EE; color: #085041; border-color: #9FE1CB; border-radius: 7px; }
+.memoir-drop-avatar.event { background: #FAECE7; color: #712B13; border-color: #F5C4B3; border-radius: 7px; }
+
+.memoir-drop-name { font-size: 0.85rem; font-weight: 500; line-height: 1.2; }
+.memoir-drop-sub  { font-size: 0.75rem; color: var(--memoir-muted); line-height: 1.2; }
+
+.text-memoir-accent { color: var(--memoir-accent) !important; }
+.text-memoir-accent:hover { color: var(--memoir-accent) !important; }
+
+#memoirSeeAll {
+    display: flex;
+    align-items: flex-start;
+    gap: 4px;
+    white-space: normal;
+    word-break: break-word;
 }
 
 /* ── Profile picture ── */
