@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/layout}">
+
+<head>
+  <title>New Moment</title>
+</head>
+
+<th:block layout:fragment="styles">
+  <style>
+    .moment-form-card {
+      max-width: 600px;
+      margin: 40px auto;
+      background: #fff;
+      border-radius: 12px;
+      padding: 40px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+    }
+    .moment-form-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.8rem;
+      margin-bottom: 8px;
+    }
+    .moment-form-subtitle {
+      color: #888;
+      font-size: 0.95rem;
+      margin-bottom: 32px;
+    }
+    .image-preview-box {
+      width: 100%;
+      height: 240px;
+      border: 2px dashed #ddd;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      cursor: pointer;
+      margin-bottom: 24px;
+      background-color: #fafafa;
+      transition: border-color 0.2s;
+    }
+    .image-preview-box:hover {
+      border-color: #aaa;
+    }
+    .image-preview-box img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .image-preview-placeholder {
+      text-align: center;
+      color: #aaa;
+    }
+    .image-preview-placeholder i {
+      font-size: 2rem;
+      margin-bottom: 8px;
+    }
+    .form-label {
+      font-weight: 500;
+      margin-bottom: 6px;
+    }
+    .btn-memoir-submit {
+      background-color: #000;
+      color: #fff;
+      border: none;
+      padding: 12px 32px;
+      border-radius: 8px;
+      font-size: 1rem;
+      width: 100%;
+      margin-top: 8px;
+      transition: background-color 0.2s;
+    }
+    .btn-memoir-submit:hover {
+      background-color: #333;
+      color: #fff;
+    }
+  </style>
+</th:block>
+
+<th:block layout:fragment="content">
+  <div class="moment-form-card">
+    <h1 class="moment-form-title">New Moment</h1>
+    <p class="moment-form-subtitle">Capture something from your day</p>
+
+    <form th:action="@{/moments/new}" method="post" enctype="multipart/form-data">
+
+      <!-- Image upload -->
+      <div class="image-preview-box" onclick="document.getElementById('imageInput').click()">
+        <div class="image-preview-placeholder" id="imagePlaceholder">
+          <i class="bi bi-camera"></i>
+          <p class="mb-0">Click to upload a photo</p>
+        </div>
+        <img id="imagePreview" src="" alt="Preview" style="display:none;"/>
+      </div>
+      <input type="file"
+             id="imageInput"
+             name="image"
+             accept="image/*"
+             style="display:none;"
+             required/>
+
+      <!-- Group selection -->
+      <div class="mb-3">
+        <label class="form-label" for="groupId">Group</label>
+        <select class="form-select" id="groupId" name="groupId" required>
+          <option value="" disabled selected>Select a group</option>
+          <option th:each="group : ${groups}"
+                  th:value="${group.id}"
+                  th:text="${group.name}">
+          </option>
+        </select>
+      </div>
+
+      <!-- Description -->
+      <div class="mb-3">
+        <label class="form-label" for="content">Description</label>
+        <textarea class="form-control"
+                  id="content"
+                  name="content"
+                  rows="3"
+                  placeholder="What made this moment special?"></textarea>
+      </div>
+
+      <!-- Location -->
+      <div class="mb-4">
+        <label class="form-label" for="location">Location <span class="text-muted fw-normal">(optional)</span></label>
+        <input type="text"
+               class="form-control"
+               id="location"
+               name="location"
+               placeholder="e.g. Hyde Park, London"/>
+      </div>
+
+      <button type="submit" class="btn btn-memoir-submit">Save moment</button>
+    </form>
+  </div>
+</th:block>
+
+<th:block layout:fragment="scripts">
+  <script>
+    // Image preview before upload
+    document.getElementById('imageInput').addEventListener('change', function(e) {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(event) {
+          const preview = document.getElementById('imagePreview');
+          const placeholder = document.getElementById('imagePlaceholder');
+          preview.src = event.target.result;
+          preview.style.display = 'block';
+          placeholder.style.display = 'none';
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+  </script>
+</th:block>
+
+</html>

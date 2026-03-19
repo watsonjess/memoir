@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/layout}">
+
+<th:block layout:fragment="styles">
+  <style>
+    .moments-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 24px;
+      margin-top: 32px;
+    }
+    .moment-tile {
+      border-radius: 12px;
+      overflow: hidden;
+      background: #fff;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+      text-decoration: none;
+      color: inherit;
+      transition: transform 0.2s, box-shadow 0.2s;
+      display: block;
+    }
+    .moment-tile:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+    }
+    .moment-tile-image {
+      width: 100%;
+      height: 200px;
+      object-fit: cover;
+    }
+    .moment-tile-body {
+      padding: 16px;
+    }
+    .moment-tile-date {
+      font-size: 0.8rem;
+      color: #aaa;
+      margin-bottom: 6px;
+    }
+    .moment-tile-content {
+      font-size: 0.95rem;
+      color: #333;
+      line-height: 1.5;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .moment-tile-location {
+      font-size: 0.8rem;
+      color: #aaa;
+      margin-top: 8px;
+    }
+    .moments-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 32px;
+    }
+    .moments-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.8rem;
+    }
+    .empty-state {
+      text-align: center;
+      padding: 80px 0;
+      color: #aaa;
+    }
+    .empty-state i {
+      font-size: 3rem;
+      margin-bottom: 16px;
+    }
+  </style>
+</th:block>
+
+<th:block layout:fragment="content">
+  <div class="moments-header">
+    <h1 class="moments-title">Your Moments</h1>
+    <a th:href="@{/moments/new}" class="btn btn-memoir">
+      <i class="bi bi-plus-lg"></i> Add moment
+    </a>
+  </div>
+
+  <div th:if="${moments.isEmpty()}" class="empty-state">
+    <i class="bi bi-camera"></i>
+    <p>No moments yet. Start capturing your day!</p>
+    <a th:href="@{/moments/new}" class="btn btn-memoir">Add your first moment</a>
+  </div>
+
+  <div th:unless="${moments.isEmpty()}" class="moments-grid">
+    <a th:each="moment : ${moments}"
+       th:href="@{/moments/{id}(id=${moment.id})}"
+       class="moment-tile">
+      <img th:src="${moment.imageUrl}"
+           th:alt="${moment.content}"
+           class="moment-tile-image"/>
+      <div class="moment-tile-body">
+        <p class="moment-tile-date"
+           th:text="${#temporals.format(moment.createdAt, 'dd MMMM yyyy')}"></p>
+        <p class="moment-tile-content" th:text="${moment.content}"></p>
+        <p class="moment-tile-location"
+           th:if="${moment.location != null}">
+          <i class="bi bi-geo-alt"></i>
+          <span th:text="${moment.location}"></span>
+        </p>
+      </div>
+    </a>
+  </div>
+</th:block>
+
+</html>

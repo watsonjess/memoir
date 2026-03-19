@@ -66,6 +66,30 @@ public class NewsletterController {
         return principal.getName();
     }
 
+    // Converts image rows from URLs to base64 for Flying Saucer PDF rendering
+    private List<List<String>> toBase64ImageRows(List<List<String>> imageRows) {
+        return imageRows.stream()
+                .map(row -> row.stream()
+                        .map(url -> pdfService.convertImageUrlToBase64(url))
+                        .collect(Collectors.toList()))
+                .collect(Collectors.toList());
+    }
+
+    private void populatePdfContext(Context context, NewsletterData data,
+                                    Long groupId, LocalDateTime weekStart) {
+        List<List<String>> base64ImageRows = toBase64ImageRows(data.imageRows);
+
+        context.setVariable("summaries", data.summaries);
+        context.setVariable("memberMoments", data.memberMoments);
+        context.setVariable("allImageUrls", data.allImageUrls);
+        context.setVariable("imageRows", base64ImageRows);
+        context.setVariable("colWidth", data.colWidth);
+        context.setVariable("imageHeight", data.imageHeight);
+        context.setVariable("groupSummary", data.groupSummary);
+        context.setVariable("groupId", groupId);
+        context.setVariable("weekStart", weekStart);
+    }
+
     private NewsletterData buildNewsletterData(Long groupId, LocalDateTime weekStart, LocalDateTime weekEnd) {
         List<GroupMember> groupMembers = groupMemberRepository
                 .findByGroupIdAndStatus(groupId, "joined");
@@ -97,7 +121,6 @@ public class NewsletterController {
 
         Collections.shuffle(allImageUrls);
 
-        // Find optimal column count that minimises uneven last row
         int totalImages = allImageUrls.size();
         int bestColumns = 3;
         int bestRemainder = totalImages % 3;
@@ -110,7 +133,6 @@ public class NewsletterController {
             }
         }
 
-        // Cap image height based on column count so images don't get too tall
         int imageHeight;
         switch (bestColumns) {
             case 2: imageHeight = 200; break;
@@ -122,7 +144,6 @@ public class NewsletterController {
 
         int colWidth = 100 / bestColumns;
 
-        // Split into rows
         List<List<String>> imageRows = new ArrayList<>();
         for (int i = 0; i < allImageUrls.size(); i += bestColumns) {
             imageRows.add(allImageUrls.subList(i, Math.min(i + bestColumns, allImageUrls.size())));
@@ -138,18 +159,8 @@ public class NewsletterController {
 
     private String buildNewsletterHtml(Long groupId, LocalDateTime weekStart, LocalDateTime weekEnd) {
         NewsletterData data = buildNewsletterData(groupId, weekStart, weekEnd);
-
         Context context = new Context();
-        context.setVariable("summaries", data.summaries);
-        context.setVariable("memberMoments", data.memberMoments);
-        context.setVariable("allImageUrls", data.allImageUrls);
-        context.setVariable("imageRows", data.imageRows);
-        context.setVariable("colWidth", data.colWidth);
-        context.setVariable("imageHeight", data.imageHeight);
-        context.setVariable("groupSummary", data.groupSummary);
-        context.setVariable("groupId", groupId);
-        context.setVariable("weekStart", weekStart);
-
+        populatePdfContext(context, data, groupId, weekStart);
         return templateEngine.process("newsletter/pdf", context);
     }
 
@@ -162,7 +173,7 @@ public class NewsletterController {
 
         NewsletterData data = buildNewsletterData(groupId, weekStart, weekEnd);
 
-        // Populate model for Thymeleaf web view
+        // Web view uses original Cloudinary URLs
         model.addAttribute("summaries", data.summaries);
         model.addAttribute("memberMoments", data.memberMoments);
         model.addAttribute("allImageUrls", data.allImageUrls);
@@ -173,19 +184,10 @@ public class NewsletterController {
         model.addAttribute("groupId", groupId);
         model.addAttribute("weekStart", weekStart);
 
-        // Generate PDF and email
+        // PDF uses base64 encoded images
         try {
             Context context = new Context();
-            context.setVariable("summaries", data.summaries);
-            context.setVariable("memberMoments", data.memberMoments);
-            context.setVariable("allImageUrls", data.allImageUrls);
-            context.setVariable("imageRows", data.imageRows);
-            context.setVariable("colWidth", data.colWidth);
-            context.setVariable("imageHeight", data.imageHeight);
-            context.setVariable("groupSummary", data.groupSummary);
-            context.setVariable("groupId", groupId);
-            context.setVariable("weekStart", weekStart);
-
+            populatePdfContext(context, data, groupId, weekStart);
             String htmlContent = templateEngine.process("newsletter/pdf", context);
             byte[] pdfBytes = pdfService.generatePdf(htmlContent);
 
