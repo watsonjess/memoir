@@ -56,6 +56,30 @@
             </ul>
 
             <div class="d-flex align-items-center gap-3 mb-2 mb-md-0" sec:authorize="isAuthenticated()">
+                <div class="dropdown" id="memoirSearch">
+                    <div class="memoir-search-trigger" id="memoirSearchTrigger">
+                        <i class="bi bi-search memoir-search-bi-icon"></i>
+                        <input type="text"
+                               id="memoirSearchInput"
+                               class="memoir-search-inline-input"
+                               placeholder="Search…"
+                               autocomplete="off"
+                               aria-label="Search"/>
+                    </div>
+                    <div class="dropdown-menu memoir-search-dropdown w-100 mt-1 shadow-sm"
+                         id="memoirSearchDropdown"
+                         aria-live="polite">
+                        <div id="memoirDropBody">
+                            <span class="dropdown-item-text text-muted small">Start typing to search…</span>
+                        </div>
+                        <div id="memoirDropFooter" style="display:none;">
+                            <div class="dropdown-divider"></div>
+                            <a href="#" id="memoirSeeAll" class="dropdown-item small text-memoir-accent">
+                                <i class="bi bi-search me-1"></i><span class="memoir-see-all-text">See all results for "<span id="memoirQueryLabel"></span>"</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
                 <a th:href="@{/moments/new}" class="btn btn-memoir">
                     <i class="bi bi-plus-lg"></i> Add moment
                 </a>
@@ -92,6 +116,7 @@
 
 <!-- Bootstrap 5 JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script th:src="@{/scripts/search-box.js}" defer></script>
 
 <!-- Page-specific scripts slot -->
 <th:block layout:fragment="scripts"></th:block>
