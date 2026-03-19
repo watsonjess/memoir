@@ -16,9 +16,15 @@ public class SecurityConfiguration {
     public SecurityFilterChain configure(HttpSecurity http) throws Exception {
         http
                 .authorizeHttpRequests(authorize -> authorize
+                        .requestMatchers("/", "/main.css").permitAll()
                         .anyRequest().authenticated()
                 )
-                .oauth2Login(withDefaults());
+                .oauth2Login(oauth -> oauth
+                        .successHandler((request, response, authentication) -> {
+                            response.sendRedirect("/after-login");
+                        })
+                );
+
         return http.build();
     }
 }

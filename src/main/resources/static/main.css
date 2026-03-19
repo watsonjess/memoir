@@ -245,3 +245,40 @@ h1, h2, h3, h4, h5 {
     white-space: normal;
     word-break: break-word;
 }
+
+/* ── Profile picture ── */
+.profile-picture-div {
+    padding: 12px 0;
+}
+
+.profile-picture-div > div {
+    position: relative;
+    width: 150px;
+    height: 150px;
+}
+
+.profile-picture-div img {
+    object-fit: cover;
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+}
+
+.create-profile-container {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.form-container {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.center-overlay {
+    position: absolute;
+    bottom: 8px;
+    left: 50%;
+    transform: translateX(-50%);
+}
