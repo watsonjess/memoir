@@ -32,6 +32,9 @@ build/
 ### VS Code ###
 .vscode/
 
+### AI API Key ###
+/src/main/resources/env.properties
+
 src/main/resources/env.properties
 
 application.yaml
