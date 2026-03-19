@@ -118,12 +118,12 @@
 
   <!-- Shuffled photo collage -->
   <p class="section-title">This week's moments</p>
-  <table class="collage-table">
+  <table style="width:100%;border-collapse:collapse;margin-bottom:40px;table-layout:fixed;">
     <tr th:each="row : ${imageRows}">
       <td th:each="imageUrl : ${row}"
-          th:style="'width:' + ${colWidth} + '%;padding:4px;'">
+          th:style="'width:' + ${colWidth} + '%;padding:3px;overflow:hidden;'">
         <img th:src="${imageUrl}"
-             th:style="'width:100%;height:' + ${imageHeight} + 'px;object-fit:cover;'"
+             th:style="'display:block;width:100%;height:' + ${imageHeight} + 'px;'"
              alt="Moment"/>
       </td>
     </tr>
