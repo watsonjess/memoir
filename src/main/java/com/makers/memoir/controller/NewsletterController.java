@@ -7,34 +7,28 @@ import com.makers.memoir.repository.GroupMemberRepository;
 import com.makers.memoir.repository.GroupRepository;
 import com.makers.memoir.repository.MomentRepository;
 import com.makers.memoir.repository.UserRepository;
-import com.makers.memoir.service.EmailService;import com.makers.memoir.service.NewsletterService;
-import com.makers.memoir.service.PdfService;import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
+import com.makers.memoir.service.EmailService;
+import com.makers.memoir.service.NewsletterService;
+import com.makers.memoir.service.PdfService;
 import jakarta.mail.MessagingException;
-import org.xhtmlrenderer.pdf.ITextRenderer;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
-import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.http.ResponseEntity;
-
+import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.*;
+import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
+
 import java.security.Principal;
 import java.time.DayOfWeek;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
-import java.util.Collections;
-import java.util.ArrayList;
-import org.thymeleaf.TemplateEngine;
 
 @Controller
 @RequestMapping("/newsletter")
@@ -64,7 +58,6 @@ public class NewsletterController {
     @Autowired
     GroupMemberRepository groupMemberRepository;
 
-//    Currently this will all error since the login and OAuth hasnt been setup
     private String getUsernameFromPrincipal(Principal principal) {
         if (principal instanceof OAuth2AuthenticationToken) {
             OAuth2AuthenticationToken token = (OAuth2AuthenticationToken) principal;
@@ -73,7 +66,7 @@ public class NewsletterController {
         return principal.getName();
     }
 
-    private String buildNewsletterHtml(Long groupId, LocalDateTime weekStart, LocalDateTime weekEnd) {
+    private NewsletterData buildNewsletterData(Long groupId, LocalDateTime weekStart, LocalDateTime weekEnd) {
         List<GroupMember> groupMembers = groupMemberRepository
                 .findByGroupIdAndStatus(groupId, "joined");
         List<User> members = groupMembers.stream()
@@ -108,15 +101,21 @@ public class NewsletterController {
                 ? null
                 : newsletterService.generateGroupSummary(summaries);
 
+        return new NewsletterData(summaries, memberMoments, allImageUrls, groupSummary, members);
+    }
+
+    private String buildNewsletterHtml(Long groupId, LocalDateTime weekStart, LocalDateTime weekEnd) {
+        NewsletterData data = buildNewsletterData(groupId, weekStart, weekEnd);
+
         Context context = new Context();
-        context.setVariable("summaries", summaries);
-        context.setVariable("memberMoments", memberMoments);
-        context.setVariable("allImageUrls", allImageUrls);
-        context.setVariable("groupSummary", groupSummary);
+        context.setVariable("summaries", data.summaries);
+        context.setVariable("memberMoments", data.memberMoments);
+        context.setVariable("allImageUrls", data.allImageUrls);
+        context.setVariable("groupSummary", data.groupSummary);
         context.setVariable("groupId", groupId);
         context.setVariable("weekStart", weekStart);
 
-        return templateEngine.process("newsletter/index", context);
+        return templateEngine.process("newsletter/pdf", context);
     }
 
     @GetMapping("/group/{groupId}")
@@ -126,18 +125,30 @@ public class NewsletterController {
                 .truncatedTo(ChronoUnit.DAYS);
         LocalDateTime weekEnd = weekStart.plusDays(7);
 
-        String htmlContent = buildNewsletterHtml(groupId, weekStart, weekEnd);
+        NewsletterData data = buildNewsletterData(groupId, weekStart, weekEnd);
 
-        // Add attributes to model for Thymeleaf rendering
+        // Populate model for Thymeleaf
+        model.addAttribute("summaries", data.summaries);
+        model.addAttribute("memberMoments", data.memberMoments);
+        model.addAttribute("allImageUrls", data.allImageUrls);
+        model.addAttribute("groupSummary", data.groupSummary);
         model.addAttribute("groupId", groupId);
         model.addAttribute("weekStart", weekStart);
 
-        // Generate and email PDF
+        // Generate PDF from HTML and email it
         try {
+            Context context = new Context();
+            context.setVariable("summaries", data.summaries);
+            context.setVariable("memberMoments", data.memberMoments);
+            context.setVariable("allImageUrls", data.allImageUrls);
+            context.setVariable("groupSummary", data.groupSummary);
+            context.setVariable("groupId", groupId);
+            context.setVariable("weekStart", weekStart);
+
+            String htmlContent = templateEngine.process("newsletter/index", context);
             byte[] pdfBytes = pdfService.generatePdf(htmlContent);
-            List<GroupMember> groupMembers = groupMemberRepository
-                    .findByGroupIdAndStatus(groupId, "joined");
-            for (GroupMember gm : groupMembers) {
+
+            for (GroupMember gm : groupMemberRepository.findByGroupIdAndStatus(groupId, "joined")) {
                 try {
                     emailService.sendNewsletterEmail(
                             gm.getUser().getEmail(),
@@ -149,7 +160,7 @@ public class NewsletterController {
                 }
             }
         } catch (Exception e) {
-            System.err.println("Failed to generate PDF: " + e.getMessage());
+            System.err.println("Failed to generate or send PDF: " + e.getMessage());
         }
 
         return "newsletter/index";
@@ -174,6 +185,24 @@ public class NewsletterController {
             return new ResponseEntity<>(pdfBytes, headers, HttpStatus.OK);
         } catch (Exception e) {
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    // Inner class to carry newsletter data between methods
+    private static class NewsletterData {
+        Map<User, String> summaries;
+        Map<User, List<Moment>> memberMoments;
+        List<String> allImageUrls;
+        String groupSummary;
+        List<User> members;
+
+        NewsletterData(Map<User, String> summaries, Map<User, List<Moment>> memberMoments,
+                       List<String> allImageUrls, String groupSummary, List<User> members) {
+            this.summaries = summaries;
+            this.memberMoments = memberMoments;
+            this.allImageUrls = allImageUrls;
+            this.groupSummary = groupSummary;
+            this.members = members;
         }
     }
 }

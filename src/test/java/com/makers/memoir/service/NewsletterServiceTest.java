@@ -36,7 +36,7 @@ public class NewsletterServiceTest {
 
         Moment m3 = new Moment();
         m3.setImageUrl("https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=800");
-        m3.setContent("Decided to go walk Hugo through the forest to reconnect with nature, he loved it! ");
+        m3.setContent("Decided to go walk Hugo through the forest to reconnect with nature, he loved it!");
         m3.setLocation("Home");
         m3.setCreatedAt(LocalDateTime.now());
 

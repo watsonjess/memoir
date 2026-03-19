@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8"/>
+  <title>Weekly Newsletter</title>
+  <style>
+    body {
+      background-color: #f8f5f0;
+      font-family: Georgia, serif;
+      margin: 40px;
+      color: #333;
+    }
+    .newsletter-header {
+      border-bottom: 2px solid #000;
+      border-top: 2px solid #000;
+      padding: 20px 0;
+      margin-bottom: 40px;
+    }
+    .header-table {
+      width: 100%;
+    }
+    .title-cell {
+      vertical-align: top;
+    }
+    .meta-cell {
+      vertical-align: top;
+      text-align: right;
+    }
+    .issue-badge {
+      background-color: #000;
+      color: #fff;
+      padding: 4px 12px;
+      font-size: 0.8rem;
+      letter-spacing: 2px;
+    }
+    .newsletter-title {
+      font-size: 2.5rem;
+      font-weight: bold;
+      margin: 0;
+      line-height: 1.1;
+    }
+    .section-title {
+      font-size: 0.75rem;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: #888;
+      margin-bottom: 16px;
+      margin-top: 32px;
+    }
+    .collage-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 40px;
+    }
+    .collage-table td {
+      padding: 4px;
+      width: 25%;
+    }
+    .collage-img {
+      width: 100%;
+      height: 150px;
+    }
+    .member-name {
+      font-size: 1.1rem;
+      font-weight: bold;
+      border-bottom: 1px solid #ccc;
+      padding-bottom: 8px;
+      margin-bottom: 10px;
+      margin-top: 24px;
+    }
+    .summary-text {
+      font-size: 0.95rem;
+      line-height: 1.8;
+      color: #333;
+    }
+    .divider {
+      border: none;
+      border-top: 1px solid #ddd;
+      margin: 20px 0;
+    }
+    .group-summary {
+      border-left: 4px solid #000;
+      padding: 20px 24px;
+      font-size: 1rem;
+      line-height: 1.9;
+      color: #333;
+      margin-top: 32px;
+      background-color: #fff;
+    }
+    .no-content {
+      text-align: center;
+      color: #888;
+      padding: 40px 0;
+    }
+    .date-text {
+      font-size: 0.9rem;
+      color: #666;
+      margin-top: 6px;
+    }
+  </style>
+</head>
+<body>
+
+<!-- Header -->
+<div class="newsletter-header">
+  <table class="header-table">
+    <tr>
+      <td class="title-cell">
+        <p class="newsletter-title">Weekly</p>
+        <p class="newsletter-title">Newsletter</p>
+      </td>
+      <td class="meta-cell">
+        <span class="issue-badge">GROUP #<span th:text="${groupId}"></span></span>
+        <p class="date-text" th:text="${#temporals.format(weekStart, 'dd MMMM yyyy')}"></p>
+      </td>
+    </tr>
+  </table>
+</div>
+
+<!-- No content fallback -->
+<div th:if="${summaries == null or summaries.isEmpty()}">
+  <p class="no-content">No moments were posted this week yet.</p>
+</div>
+
+<div th:unless="${summaries == null or summaries.isEmpty()}">
+  <!-- Shuffled photo collage -->
+  <p class="section-title">This week's moments</p>
+  <table class="collage-table">
+    <tr th:each="row : ${#numbers.sequence(0, allImageUrls.size() - 1, 4)}">
+      <td th:each="col : ${#numbers.sequence(0, 3)}"
+          th:if="${row + col < allImageUrls.size()}">
+        <img th:src="${allImageUrls[row + col]}" class="collage-img" alt="Moment"/>
+      </td>
+    </tr>
+  </table>
+
+  <!-- Per user summaries -->
+  <p class="section-title">What everyone got up to</p>
+  <div th:each="entry : ${summaries}">
+    <div class="member-name" th:text="${entry.key.username}"></div>
+    <p class="summary-text" th:text="${entry.value}"></p>
+    <hr class="divider"/>
+  </div>
+
+  <!-- Overall group summary -->
+  <div th:if="${groupSummary != null}">
+    <p class="section-title">Until next week</p>
+    <div class="group-summary" th:text="${groupSummary}"></div>
+  </div>
+
+</div>
+
+</body>
+</html>
