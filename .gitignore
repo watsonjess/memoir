@@ -38,4 +38,5 @@ build/
 src/main/resources/env.properties
 
 application.yaml
-env.properties.DS_Store
+env.properties
+.DS_Store
