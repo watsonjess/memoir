@@ -52,14 +52,6 @@
       border-collapse: collapse;
       margin-bottom: 40px;
     }
-    .collage-table td {
-      padding: 4px;
-      width: 25%;
-    }
-    .collage-img {
-      width: 100%;
-      height: 150px;
-    }
     .member-name {
       font-size: 1.1rem;
       font-weight: bold;
@@ -123,13 +115,16 @@
 </div>
 
 <div th:unless="${summaries == null or summaries.isEmpty()}">
+
   <!-- Shuffled photo collage -->
   <p class="section-title">This week's moments</p>
   <table class="collage-table">
-    <tr th:each="row : ${#numbers.sequence(0, allImageUrls.size() - 1, 4)}">
-      <td th:each="col : ${#numbers.sequence(0, 3)}"
-          th:if="${row + col < allImageUrls.size()}">
-        <img th:src="${allImageUrls[row + col]}" class="collage-img" alt="Moment"/>
+    <tr th:each="row : ${imageRows}">
+      <td th:each="imageUrl : ${row}"
+          th:style="'width:' + ${colWidth} + '%;padding:4px;'">
+        <img th:src="${imageUrl}"
+             th:style="'width:100%;height:' + ${imageHeight} + 'px;object-fit:cover;'"
+             alt="Moment"/>
       </td>
     </tr>
   </table>

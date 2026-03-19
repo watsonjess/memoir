@@ -97,11 +97,43 @@ public class NewsletterController {
 
         Collections.shuffle(allImageUrls);
 
+        // Find optimal column count that minimises uneven last row
+        int totalImages = allImageUrls.size();
+        int bestColumns = 3;
+        int bestRemainder = totalImages % 3;
+
+        for (int cols = 2; cols <= 5; cols++) {
+            int remainder = totalImages % cols;
+            if (remainder == 0 || remainder > bestRemainder) {
+                bestColumns = cols;
+                bestRemainder = remainder;
+            }
+        }
+
+        // Cap image height based on column count so images don't get too tall
+        int imageHeight;
+        switch (bestColumns) {
+            case 2: imageHeight = 200; break;
+            case 3: imageHeight = 160; break;
+            case 4: imageHeight = 130; break;
+            case 5: imageHeight = 110; break;
+            default: imageHeight = 150;
+        }
+
+        int colWidth = 100 / bestColumns;
+
+        // Split into rows
+        List<List<String>> imageRows = new ArrayList<>();
+        for (int i = 0; i < allImageUrls.size(); i += bestColumns) {
+            imageRows.add(allImageUrls.subList(i, Math.min(i + bestColumns, allImageUrls.size())));
+        }
+
         String groupSummary = summaries.isEmpty()
                 ? null
                 : newsletterService.generateGroupSummary(summaries);
 
-        return new NewsletterData(summaries, memberMoments, allImageUrls, groupSummary, members);
+        return new NewsletterData(summaries, memberMoments, allImageUrls,
+                imageRows, colWidth, imageHeight, groupSummary, members);
     }
 
     private String buildNewsletterHtml(Long groupId, LocalDateTime weekStart, LocalDateTime weekEnd) {
@@ -111,6 +143,9 @@ public class NewsletterController {
         context.setVariable("summaries", data.summaries);
         context.setVariable("memberMoments", data.memberMoments);
         context.setVariable("allImageUrls", data.allImageUrls);
+        context.setVariable("imageRows", data.imageRows);
+        context.setVariable("colWidth", data.colWidth);
+        context.setVariable("imageHeight", data.imageHeight);
         context.setVariable("groupSummary", data.groupSummary);
         context.setVariable("groupId", groupId);
         context.setVariable("weekStart", weekStart);
@@ -127,25 +162,31 @@ public class NewsletterController {
 
         NewsletterData data = buildNewsletterData(groupId, weekStart, weekEnd);
 
-        // Populate model for Thymeleaf
+        // Populate model for Thymeleaf web view
         model.addAttribute("summaries", data.summaries);
         model.addAttribute("memberMoments", data.memberMoments);
         model.addAttribute("allImageUrls", data.allImageUrls);
+        model.addAttribute("imageRows", data.imageRows);
+        model.addAttribute("colWidth", data.colWidth);
+        model.addAttribute("imageHeight", data.imageHeight);
         model.addAttribute("groupSummary", data.groupSummary);
         model.addAttribute("groupId", groupId);
         model.addAttribute("weekStart", weekStart);
 
-        // Generate PDF from HTML and email it
+        // Generate PDF and email
         try {
             Context context = new Context();
             context.setVariable("summaries", data.summaries);
             context.setVariable("memberMoments", data.memberMoments);
             context.setVariable("allImageUrls", data.allImageUrls);
+            context.setVariable("imageRows", data.imageRows);
+            context.setVariable("colWidth", data.colWidth);
+            context.setVariable("imageHeight", data.imageHeight);
             context.setVariable("groupSummary", data.groupSummary);
             context.setVariable("groupId", groupId);
             context.setVariable("weekStart", weekStart);
 
-            String htmlContent = templateEngine.process("newsletter/index", context);
+            String htmlContent = templateEngine.process("newsletter/pdf", context);
             byte[] pdfBytes = pdfService.generatePdf(htmlContent);
 
             for (GroupMember gm : groupMemberRepository.findByGroupIdAndStatus(groupId, "joined")) {
@@ -188,19 +229,25 @@ public class NewsletterController {
         }
     }
 
-    // Inner class to carry newsletter data between methods
     private static class NewsletterData {
         Map<User, String> summaries;
         Map<User, List<Moment>> memberMoments;
         List<String> allImageUrls;
+        List<List<String>> imageRows;
+        int colWidth;
+        int imageHeight;
         String groupSummary;
         List<User> members;
 
         NewsletterData(Map<User, String> summaries, Map<User, List<Moment>> memberMoments,
-                       List<String> allImageUrls, String groupSummary, List<User> members) {
+                       List<String> allImageUrls, List<List<String>> imageRows,
+                       int colWidth, int imageHeight, String groupSummary, List<User> members) {
             this.summaries = summaries;
             this.memberMoments = memberMoments;
             this.allImageUrls = allImageUrls;
+            this.imageRows = imageRows;
+            this.colWidth = colWidth;
+            this.imageHeight = imageHeight;
             this.groupSummary = groupSummary;
             this.members = members;
         }
