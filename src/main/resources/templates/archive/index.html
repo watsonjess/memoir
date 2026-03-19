@@ -251,17 +251,11 @@
 
 </div>
 
-<!--<script th:inline="javascript">-->
-<!--    const NEWSLETTER_DATA = [[${newslettersByDate}]]-->
-<!--    {-->
-<!--    }-->
-<!--    ;-->
-<!--</script>-->
 <th:block layout:fragment="scripts">
     <script>
         (() => {
 
-            const data = typeof NEWSLETTER_DATA !== "undefined" ? NEWSLETTER_DATA : {};
+            const data = {};
 
             const MONTHS = [
                 "January", "February", "March", "April", "May", "June",
@@ -296,7 +290,6 @@
                 monthLabel.textContent = `${MONTHS[month]} ${year}`;
                 grid.innerHTML = "";
 
-                // Monday-first offset (Sun getDay()=0 → offset 6, Mon → 0, etc.)
                 let startOffset = (new Date(year, month, 1).getDay() + 6) % 7;
                 const daysInMonth = new Date(year, month + 1, 0).getDate();
                 const totalCells = Math.ceil((startOffset + daysInMonth) / 7) * 7;
@@ -309,7 +302,6 @@
                     );
                 }
 
-                // Strip bottom border from last row
                 const cells = grid.querySelectorAll(".nl-day");
                 cells.forEach((cell, idx) => {
                     if (idx >= cells.length - 7) cell.style.borderBottom = "none";
