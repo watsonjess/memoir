@@ -1,16 +1,17 @@
 <!DOCTYPE html>
-<html layout:decorate="~{layout/layout}" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.w3.org/1999/xhtml">
+<html layout:decorate="~{layout/layout}" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.w3.org/1999/xhtml"
+      xmlns:sec="http://www.w3.org/1999/xhtml">
 <head>
-    <title>Home</title>
+    <title>Memoir</title>
 </head>
 <body>
 <div layout:fragment="content">
-<h1>Hello</h1>
+<h1>Welcome</h1>
+    <div sec:authorize="!isAuthenticated()">
+        <p>Please log in to view your memories</p>
+        <a th:href="@{/oauth2/authorization/auth0}" class="btn btn-memoir">Login</a>
+    </div>
 
-<p>You are logged in.</p>
-
-<p>Name: <span th:text="${#authentication.principal.attributes['nickname']}"></span></p>
-<p>Email: <span th:text="${#authentication.principal.attributes['email']}"></span></p>
 
 </div>
 </body>
