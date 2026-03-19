@@ -6,14 +6,11 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 
-/**
- * Controller for the home page.
- */
 @Controller
-public class HomeController {
+public class ProfileController {
 
-    @GetMapping("/")
-    public String home(Model model, @AuthenticationPrincipal OidcUser principal) {
-        return "index";
-    }
+@GetMapping("/profile")
+public String profile(Model model, @AuthenticationPrincipal OidcUser principal) {
+    return "profile";
+}
 }

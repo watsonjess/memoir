@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      layout:decorate="~{layout/layout}">
+<head>
+  <title>Group</title>
+</head>
+<body>
+
+<div layout:fragment="content">
+
+  <!-- Page header -->
+  <div class="mb-4">
+    <a th:href="@{/groups}" class="text-muted small text-decoration-none">
+      <i class="bi bi-arrow-left me-1"></i> Back to groups
+    </a>
+    <div class="d-flex justify-content-between align-items-start mt-2">
+      <div>
+        <h1 class="memoir-page-title" th:text="${group.name}">Group name</h1>
+        <p class="memoir-page-subtitle" th:text="${group.description}"></p>
+      </div>
+      <div class="d-flex align-items-center gap-2">
+        <span class="badge rounded-pill"
+              th:classappend="${group.type == 'weekly'} ? 'bg-success' : 'bg-warning text-dark'"
+              th:text="${group.type == 'weekly'} ? 'Weekly' : 'Event'">
+        </span>
+        <!-- Delete button (owners only) -->
+        <form th:if="${currentMembership != null and currentMembership.role == 'owner'}"
+              th:action="@{/groups/{id}/delete(id=${group.id})}" method="post"
+              onsubmit="return confirm('Are you sure you want to delete this group? This cannot be undone.')">
+          <button type="submit" class="btn btn-sm btn-outline-danger">
+            <i class="bi bi-trash"></i> Delete group
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Weekly: next send date -->
+  <div th:if="${group.type == 'weekly' and currentWeekly != null}"
+       class="memoir-card mb-4 d-flex align-items-center gap-3"
+       style="background: #f8fdf9; border-color: #c3e6cb;">
+    <i class="bi bi-calendar-check fs-4" style="color: #2d6a4f"></i>
+    <div>
+      <div class="small fw-500" style="color: #2d6a4f">Next newsletter</div>
+      <div class="small text-muted"
+           th:text="${#temporals.format(currentWeekly.sendDate, 'EEEE d MMMM yyyy, HH:mm')}">
+      </div>
+    </div>
+  </div>
+
+  <!-- Event: date range (most recent event) -->
+  <div th:if="${group.type == 'event' and events != null and not #lists.isEmpty(events)}"
+       class="memoir-card mb-4 d-flex align-items-center gap-3"
+       style="background: #fffdf5; border-color: #fce8b2;">
+    <i class="bi bi-calendar-range fs-4" style="color: #856404"></i>
+    <div th:each="event : ${events}" th:if="${eventStat.first}">
+      <div class="small fw-500" style="color: #856404" th:text="${event.name}">Event name</div>
+      <div class="small text-muted">
+        <span th:text="${#temporals.format(event.startDate, 'd MMM yyyy')}"></span>
+        <span> &rarr; </span>
+        <span th:text="${#temporals.format(event.endDate, 'd MMM yyyy')}"></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Pending invitation banner (shown to invited user) -->
+  <div th:if="${currentMembership != null and currentMembership.status == 'pending'}"
+       class="alert d-flex justify-content-between align-items-center mb-4"
+       style="background: #fff8f0; border: 1px solid #f0d9c8; border-radius: 10px;">
+    <div>
+      <i class="bi bi-envelope me-2" style="color: var(--memoir-accent)"></i>
+      <strong>You've been invited to join this group</strong>
+    </div>
+    <div class="d-flex gap-2">
+      <form th:action="@{/groups/{id}/accept(id=${group.id})}" method="post">
+        <button type="submit" class="btn btn-memoir btn-sm">
+          <i class="bi bi-check-lg me-1"></i> Accept
+        </button>
+      </form>
+      <form th:action="@{/groups/{id}/decline(id=${group.id})}" method="post">
+        <button type="submit" class="btn btn-outline-secondary btn-sm">
+          <i class="bi bi-x-lg me-1"></i> Decline
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <div class="row g-4">
+
+    <!-- Left: members list -->
+    <div class="col-md-5">
+      <div class="memoir-card">
+        <h5 class="mb-3">
+          <i class="bi bi-people me-2"></i>
+          Members
+          <span class="text-muted small ms-1"
+                th:text="'(' + ${members.size()} + ')'"></span>
+        </h5>
+
+        <!-- Joined members -->
+        <div th:each="member : ${members}"
+             class="d-flex align-items-center justify-content-between mb-3">
+          <div class="d-flex align-items-center gap-2">
+            <div class="memoir-avatar"
+                 th:text="${member.user.firstname != null
+                                        ? member.user.firstname.substring(0,1).toUpperCase()
+                                        : member.user.username.substring(0,1).toUpperCase()}">
+            </div>
+            <div>
+              <div class="small fw-500"
+                   th:text="${member.user.firstname + ' ' + (member.user.lastname ?: '')}">
+              </div>
+              <div class="text-muted" style="font-size: 0.75rem"
+                   th:text="'@' + ${member.user.username}">
+              </div>
+            </div>
+          </div>
+          <span class="badge"
+                th:classappend="${member.role == 'owner'} ? 'bg-secondary' : 'bg-light text-dark'"
+                th:text="${member.role}">
+                    </span>
+        </div>
+
+        <!-- Pending invitations sub-section (owners only) -->
+        <div th:if="${currentMembership != null
+                              and currentMembership.role == 'owner'
+                              and not #lists.isEmpty(pendingMembers)}">
+          <hr/>
+          <p class="small text-muted mb-2">Pending invitations</p>
+          <div th:each="pending : ${pendingMembers}"
+               class="d-flex align-items-center justify-content-between mb-2">
+            <div class="d-flex align-items-center gap-2">
+              <div class="memoir-avatar" style="opacity: 0.5"
+                   th:text="${pending.user.firstname != null
+                                            ? pending.user.firstname.substring(0,1).toUpperCase()
+                                            : pending.user.username.substring(0,1).toUpperCase()}">
+              </div>
+              <div class="text-muted small"
+                   th:text="'@' + ${pending.user.username}">
+              </div>
+            </div>
+            <span class="badge bg-light text-muted">Pending</span>
+          </div>
+        </div>
+
+        <!-- Empty state -->
+        <p class="text-muted small" th:if="${#lists.isEmpty(members)}">
+          No members yet
+        </p>
+
+      </div>
+    </div>
+
+    <!-- Right column -->
+    <div class="col-md-7">
+
+      <!-- Invite section (owners only) -->
+      <div class="memoir-card mb-4"
+           th:if="${currentMembership != null and currentMembership.role == 'owner'}">
+        <h5 class="mb-3">
+          <i class="bi bi-person-plus me-2"></i>Invite someone
+        </h5>
+
+        <div class="dropdown" id="memoirSearchInvite" th:data-group-id="${group.id}">
+          <div class="memoir-search-trigger" id="memoirSearchTriggerInvite">
+            <i class="bi bi-search memoir-search-bi-icon"></i>
+            <input type="text"
+                   id="memoirSearchInputInvite"
+                   class="memoir-search-inline-input"
+                   placeholder="Search…"
+                   autocomplete="off"
+                   aria-label="Search"/>
+          </div>
+          <div class="dropdown-menu memoir-search-dropdown w-100 mt-1 shadow-sm"
+               id="memoirSearchDropdownInvite"
+               aria-live="polite">
+            <div id="memoirDropBodyInvite">
+              <span class="dropdown-item-text text-muted small">Start typing to search…</span>
+            </div>
+            <div id="memoirDropFooterInvite" style="display:none;">
+              <div class="dropdown-divider"></div>
+              <a href="#" id="memoirSeeAllInvite" class="dropdown-item small text-memoir-accent">
+                <i class="bi bi-search me-1"></i><span class="memoir-see-all-text">See all results for "<span id="memoirQueryLabelInvite"></span>"</span>
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Search results -->
+        <div th:if="${searchResults != null}">
+
+          <!-- No results -->
+          <p class="text-muted small"
+             th:if="${#lists.isEmpty(searchResults)}"
+             th:text="'No users found for &quot;' + ${query} + '&quot;'">
+          </p>
+
+          <!-- Results list -->
+          <div th:each="result : ${searchResults}"
+               class="d-flex align-items-center justify-content-between mb-2 p-2"
+               style="border: 1px solid var(--memoir-border); border-radius: 8px;">
+            <div class="d-flex align-items-center gap-2">
+              <div class="memoir-avatar"
+                   th:text="${result.firstname != null
+                                            ? result.firstname.substring(0,1).toUpperCase()
+                                            : result.username.substring(0,1).toUpperCase()}">
+              </div>
+              <div>
+                <div class="small fw-500"
+                     th:text="${result.firstname + ' ' + (result.lastname ?: '')}">
+                </div>
+                <div class="text-muted" style="font-size: 0.75rem"
+                     th:text="'@' + ${result.username}">
+                </div>
+              </div>
+            </div>
+
+            <!-- Already a member -->
+            <span class="text-muted small"
+                  th:if="${members.stream().anyMatch(m -> m.user.id == result.id)}">
+                            Already a member
+                        </span>
+
+            <!-- Invite already sent -->
+            <span class="text-muted small"
+                  th:if="${not members.stream().anyMatch(m -> m.user.id == result.id)
+                                       and pendingMembers.stream().anyMatch(m -> m.user.id == result.id)}">
+                            Invite sent
+                        </span>
+
+            <!-- Invite button -->
+            <form th:unless="${members.stream().anyMatch(m -> m.user.id == result.id)
+                                          or pendingMembers.stream().anyMatch(m -> m.user.id == result.id)}"
+                  th:action="@{/groups/{id}/invite(id=${group.id})}" method="post">
+              <input type="hidden" name="userId" th:value="${result.id}"/>
+              <button type="submit" class="btn btn-sm btn-memoir">
+                <i class="bi bi-person-plus me-1"></i> Invite
+              </button>
+            </form>
+
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script th:src="@{/scripts/search-invite.js}" defer></script>
+</div>
+
+</body>
+</html>

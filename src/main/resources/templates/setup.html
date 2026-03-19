@@ -1,0 +1,68 @@
+<html layout:decorate="~{layout/layout}" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8">
+    <title>Profile</title>
+    <link rel="stylesheet" href="/main.css"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+
+<body>
+<div layout:fragment="content">
+<div th:if="${!isFirstSetup}">
+</div>
+<main class="setup-main">
+    <div class="create-profile-container">
+        <h1 th:text="${isFirstSetup} ? 'Create your profile' : 'Edit profile'"></h1>
+
+        <form class="form-container" th:action="@{/setup}" enctype="multipart/form-data" method="post">
+            <input type="hidden" name="isFirstSetup" th:value="${isFirstSetup}">
+            <div class="profile-picture-div">
+
+                <!-- Button to select profile picture -->
+                <div id="add-profile-pic-div">
+                    <label id="add-profile-pic-btn" for="profile-picture" style="cursor: pointer">
+                        <img alt="add-profile-picture"
+                             th:src="${user != null and user.profileImage != null and !#strings.isEmpty(user.profileImage) ? user.profileImage : '/images/default-picture.png'}"></label>
+                    <input hidden id="profile-picture" name="profile-picture" type="file" accept="image/*">
+
+                    <i class="fa-solid fa-plus center-overlay" style="color: dimgrey; font-size: 40px"></i>
+                </div>
+
+                <!--  Profile pic preview with button to remove -->
+                <div id="rmv-profile-pic-div" style="display: none">
+                    <img id="profile-pic-img"
+                         alt="remove-profile-picture"
+                         src=""/>
+                    <button type="button" id="rmv-profile-pic-btn" class="remove-img-btn">✕</button>
+                </div>
+            </div>
+            <div class="create-profile-form-div">
+                <label for="firstName">First Name:</label>
+                <input class="create-profile-input" type="text" id="firstName" name="firstName"
+                        th:value="${user != null ? user.firstname : ''}" required>
+            </div>
+            <div class="create-profile-form-div">
+                <label for="lastName">Last Name:</label>
+                <input class="create-profile-input" type="text" id="lastName" name="lastName"
+                       th:value="${user != null ? user.lastname : ''}" required>
+            </div>
+            <div class="create-profile-form-div">
+                <label for="username">Username:</label>
+                <input class="create-profile-input" type="text" id="username" name="username"
+                       th:value="${user != null ? user.username : ''}" required>
+            </div>
+            <div class="create-profile-form-div">
+                <label for="email">Email:</label>
+                <input class="create-profile-input" type="text" id="email" name="email" th:value="${user.email}" readonly>
+            </div>
+            <div class="create-profile-button-div">
+                <button class="create-profile-button" name="updateUserBtn" type="submit"
+                    th:text="${isFirstSetup} ? 'Continue' : 'Update'"> </button>
+            </div>
+        </form>
+        <script src="/scripts/profile-picture-preview.js"></script>
+    </div>
+</main>
+</div>
+</body>
+</html>

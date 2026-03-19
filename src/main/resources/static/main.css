@@ -1,0 +1,284 @@
+:root {
+    --memoir-cream:    #FAF8F4;
+    --memoir-ink:      #1C1C1A;
+    --memoir-muted:    #6B6860;
+    --memoir-accent:   #C1603A;
+    --memoir-border:   #E4E1DA;
+    --memoir-surface:  #FFFFFF;
+    --memoir-nav-h:    60px;
+}
+
+body {
+    font-family: 'DM Sans', sans-serif;
+    background-color: var(--memoir-cream);
+    color: var(--memoir-ink);
+    min-height: 100vh;
+}
+
+h1, h2, h3, h4, h5 {
+    font-family: 'Playfair Display', serif;
+}
+
+/* ── Navbar ── */
+.memoir-nav {
+    height: var(--memoir-nav-h);
+    background-color: var(--memoir-surface);
+    border-bottom: 1px solid var(--memoir-border);
+    overflow: visible;
+}
+
+.memoir-nav .navbar-brand {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.4rem;
+    font-weight: 600;
+    color: var(--memoir-ink);
+    letter-spacing: -0.02em;
+}
+
+.memoir-nav .navbar-brand:hover {
+    color: var(--memoir-accent);
+}
+
+.memoir-nav .nav-link {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--memoir-muted);
+    padding: 0.4rem 0.75rem;
+    border-radius: 6px;
+    transition: color 0.15s, background 0.15s;
+}
+
+.memoir-nav .nav-link:hover,
+.memoir-nav .nav-link.active {
+    color: var(--memoir-ink);
+    background-color: var(--memoir-cream);
+}
+
+.memoir-nav .nav-link i {
+    font-size: 1rem;
+    vertical-align: -1px;
+}
+
+/* ── Add moment button ── */
+.btn-memoir {
+    background-color: var(--memoir-accent);
+    color: #fff;
+    border: none;
+    font-size: 0.8rem;
+    font-weight: 500;
+    padding: 0.4rem 0.9rem;
+    border-radius: 20px;
+    transition: opacity 0.15s;
+}
+
+.btn-memoir:hover {
+    opacity: 0.88;
+    color: #fff !important;
+    background-color: var(--memoir-accent);
+}
+
+/* ── Avatar initials ── */
+.memoir-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background-color: var(--memoir-accent);
+    color: #fff;
+    font-size: 0.75rem;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+}
+
+.memoir-avatar:hover {
+    opacity: 0.85;
+}
+
+/* ── Main content ── */
+.memoir-main {
+    padding-top: 2rem;
+    padding-bottom: 4rem;
+    min-height: calc(100vh - var(--memoir-nav-h) - 56px);
+}
+
+/* ── Cards ── */
+.memoir-card {
+    background: var(--memoir-surface);
+    border: 1px solid var(--memoir-border);
+    border-radius: 12px;
+    padding: 1.5rem;
+}
+
+/* ── Page title ── */
+.memoir-page-title {
+    font-size: 1.75rem;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    margin-bottom: 0.25rem;
+}
+
+.memoir-page-subtitle {
+    font-size: 0.875rem;
+    color: var(--memoir-muted);
+    margin-bottom: 1.5rem;
+}
+
+/* ── Flash alerts ── */
+.memoir-alert {
+    border: none;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    padding: 0.65rem 1rem;
+}
+
+/* ── Footer ── */
+.memoir-footer {
+    background-color: var(--memoir-surface);
+    border-top: 1px solid var(--memoir-border);
+    padding: 1rem 0;
+    font-size: 0.8rem;
+    color: var(--memoir-muted);
+}
+
+/* ── Search box ── */
+.memoir-search-trigger {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--memoir-cream);
+    border: 1px solid var(--memoir-border);
+    border-radius: 8px;
+    padding: 6px 12px;
+    min-width: 190px;
+    cursor: text;
+    transition: border-color 0.15s;
+}
+
+.memoir-search-trigger:focus-within {
+    border-color: var(--memoir-accent);
+    background: var(--memoir-surface);
+}
+
+.memoir-search-bi-icon {
+    font-size: 0.78rem;
+    color: var(--memoir-muted);
+    flex-shrink: 0;
+}
+
+.memoir-search-inline-input {
+    border: none;
+    background: transparent;
+    outline: none;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.82rem;
+    color: var(--memoir-ink);
+    width: 100%;
+    min-width: 0;
+}
+
+.memoir-search-inline-input::placeholder {
+    color: var(--memoir-muted);
+}
+
+.memoir-search-dropdown {
+    border: 1px solid var(--memoir-border) !important;
+    border-radius: 10px !important;
+    padding: 6px 0;
+}
+
+.memoir-drop-section-label {
+    font-size: 0.68rem;
+    font-weight: 500;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: var(--memoir-muted);
+    padding: 8px 14px 2px;
+}
+
+.memoir-drop-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 7px 14px;
+    text-decoration: none;
+    color: var(--memoir-ink);
+    transition: background 0.1s;
+}
+
+.memoir-drop-row:hover {
+    background: var(--memoir-cream);
+    color: var(--memoir-ink);
+}
+
+.memoir-drop-avatar {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.72rem;
+    font-weight: 500;
+    border: 1px solid var(--memoir-border);
+    background: var(--memoir-cream);
+    color: var(--memoir-accent);
+    overflow: hidden;
+}
+
+.memoir-drop-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.memoir-drop-avatar.group { background: #E1F5EE; color: #085041; border-color: #9FE1CB; border-radius: 7px; }
+.memoir-drop-avatar.event { background: #FAECE7; color: #712B13; border-color: #F5C4B3; border-radius: 7px; }
+
+.memoir-drop-name { font-size: 0.85rem; font-weight: 500; line-height: 1.2; }
+.memoir-drop-sub  { font-size: 0.75rem; color: var(--memoir-muted); line-height: 1.2; }
+
+.text-memoir-accent { color: var(--memoir-accent) !important; }
+.text-memoir-accent:hover { color: var(--memoir-accent) !important; }
+
+#memoirSeeAll {
+    display: flex;
+    align-items: flex-start;
+    gap: 4px;
+    white-space: normal;
+    word-break: break-word;
+}
+
+/* ── Profile picture ── */
+.profile-picture-div {
+    padding: 12px 0;
+}
+
+.profile-picture-div > div {
+    position: relative;
+    width: 150px;
+    height: 150px;
+}
+
+.profile-picture-div img {
+    object-fit: cover;
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+}
+
+.create-profile-container {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.form-container {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.center-overlay {
+    position: absolute;
+    bottom: 8px;
+    left: 50%;
+    transform: translateX(-50%);
+}

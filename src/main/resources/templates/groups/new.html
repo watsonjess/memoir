@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/layout}">
+<head>
+    <title>New Group</title>
+</head>
+<body>
+
+<div layout:fragment="content">
+
+    <!-- Page header -->
+    <div class="mb-4">
+        <a th:href="@{/groups}" class="text-muted small text-decoration-none">
+            <i class="bi bi-arrow-left me-1"></i> Back to groups
+        </a>
+        <h1 class="memoir-page-title mt-2">Create a group</h1>
+        <p class="memoir-page-subtitle">Groups let you share moments with friends and family</p>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="memoir-card">
+
+                <form th:action="@{/groups}" method="post">
+
+                    <!-- Group name -->
+                    <div class="mb-3">
+                        <label for="name" class="form-label fw-500 small">Group name</label>
+                        <input type="text"
+                               class="form-control"
+                               id="name"
+                               name="name"
+                               placeholder="e.g. The Smith Family"
+                               required/>
+                    </div>
+
+                    <!-- Description -->
+                    <div class="mb-3">
+                        <label for="description" class="form-label fw-500 small">
+                            Description
+                            <span class="text-muted">(optional)</span>
+                        </label>
+                        <textarea class="form-control"
+                                  id="description"
+                                  name="description"
+                                  rows="3"
+                                  placeholder="What's this group about?"></textarea>
+                    </div>
+
+                    <!-- Group type -->
+                    <div class="mb-4">
+                        <label class="form-label fw-500 small">Group type</label>
+
+                        <div class="d-flex gap-3">
+
+                            <!-- Weekly option -->
+                            <label class="flex-grow-1" style="cursor: pointer;">
+                                <input type="radio" name="type" value="weekly"
+                                       class="d-none" checked id="typeWeekly"/>
+                                <div class="memoir-card text-center py-3 type-option"
+                                     id="weeklyCard"
+                                     style="border: 2px solid var(--memoir-accent);">
+                                    <i class="bi bi-newspaper fs-4 d-block mb-2"
+                                       style="color: var(--memoir-accent)"></i>
+                                    <span class="fw-500 small">Weekly newsletter</span>
+                                    <p class="text-muted mb-0" style="font-size: 0.75rem;">
+                                        Share a weekly digest with your group
+                                    </p>
+                                </div>
+                            </label>
+
+                            <!-- Event option -->
+                            <label class="flex-grow-1" style="cursor: pointer;">
+                                <input type="radio" name="type" value="event"
+                                       class="d-none" id="typeEvent"/>
+                                <div class="memoir-card text-center py-3 type-option"
+                                     id="eventCard">
+                                    <i class="bi bi-calendar-event fs-4 d-block mb-2"
+                                       style="color: var(--memoir-muted)"></i>
+                                    <span class="fw-500 small">Event</span>
+                                    <p class="text-muted mb-0" style="font-size: 0.75rem;">
+                                        Collect moments from a specific event
+                                    </p>
+                                </div>
+                            </label>
+
+                        </div>
+                    </div>
+
+                    <!-- Weekly send date (shown for weekly groups only) -->
+                    <div class="mb-4" id="weeklyFields">
+                        <label for="sendDate" class="form-label fw-500 small">First send date</label>
+                        <input type="datetime-local"
+                               class="form-control"
+                               id="sendDate"
+                               name="sendDate"/>
+                        <div class="form-text">
+                            Your group's digest will be sent every 7 days from this date
+                        </div>
+                    </div>
+
+                    <!-- Event dates (shown for event groups only) -->
+                    <div class="mb-4" id="eventFields" style="display: none;">
+                        <div class="mb-3">
+                            <label for="startDate" class="form-label fw-500 small">Start date</label>
+                            <input type="datetime-local"
+                                   class="form-control"
+                                   id="startDate"
+                                   name="startDate"/>
+                        </div>
+                        <div class="mb-3">
+                            <label for="endDate" class="form-label fw-500 small">End date</label>
+                            <input type="datetime-local"
+                                   class="form-control"
+                                   id="endDate"
+                                   name="endDate"/>
+                        </div>
+                    </div>
+
+                    <!-- Submit -->
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-memoir flex-grow-1">
+                            Create group
+                        </button>
+                        <a th:href="@{/groups}" class="btn btn-outline-secondary">
+                            Cancel
+                        </a>
+                    </div>
+
+                </form>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<th:block layout:fragment="scripts">
+    <script>
+        const weekly       = document.getElementById('typeWeekly');
+        const event        = document.getElementById('typeEvent');
+        const weeklyCard   = document.getElementById('weeklyCard');
+        const eventCard    = document.getElementById('eventCard');
+        const weeklyFields = document.getElementById('weeklyFields');
+        const eventFields  = document.getElementById('eventFields');
+
+        function updateCards() {
+            const isWeekly = weekly.checked;
+
+            // Show/hide date fields
+            weeklyFields.style.display = isWeekly ? 'block' : 'none';
+            eventFields.style.display  = isWeekly ? 'none'  : 'block';
+
+            // Update card borders and icon colours
+            if (isWeekly) {
+                weeklyCard.style.border = '2px solid var(--memoir-accent)';
+                weeklyCard.querySelector('i').style.color = 'var(--memoir-accent)';
+                eventCard.style.border  = '1px solid var(--memoir-border)';
+                eventCard.querySelector('i').style.color = 'var(--memoir-muted)';
+            } else {
+                eventCard.style.border  = '2px solid var(--memoir-accent)';
+                eventCard.querySelector('i').style.color = 'var(--memoir-accent)';
+                weeklyCard.style.border = '1px solid var(--memoir-border)';
+                weeklyCard.querySelector('i').style.color = 'var(--memoir-muted)';
+            }
+        }
+
+        weekly.addEventListener('change', updateCards);
+        event.addEventListener('change',  updateCards);
+    </script>
+</th:block>
+
+</body>
+</html>
