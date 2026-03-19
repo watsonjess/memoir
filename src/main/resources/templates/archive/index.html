@@ -122,6 +122,14 @@
                 transition: background 0.12s, color 0.12s;
             }
             .nl-day--empty .nl-day-num { color: var(--memoir-muted); }
+            .nl-event-dot {
+                width: 6px;
+                height: 6px;
+                border-radius: 50%;
+                background: var(--memoir-accent);
+                display: inline-block;
+                margin: 2px;
+            }
             .nl-event-pill {
                 display: block;
                 font-size: 0.68rem;
@@ -136,10 +144,7 @@
                 margin-bottom: 3px;
                 line-height: 1.5;
                 max-width: 100%;
-                text-decoration: none;
-                cursor: pointer;
             }
-            .nl-event-pill:hover { opacity: 0.85; color: #fff; }
             .nl-event-pill--light {
                 background: #FAECE7;
                 color: #712B13;
@@ -150,6 +155,107 @@
                 font-size: 0.65rem;
                 padding-left: 4px;
             }
+
+            /* Sliding panel */
+            .nl-panel-overlay {
+                display: none;
+                position: fixed;
+                inset: 0;
+                background: rgba(0,0,0,0.3);
+                z-index: 100;
+            }
+            .nl-panel-overlay.active { display: block; }
+            .nl-panel {
+                position: fixed;
+                top: 0;
+                right: -420px;
+                width: 400px;
+                max-width: 95vw;
+                height: 100vh;
+                background: #fff;
+                box-shadow: -4px 0 24px rgba(0,0,0,0.12);
+                z-index: 101;
+                transition: right 0.3s ease;
+                display: flex;
+                flex-direction: column;
+                padding: 32px 28px;
+                overflow-y: auto;
+            }
+            .nl-panel.active { right: 0; }
+            .nl-panel-close {
+                position: absolute;
+                top: 16px;
+                right: 16px;
+                background: none;
+                border: none;
+                font-size: 1.4rem;
+                cursor: pointer;
+                color: var(--memoir-muted);
+                line-height: 1;
+            }
+            .nl-panel-close:hover { color: var(--memoir-ink); }
+            .nl-panel-date {
+                font-family: 'Playfair Display', serif;
+                font-size: 1.4rem;
+                font-weight: 600;
+                margin-bottom: 4px;
+            }
+            .nl-panel-kicker {
+                font-size: 0.7rem;
+                text-transform: uppercase;
+                letter-spacing: 0.1em;
+                color: var(--memoir-muted);
+                margin-bottom: 24px;
+            }
+            .nl-panel-item {
+                border: 1px solid var(--memoir-border);
+                border-radius: 12px;
+                padding: 16px 18px;
+                margin-bottom: 12px;
+            }
+            .nl-panel-group-name {
+                font-weight: 600;
+                font-size: 0.95rem;
+                margin-bottom: 10px;
+            }
+            .nl-panel-links {
+                display: flex;
+                gap: 8px;
+            }
+            .nl-panel-link {
+                flex: 1;
+                text-align: center;
+                padding: 6px 0;
+                border-radius: 8px;
+                font-size: 0.8rem;
+                font-weight: 500;
+                text-decoration: none;
+                transition: opacity 0.15s;
+            }
+            .nl-panel-link:hover { opacity: 0.8; }
+            .nl-panel-link--html {
+                background: var(--memoir-accent);
+                color: #fff;
+            }
+            .nl-panel-link--pdf {
+                background: #f0f0f0;
+                color: var(--memoir-ink);
+            }
+            .nl-panel-empty {
+                color: var(--memoir-muted);
+                font-size: 0.9rem;
+                margin-top: 8px;
+            }
+            .nl-current-btn {
+                margin-top: 16px;
+                display: inline-block;
+                font-size: 0.8rem;
+                color: var(--memoir-accent);
+                text-decoration: none;
+                font-weight: 500;
+            }
+            .nl-current-btn:hover { text-decoration: underline; }
+
             @media (max-width: 991px) {
                 .nl-day { min-height: 64px; }
                 .nl-event-pill { display: none; }
@@ -204,31 +310,44 @@
         <div class="nl-date-grid" id="nlDateGrid"></div>
     </div>
 
+    <!-- Sliding panel overlay -->
+    <div class="nl-panel-overlay" id="nlOverlay"></div>
+
+    <!-- Sliding panel -->
+    <div class="nl-panel" id="nlPanel">
+        <button class="nl-panel-close" id="nlPanelClose">&times;</button>
+        <p class="nl-panel-kicker">Newsletters</p>
+        <div class="nl-panel-date" id="nlPanelDate"></div>
+        <div id="nlPanelContent"></div>
+    </div>
+
 </div>
 
 <th:block layout:fragment="scripts">
     <script th:inline="javascript">
         (() => {
-            // Populate data from backend
+            // Populate newsletter data from backend
             const data = {};
             /*[# th:each="nl : ${newsletters}"]*/
-            /*[# th:if="${nl.sentAt != null and nl.pdfUrl != null}"]*/
+            /*[# th:if="${nl.sentAt != null}"]*/
             (function() {
                 const key = /*[[${nl.sentAt.year}]]*/ 0
                     + '-' + /*[[${nl.sentAt.monthValue}]]*/ 0
                     + '-' + /*[[${nl.sentAt.dayOfMonth}]]*/ 0;
                 if (!data[key]) data[key] = [];
                 data[key].push({
-                    title: /*[[${nl.group.name}]]*/ '',
-                    url: /*[[${nl.pdfUrl}]]*/ ''
+                    group: /*[[${nl.group.name}]]*/ '',
+                    groupId: /*[[${nl.group.id}]]*/ 0,
+                    pdfUrl: /*[[${nl.pdfUrl}]]*/ '',
+                    sentAt: /*[[${nl.sentAt.year + '-' + nl.sentAt.monthValue + '-' + nl.sentAt.dayOfMonth}]]*/ ''
                 });
             })();
             /*[/]*/
             /*[/]*/
 
             const MONTHS = [
-                "January", "February", "March", "April", "May", "June",
-                "July", "August", "September", "October", "November", "December"
+                "January","February","March","April","May","June",
+                "July","August","September","October","November","December"
             ];
 
             const today = new Date();
@@ -238,6 +357,84 @@
 
             const grid = document.getElementById("nlDateGrid");
             const monthLabel = document.getElementById("nlMonthLabel");
+            const panel = document.getElementById("nlPanel");
+            const overlay = document.getElementById("nlOverlay");
+            const panelClose = document.getElementById("nlPanelClose");
+            const panelDate = document.getElementById("nlPanelDate");
+            const panelContent = document.getElementById("nlPanelContent");
+
+            panelClose.addEventListener("click", closePanel);
+            overlay.addEventListener("click", closePanel);
+
+            function closePanel() {
+                panel.classList.remove("active");
+                overlay.classList.remove("active");
+                selectedDay = null;
+                render();
+            }
+
+            function openPanel(dayNum) {
+                const isToday = dayNum === today.getDate()
+                    && month === today.getMonth()
+                    && year === today.getFullYear();
+
+                const monthName = MONTHS[month];
+                panelDate.textContent = `${dayNum} ${monthName} ${year}`;
+
+                const key = `${year}-${month + 1}-${dayNum}`;
+                const events = data[key] ?? [];
+
+                panelContent.innerHTML = "";
+
+                if (isToday) {
+                    const link = document.createElement("a");
+                    link.href = "/newsletters/current";
+                    link.className = "nl-current-btn";
+                    link.textContent = "→ View current newsletters";
+                    panelContent.appendChild(link);
+                }
+
+                if (events.length === 0 && !isToday) {
+                    const empty = document.createElement("p");
+                    empty.className = "nl-panel-empty";
+                    empty.textContent = "No newsletters released on this day.";
+                    panelContent.appendChild(empty);
+                } else {
+                    events.forEach(ev => {
+                        const item = document.createElement("div");
+                        item.className = "nl-panel-item";
+
+                        const name = document.createElement("div");
+                        name.className = "nl-panel-group-name";
+                        name.textContent = ev.group;
+                        item.appendChild(name);
+
+                        const links = document.createElement("div");
+                        links.className = "nl-panel-links";
+
+                        const htmlLink = document.createElement("a");
+                        htmlLink.href = `/newsletter/group/${ev.groupId}`;
+                        htmlLink.className = "nl-panel-link nl-panel-link--html";
+                        htmlLink.textContent = "View newsletter";
+                        links.appendChild(htmlLink);
+
+                        if (ev.pdfUrl) {
+                            const pdfLink = document.createElement("a");
+                            pdfLink.href = ev.pdfUrl;
+                            pdfLink.target = "_blank";
+                            pdfLink.className = "nl-panel-link nl-panel-link--pdf";
+                            pdfLink.textContent = "Download PDF";
+                            links.appendChild(pdfLink);
+                        }
+
+                        item.appendChild(links);
+                        panelContent.appendChild(item);
+                    });
+                }
+
+                panel.classList.add("active");
+                overlay.classList.add("active");
+            }
 
             document.getElementById("nlPrevMonth").addEventListener("click", () => navigate(-1));
             document.getElementById("nlNextMonth").addEventListener("click", () => navigate(+1));
@@ -300,7 +497,7 @@
                     "nl-day nl-day--clickable",
                     isToday ? "nl-day--today" : "",
                     isSelected ? "nl-day--selected" : "",
-                    events.length ? "nl-day--has-events" : "",
+                    events.length || isToday ? "nl-day--has-events" : "",
                 ].filter(Boolean).join(" ");
 
                 const num = document.createElement("span");
@@ -310,11 +507,9 @@
 
 
                 events.slice(0, 2).forEach((ev, idx) => {
-                    const pill = document.createElement("a");
+                    const pill = document.createElement("span");
                     pill.className = `nl-event-pill${idx === 1 ? " nl-event-pill--light" : ""}`;
-                    pill.textContent = ev.title;
-                    pill.href = ev.url;
-                    pill.target = "_blank";
+                    pill.textContent = ev.group;
                     cell.appendChild(pill);
                 });
 
@@ -328,6 +523,7 @@
                 cell.addEventListener("click", () => {
                     selectedDay = {year, month, day: dayNum};
                     render();
+                    openPanel(dayNum);
                 });
 
                 return cell;

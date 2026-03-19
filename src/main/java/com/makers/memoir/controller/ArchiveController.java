@@ -10,15 +10,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Controller
-@RequestMapping("/archive")
 public class ArchiveController {
 
     @Autowired
@@ -38,21 +38,56 @@ public class ArchiveController {
         return principal.getName();
     }
 
-    @GetMapping
-    public String archive(Model model, Principal principal) {
+    private List<Long> getGroupIds(Principal principal) {
         User currentUser = userRepository.findByEmail(getUsernameFromPrincipal(principal));
-
-        List<Long> groupIds = groupMemberRepository
+        return groupMemberRepository
                 .findByUserIdAndStatus(currentUser.getId(), "joined")
                 .stream()
                 .map(gm -> gm.getGroup().getId())
                 .collect(Collectors.toList());
+    }
 
+    @GetMapping("/archive")
+    public String archive(Model model, Principal principal) {
+        List<Long> groupIds = getGroupIds(principal);
         List<Weekly> newsletters = groupIds.isEmpty()
                 ? List.of()
                 : weeklyRepository.findByGroupIdInAndStatus(groupIds, "sent");
-
         model.addAttribute("newsletters", newsletters);
         return "archive/index";
+    }
+
+    @GetMapping("/archive/{date}")
+    public String archiveDay(@PathVariable String date, Model model, Principal principal) {
+        List<Long> groupIds = getGroupIds(principal);
+        LocalDate localDate = LocalDate.parse(date);
+        LocalDateTime dayStart = localDate.atStartOfDay();
+        LocalDateTime dayEnd = localDate.atTime(23, 59, 59);
+
+        List<Weekly> newsletters = groupIds.isEmpty()
+                ? List.of()
+                : weeklyRepository.findByGroupIdsAndSentDate(groupIds, dayStart, dayEnd);
+
+        model.addAttribute("newsletters", newsletters);
+        model.addAttribute("date", localDate);
+        return "archive/day";
+    }
+
+    @GetMapping("/newsletters/current")
+    public String currentNewsletters(Model model, Principal principal) {
+        List<Long> groupIds = getGroupIds(principal);
+
+        // Get the most recent sent newsletter per group
+        List<Weekly> newsletters = groupIds.isEmpty()
+                ? List.of()
+                : groupIds.stream()
+                .map(id -> weeklyRepository
+                        .findFirstByGroupIdAndStatusOrderByWeekStartDesc(id, "sent")
+                        .orElse(null))
+                .filter(w -> w != null)
+                .collect(Collectors.toList());
+
+        model.addAttribute("newsletters", newsletters);
+        return "newsletters/current";
     }
 }

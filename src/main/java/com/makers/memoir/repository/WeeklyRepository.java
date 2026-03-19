@@ -25,4 +25,5 @@ public interface WeeklyRepository extends JpaRepository<Weekly, Long> {
             @Param("dayStart") LocalDateTime dayStart,
             @Param("dayEnd") LocalDateTime dayEnd
     );
+
 }
