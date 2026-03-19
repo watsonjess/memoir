@@ -16,7 +16,6 @@
                 flex-wrap: wrap;
                 gap: 1rem;
             }
-
             .nl-kicker {
                 font-size: 0.7rem;
                 font-weight: 500;
@@ -25,13 +24,11 @@
                 color: var(--memoir-accent);
                 margin-bottom: 0.35rem;
             }
-
             .nl-month-nav {
                 display: flex;
                 align-items: center;
                 gap: 0.5rem;
             }
-
             .nl-month-btn {
                 width: 34px;
                 height: 34px;
@@ -48,13 +45,11 @@
                 padding: 0;
                 line-height: 1;
             }
-
             .nl-month-btn:hover {
                 border-color: var(--memoir-accent);
                 color: var(--memoir-accent);
                 background: #FAECE7;
             }
-
             .nl-month-label {
                 font-family: 'Playfair Display', serif;
                 font-size: 1.1rem;
@@ -63,21 +58,18 @@
                 text-align: center;
                 letter-spacing: -0.01em;
             }
-
             .nl-calendar-wrap {
                 background: var(--memoir-surface);
                 border: 1px solid var(--memoir-border);
                 border-radius: 16px;
                 overflow: hidden;
             }
-
             .nl-dow-row {
                 display: grid;
                 grid-template-columns: repeat(7, 1fr);
                 border-bottom: 1px solid var(--memoir-border);
                 background: var(--memoir-cream);
             }
-
             .nl-dow-cell {
                 padding: 0.7rem 0;
                 text-align: center;
@@ -87,12 +79,10 @@
                 text-transform: uppercase;
                 color: var(--memoir-muted);
             }
-
             .nl-date-grid {
                 display: grid;
                 grid-template-columns: repeat(7, 1fr);
             }
-
             .nl-day {
                 min-height: 100px;
                 border-right: 1px solid var(--memoir-border);
@@ -102,38 +92,22 @@
                 cursor: default;
                 transition: background 0.12s;
             }
-
-            .nl-day:nth-child(7n) {
-                border-right: none;
-            }
-
+            .nl-day:nth-child(7n) { border-right: none; }
             .nl-day--empty {
                 background: var(--memoir-cream);
                 opacity: 0.45;
             }
-
-            .nl-day--clickable {
-                cursor: pointer;
-            }
-
-            .nl-day--clickable:hover {
-                background: #FBF3F0;
-            }
-
+            .nl-day--clickable { cursor: pointer; }
+            .nl-day--clickable:hover { background: #FBF3F0; }
             .nl-day--today .nl-day-num {
                 background: var(--memoir-accent);
                 color: #fff;
             }
-
-            .nl-day--selected {
-                background: #FAECE7;
-            }
-
+            .nl-day--selected { background: #FAECE7; }
             .nl-day--selected .nl-day-num {
                 background: var(--memoir-accent);
                 color: #fff;
             }
-
             .nl-day-num {
                 display: inline-flex;
                 align-items: center;
@@ -147,11 +121,7 @@
                 margin-bottom: 0.35rem;
                 transition: background 0.12s, color 0.12s;
             }
-
-            .nl-day--empty .nl-day-num {
-                color: var(--memoir-muted);
-            }
-
+            .nl-day--empty .nl-day-num { color: var(--memoir-muted); }
             .nl-event-pill {
                 display: block;
                 font-size: 0.68rem;
@@ -166,29 +136,23 @@
                 margin-bottom: 3px;
                 line-height: 1.5;
                 max-width: 100%;
+                text-decoration: none;
+                cursor: pointer;
             }
-
+            .nl-event-pill:hover { opacity: 0.85; color: #fff; }
             .nl-event-pill--light {
                 background: #FAECE7;
                 color: #712B13;
             }
-
             .nl-event-pill--more {
                 background: transparent;
                 color: var(--memoir-muted);
                 font-size: 0.65rem;
                 padding-left: 4px;
             }
-
             @media (max-width: 991px) {
-                .nl-day {
-                    min-height: 64px;
-                }
-
-                .nl-event-pill {
-                    display: none;
-                }
-
+                .nl-day { min-height: 64px; }
+                .nl-event-pill { display: none; }
                 .nl-day--has-events::after {
                     content: '';
                     display: block;
@@ -199,18 +163,9 @@
                     margin: 4px auto 0;
                 }
             }
-
             @media (max-width: 575px) {
-                .nl-day {
-                    min-height: 48px;
-                    padding: 0.35rem;
-                }
-
-                .nl-day-num {
-                    width: 24px;
-                    height: 24px;
-                    font-size: 0.75rem;
-                }
+                .nl-day { min-height: 48px; padding: 0.35rem; }
+                .nl-day-num { width: 24px; height: 24px; font-size: 0.75rem; }
             }
         </style>
     </th:block>
@@ -252,10 +207,24 @@
 </div>
 
 <th:block layout:fragment="scripts">
-    <script>
+    <script th:inline="javascript">
         (() => {
-
+            // Populate data from backend
             const data = {};
+            /*[# th:each="nl : ${newsletters}"]*/
+            /*[# th:if="${nl.sentAt != null and nl.pdfUrl != null}"]*/
+            (function() {
+                const key = /*[[${nl.sentAt.year}]]*/ 0
+                    + '-' + /*[[${nl.sentAt.monthValue}]]*/ 0
+                    + '-' + /*[[${nl.sentAt.dayOfMonth}]]*/ 0;
+                if (!data[key]) data[key] = [];
+                data[key].push({
+                    title: /*[[${nl.group.name}]]*/ '',
+                    url: /*[[${nl.pdfUrl}]]*/ ''
+                });
+            })();
+            /*[/]*/
+            /*[/]*/
 
             const MONTHS = [
                 "January", "February", "March", "April", "May", "June",
@@ -275,14 +244,8 @@
 
             function navigate(dir) {
                 month += dir;
-                if (month > 11) {
-                    month = 0;
-                    year++;
-                }
-                if (month < 0) {
-                    month = 11;
-                    year--;
-                }
+                if (month > 11) { month = 0; year++; }
+                if (month < 0) { month = 11; year--; }
                 render();
             }
 
@@ -311,13 +274,11 @@
             function buildEmptyCell(dayNum, daysInMonth) {
                 const cell = document.createElement("div");
                 cell.className = "nl-day nl-day--empty";
-
                 const num = document.createElement("span");
                 num.className = "nl-day-num";
                 num.textContent = dayNum < 1
                     ? new Date(year, month, 0).getDate() + dayNum
                     : dayNum - daysInMonth;
-
                 cell.appendChild(num);
                 return cell;
             }
@@ -347,10 +308,13 @@
                 num.textContent = dayNum;
                 cell.appendChild(num);
 
+
                 events.slice(0, 2).forEach((ev, idx) => {
-                    const pill = document.createElement("span");
+                    const pill = document.createElement("a");
                     pill.className = `nl-event-pill${idx === 1 ? " nl-event-pill--light" : ""}`;
                     pill.textContent = ev.title;
+                    pill.href = ev.url;
+                    pill.target = "_blank";
                     cell.appendChild(pill);
                 });
 
