@@ -43,6 +43,9 @@ public class Weekly {
     @ToString.Exclude
     private List<WeeklyMoment> weeklyMoments = new ArrayList<>();
 
+    @Column(name = "pdf_url", length = 255)
+    private String pdfUrl;
+
     public Weekly() {}
 
     public Weekly(Group group, LocalDateTime weekStart, LocalDateTime sendDate) {

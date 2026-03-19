@@ -1,16 +1,15 @@
 package com.makers.memoir.controller;
 
+import com.cloudinary.Cloudinary;
 import com.makers.memoir.model.GroupMember;
 import com.makers.memoir.model.Moment;
 import com.makers.memoir.model.User;
-import com.makers.memoir.repository.GroupMemberRepository;
-import com.makers.memoir.repository.GroupRepository;
-import com.makers.memoir.repository.MomentRepository;
-import com.makers.memoir.repository.UserRepository;
+import com.makers.memoir.repository.*;
 import com.makers.memoir.service.EmailService;
 import com.makers.memoir.service.NewsletterService;
 import com.makers.memoir.service.PdfService;
 import jakarta.mail.MessagingException;
+import org.apache.commons.lang3.ObjectUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -22,6 +21,10 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
+import com.makers.memoir.model.Weekly;
+import com.makers.memoir.model.Group;
+import com.makers.memoir.repository.WeeklyRepository;
+import java.util.Optional;
 
 import java.security.Principal;
 import java.time.DayOfWeek;
@@ -57,6 +60,12 @@ public class NewsletterController {
 
     @Autowired
     GroupMemberRepository groupMemberRepository;
+
+    @Autowired
+    Cloudinary cloudinary;
+
+    @Autowired
+    WeeklyRepository weeklyRepository;
 
     private String getUsernameFromPrincipal(Principal principal) {
         if (principal instanceof OAuth2AuthenticationToken) {
@@ -191,6 +200,29 @@ public class NewsletterController {
             String htmlContent = templateEngine.process("newsletter/pdf", context);
             byte[] pdfBytes = pdfService.generatePdf(htmlContent);
 
+            // Upload PDF to Cloudinary
+            Map pdfUploadResult = cloudinary.uploader().upload(
+                    pdfBytes,
+                    ObjectUtils.asMap(
+                            "resource_type", "raw",
+                            "public_id", "newsletters/group_" + groupId + "_" + weekStart.toLocalDate(),
+                            "overwrite", true
+                    )
+            );
+            String pdfUrl = (String) pdfUploadResult.get("secure_url");
+
+            // Create or update Weekly record
+            Group group = groupRepository.findById(groupId).orElseThrow();
+            Optional<Weekly> existingWeekly = weeklyRepository
+                    .findByGroupAndWeekStart(group, weekStart);
+
+            Weekly weekly = existingWeekly.orElse(new Weekly(group, weekStart, weekStart.plusDays(6)));
+            weekly.setStatus("sent");
+            weekly.setSentAt(LocalDateTime.now());
+            weekly.setPdfUrl(pdfUrl);
+            weeklyRepository.save(weekly);
+
+            // Email to all group members
             for (GroupMember gm : groupMemberRepository.findByGroupIdAndStatus(groupId, "joined")) {
                 try {
                     emailService.sendNewsletterEmail(
