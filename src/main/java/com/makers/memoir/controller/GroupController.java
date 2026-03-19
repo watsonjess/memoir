@@ -148,6 +148,28 @@ public class GroupController {
         return new ModelAndView("redirect:/groups/" + id);
     }
 
+    @GetMapping("/{id}/invite")
+    public ModelAndView inviteGet(@PathVariable Long id,
+                                  @RequestParam Long userId) {
+        Group group = groupRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Group not found"));
+        User invitee = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        boolean alreadyMember = groupMemberRepository
+                .findByGroupIdAndUserId(id, userId).isPresent();
+        if (!alreadyMember) {
+            GroupMember membership = new GroupMember();
+            membership.setGroup(group);
+            membership.setUser(invitee);
+            membership.setRole("member");
+            membership.setStatus("pending");
+            groupMemberRepository.save(membership);
+        }
+
+        return new ModelAndView("redirect:/groups/" + id);
+    }
+
     // Accept an invitation
     @PostMapping("/{id}/accept")
     public ModelAndView acceptInvite(@PathVariable Long id,

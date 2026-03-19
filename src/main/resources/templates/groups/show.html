@@ -164,18 +164,30 @@
           <i class="bi bi-person-plus me-2"></i>Invite someone
         </h5>
 
-        <!-- Search form -->
-        <form th:action="@{/groups/{id}(id=${group.id})}" method="get"
-              class="d-flex gap-2 mb-3">
-          <input type="text"
-                 class="form-control"
-                 name="query"
-                 th:value="${query}"
-                 placeholder="Search by username"/>
-          <button type="submit" class="btn btn-memoir">
-            <i class="bi bi-search"></i>
-          </button>
-        </form>
+        <div class="dropdown" id="memoirSearchInvite" th:data-group-id="${group.id}">
+          <div class="memoir-search-trigger" id="memoirSearchTriggerInvite">
+            <i class="bi bi-search memoir-search-bi-icon"></i>
+            <input type="text"
+                   id="memoirSearchInputInvite"
+                   class="memoir-search-inline-input"
+                   placeholder="Search…"
+                   autocomplete="off"
+                   aria-label="Search"/>
+          </div>
+          <div class="dropdown-menu memoir-search-dropdown w-100 mt-1 shadow-sm"
+               id="memoirSearchDropdownInvite"
+               aria-live="polite">
+            <div id="memoirDropBodyInvite">
+              <span class="dropdown-item-text text-muted small">Start typing to search…</span>
+            </div>
+            <div id="memoirDropFooterInvite" style="display:none;">
+              <div class="dropdown-divider"></div>
+              <a href="#" id="memoirSeeAllInvite" class="dropdown-item small text-memoir-accent">
+                <i class="bi bi-search me-1"></i><span class="memoir-see-all-text">See all results for "<span id="memoirQueryLabelInvite"></span>"</span>
+              </a>
+            </div>
+          </div>
+        </div>
 
         <!-- Search results -->
         <div th:if="${searchResults != null}">
@@ -234,7 +246,7 @@
       </div>
     </div>
   </div>
-
+  <script th:src="@{/scripts/search-invite.js}" defer></script>
 </div>
 
 </body>
