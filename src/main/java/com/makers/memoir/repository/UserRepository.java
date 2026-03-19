@@ -20,7 +20,15 @@ public interface UserRepository extends CrudRepository<User, Long> {
             WHERE LOWER(u.username) LIKE LOWER(CONCAT('%', :query, '%'))
                OR LOWER(u.firstname) LIKE LOWER(CONCAT('%', :query, '%'))
                OR LOWER(u.lastname) LIKE LOWER(CONCAT('%', :query, '%'))
-            ORDER BY u.username ASC
+            ORDER BY
+                        CASE
+                            WHEN LOWER(u.username)  LIKE LOWER(CONCAT(:query, '%')) THEN 1
+                            WHEN LOWER(u.firstname) LIKE LOWER(CONCAT(:query, '%')) THEN 2
+                            WHEN LOWER(u.username)  LIKE LOWER(CONCAT('%', :query, '%')) THEN 3
+                            WHEN LOWER(u.firstname) LIKE LOWER(CONCAT('%', :query, '%')) THEN 4
+                            ELSE 5
+                        END ASC,
+                        u.firstname ASC, u.lastname ASC
             """)
     List<User> searchUsers(@Param("query") String query);
 }
