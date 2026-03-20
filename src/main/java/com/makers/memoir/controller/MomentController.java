@@ -2,14 +2,8 @@ package com.makers.memoir.controller;
 
 import com.cloudinary.Cloudinary;
 import com.cloudinary.utils.ObjectUtils;
-import com.makers.memoir.model.Group;
-import com.makers.memoir.model.GroupMember;
-import com.makers.memoir.model.Moment;
-import com.makers.memoir.model.User;
-import com.makers.memoir.repository.GroupMemberRepository;
-import com.makers.memoir.repository.GroupRepository;
-import com.makers.memoir.repository.MomentRepository;
-import com.makers.memoir.repository.UserRepository;
+import com.makers.memoir.model.*;
+import com.makers.memoir.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.stereotype.Controller;
@@ -40,6 +34,12 @@ public class MomentController {
 	GroupRepository groupRepository;
 
 	@Autowired
+	EventRepository eventRepository;
+
+	@Autowired
+	EventMomentRepository eventMomentRepository;
+
+	@Autowired
 	Cloudinary cloudinary;
 
 	private String getUsernameFromPrincipal(Principal principal) {
@@ -51,7 +51,8 @@ public class MomentController {
 	}
 
 	@GetMapping("/new")
-	public String newMomentForm(Model model, Principal principal) {
+	public String newMomentForm(Model model, Principal principal,@RequestParam(required = false) Long groupId,
+								@RequestParam(required = false) Long eventId) {
 		User currentUser = userRepository.findByEmail(getUsernameFromPrincipal(principal));
 
 		List<GroupMember> memberships = groupMemberRepository
@@ -61,6 +62,9 @@ public class MomentController {
 				.map(GroupMember::getGroup)
 				.collect(Collectors.toList()));
 
+		model.addAttribute("eventId", eventId);
+		model.addAttribute("preselectedGroupId", groupId);
+
 		return "moments/new";
 	}
 
@@ -69,6 +73,7 @@ public class MomentController {
 									 @RequestParam("content") String content,
 									 @RequestParam("location") String location,
 									 @RequestParam("groupId") Long groupId,
+									 @RequestParam(value = "eventId", required = false) Long eventId,
 									 Principal principal) throws Exception {
 		User currentUser = userRepository.findByEmail(getUsernameFromPrincipal(principal));
 
@@ -87,6 +92,15 @@ public class MomentController {
 		moment.setLocation(location.isEmpty() ? null : location);
 		moment.getGroups().add(group);
 		momentRepository.save(moment);
+
+		if (eventId != null) {
+			Event event = eventRepository.findById(eventId).orElseThrow();
+			EventMoment em = new EventMoment();
+			em.setEvent(event);
+			em.setMoment(moment);
+			eventMomentRepository.save(em);
+			return new RedirectView("/groups/" + event.getGroup().getId() + "/events/" + eventId);
+		}
 
 		return new RedirectView("/moments/" + moment.getId());
 	}

@@ -35,6 +35,9 @@ public class Moment {
     @Column(columnDefinition = "text")
     private String location;
 
+    private Double latitude;
+    private Double longitude;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 

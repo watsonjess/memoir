@@ -97,7 +97,10 @@ public class GroupController {
                                LocalDateTime startDate,
                                @RequestParam(required = false)
                                @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
-                               LocalDateTime endDate) {
+                               LocalDateTime endDate,
+                               @RequestParam(required = false) String location,
+                               @RequestParam(required = false) Double latitude,
+                               @RequestParam(required = false) Double longitude) {
 
         User user = getCurrentUser(principal);
         group.setCreatedBy(user);
@@ -123,7 +126,17 @@ public class GroupController {
             event.setStartDate(startDate);
             event.setEndDate(endDate);
             event.setCreatedBy(user);
+            event.setLocation(location);
+            event.setLatitude(latitude);
+            event.setLongitude(longitude);
             eventRepository.save(event);
+        }
+
+        if (group.getType().equals("event") && latitude == null) {
+            ModelAndView modelAndView = new ModelAndView("groups/new");
+            modelAndView.addObject("group", group);
+            modelAndView.addObject("errorMessage", "A location is required for event groups.");
+            return modelAndView;
         }
 
         return new ModelAndView("redirect:/groups/" + group.getId());
