@@ -19,6 +19,8 @@ public interface WeeklyRepository extends JpaRepository<Weekly, Long> {
     Optional<Weekly> findByGroupAndWeekStart(Group group, LocalDateTime weekStart);
     List<Weekly> findByGroupIdInAndStatus(List<Long> groupIds, String status);
 
+    List<Weekly> findByStatusAndSendDateBefore(String status, LocalDateTime dateTime);
+
     @Query("SELECT w FROM Weekly w WHERE w.group.id IN :groupIds AND w.sentAt >= :dayStart AND w.sentAt < :dayEnd")
     List<Weekly> findByGroupIdsAndSentDate(
             @Param("groupIds") List<Long> groupIds,
