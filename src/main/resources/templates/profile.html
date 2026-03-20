@@ -6,6 +6,7 @@
 <body>
 <div layout:fragment="content">
 
+  <!-- Own profile header -->
   <div th:if="${profileUser.username == loggedInUser.username}" class="d-flex justify-content-center align-items-center mb-4">
     <div class="text-center">
       <h1 class="memoir-page-title"
@@ -13,16 +14,23 @@
     </div>
   </div>
 
+  <!-- Other user's profile header -->
+  <div th:unless="${profileUser.username == loggedInUser.username}" class="d-flex justify-content-center align-items-center mb-4">
+    <div class="text-center">
+      <h1 class="memoir-page-title"
+          th:text="${profileUser.firstname + '\'s profile'}">Profile</h1>
+    </div>
+  </div>
 
   <div class="row g-3 mt-1 justify-content-center">
+
+    <!-- Profile card -->
     <div class="col-md-6 col-lg-4">
       <div class="memoir-card h-100 d-flex flex-column">
-
 
         <div class="d-flex justify-content-center align-items-start mb-3">
           <h5 class="mb-0"><span th:text="${profileUser.firstname + ' ' + profileUser.lastname}">}</h5>
         </div>
-
 
         <div class="d-flex justify-content-center mb-3">
           <img th:src="${profileUser.profileImage != null and !#strings.isEmpty(profileUser.profileImage) ? profileUser.profileImage : '/images/default-picture.png'}"
@@ -30,7 +38,6 @@
                class="rounded-circle"
                style="width: 80px; height: 80px; object-fit: cover; border: 2px solid #f0d9c8;">
         </div>
-
 
         <p class="small mb-2 text-center" style="color: var(--memoir-muted)">
           <i class="bi bi-at me-2"></i>
@@ -41,12 +48,199 @@
           <span th:text="${profileUser.email}">Email</span>
         </p>
 
+        <!-- Actions -->
+        <div class="mt-auto d-flex gap-2 justify-content-center">
+          <!-- Own profile: edit button -->
+          <a th:if="${profileUser.username == loggedInUser.username}"
+             th:href="@{/profile/edit}"
+             class="btn btn-sm btn-outline-secondary">
+            <i class="bi bi-pencil me-1"></i> Edit profile
+          </a>
+          <!-- Other profile: add friend button -->
+          <form th:unless="${profileUser.username == loggedInUser.username}"
+                th:action="@{/friends/request/{username}(username=${profileUser.username})}"
+                method="post">
+            <button type="submit" class="btn btn-memoir btn-sm">
+              <i class="bi bi-person-plus me-1"></i> Add friend
+            </button>
+          </form>
+        </div>
 
       </div>
     </div>
+
+    <!-- Friends section -->
+    <div class="col-md-8 col-lg-5">
+      <div class="memoir-card">
+
+        <!-- Tab buttons -->
+        <ul class="nav nav-tabs mb-3" style="border-bottom: 1px solid #f0d9c8;">
+          <li class="nav-item">
+            <button class="nav-link active" onclick="showTab('friends', event)" style="color: var(--memoir-muted);">
+              <i class="bi bi-people me-1"></i> Friends
+              <span class="badge rounded-pill ms-1"
+                    style="background: #f0d9c8; color: var(--memoir-accent);"
+                    th:text="${#lists.size(friends)}">0</span>
+            </button>
+          </li>
+          <li class="nav-item" th:if="${profileUser.username == loggedInUser.username}">
+            <button class="nav-link" onclick="showTab('requests', event)" style="color: var(--memoir-muted);">
+              <i class="bi bi-person-check me-1"></i> Requests
+              <span class="badge rounded-pill ms-1"
+                    style="background: #f0d9c8; color: var(--memoir-accent);"
+                    th:text="${#lists.size(incomingRequests)}">0</span>
+            </button>
+          </li>
+          <li class="nav-item" th:if="${profileUser.username == loggedInUser.username}">
+            <button class="nav-link" onclick="showTab('outgoing', event)" style="color: var(--memoir-muted);">
+              <i class="bi bi-hourglass me-1"></i> Outgoing
+              <span class="badge rounded-pill ms-1"
+                    style="background: #f0d9c8; color: var(--memoir-accent);"
+                    th:text="${#lists.size(outgoingRequests)}">0</span>
+            </button>
+          </li>
+          <li class="nav-item" th:if="${profileUser.username == loggedInUser.username}">
+            <button class="nav-link" onclick="showTab('blocked', event)" style="color: var(--memoir-muted);">
+              <i class="bi bi-slash-circle me-1"></i> Blocked
+              <span class="badge rounded-pill ms-1"
+                    style="background: #f0d9c8; color: var(--memoir-accent);"
+                    th:text="${#lists.size(blockedFriendships)}">0</span>
+            </button>
+          </li>
+        </ul>
+
+        <!-- Friends tab -->
+        <div id="tab-friends" class="tab-pane">
+          <div th:if="${#lists.isEmpty(friends)}" class="text-center py-4">
+            <i class="bi bi-people fs-2 d-block mb-2" style="color: var(--memoir-muted)"></i>
+            <p class="small mb-0" style="color: var(--memoir-muted)"
+               th:text="${profileUser.username == loggedInUser.username} ? 'You have no friends yet' : profileUser.firstname + ' has no friends yet'">No friends yet</p>
+          </div>
+          <div class="row g-2" th:unless="${#lists.isEmpty(friends)}">
+            <div class="col-6 col-md-4" th:each="friend : ${friends}">
+              <div class="d-flex align-items-center gap-2 p-2 rounded" style="border: 1px solid #f0d9c8;">
+                <img th:src="${friend.profileImage != null and !#strings.isEmpty(friend.profileImage) ? friend.profileImage : '/images/default-picture.png'}"
+                     class="rounded-circle"
+                     style="width: 36px; height: 36px; object-fit: cover;"
+                     alt="Profile picture">
+                <div class="flex-grow-1 overflow-hidden">
+                  <a th:href="@{/profile/{username}(username=${friend.username})}"
+                     class="small fw-semibold d-block text-truncate"
+                     style="color: var(--memoir-accent); text-decoration: none;"
+                     th:text="${friend.username}">Username</a>
+                </div>
+                <form th:if="${profileUser.username == loggedInUser.username}"
+                      th:action="@{/friends/unfriend/{username}(username=${friend.username})}"
+                      method="post">
+                  <button type="submit" class="btn btn-sm" style="color: var(--memoir-muted); padding: 0 4px;" title="Unfriend">
+                    <i class="bi bi-x"></i>
+                  </button>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Incoming requests tab (own profile only) -->
+        <div id="tab-requests" class="tab-pane" style="display: none;" th:if="${profileUser.username == loggedInUser.username}">
+          <div th:if="${#lists.isEmpty(incomingRequests)}" class="text-center py-4">
+            <i class="bi bi-inbox fs-2 d-block mb-2" style="color: var(--memoir-muted)"></i>
+            <p class="small mb-0" style="color: var(--memoir-muted)">No incoming requests</p>
+          </div>
+          <div class="d-flex flex-column gap-2" th:unless="${#lists.isEmpty(incomingRequests)}">
+            <div th:each="request : ${incomingRequests}"
+                 class="d-flex align-items-center justify-content-between p-2 rounded"
+                 style="border: 1px solid #f0d9c8;">
+              <div class="d-flex align-items-center gap-2">
+                <img th:src="${request.requester.profileImage != null and !#strings.isEmpty(request.requester.profileImage) ? request.requester.profileImage : '/images/default-picture.png'}"
+                     class="rounded-circle"
+                     style="width: 36px; height: 36px; object-fit: cover;"
+                     alt="Profile picture">
+                <a th:href="@{/profile/{username}(username=${request.requester.username})}"
+                   class="small fw-semibold"
+                   style="color: var(--memoir-accent); text-decoration: none;"
+                   th:text="${request.requester.username}">Username</a>
+              </div>
+              <div class="d-flex gap-2">
+                <form th:action="@{/friends/accept/{username}(username=${request.requester.username})}" method="post">
+                  <button type="submit" class="btn btn-memoir btn-sm">Accept</button>
+                </form>
+                <form th:action="@{/friends/decline/{username}(username=${request.requester.username})}" method="post">
+                  <button type="submit" class="btn btn-sm btn-outline-secondary">Decline</button>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Outgoing requests tab (own profile only) -->
+        <div id="tab-outgoing" class="tab-pane" style="display: none;" th:if="${profileUser.username == loggedInUser.username}">
+          <div th:if="${#lists.isEmpty(outgoingRequests)}" class="text-center py-4">
+            <i class="bi bi-hourglass fs-2 d-block mb-2" style="color: var(--memoir-muted)"></i>
+            <p class="small mb-0" style="color: var(--memoir-muted)">No outgoing requests</p>
+          </div>
+          <div class="d-flex flex-column gap-2" th:unless="${#lists.isEmpty(outgoingRequests)}">
+            <div th:each="request : ${outgoingRequests}"
+                 class="d-flex align-items-center justify-content-between p-2 rounded"
+                 style="border: 1px solid #f0d9c8;">
+              <div class="d-flex align-items-center gap-2">
+                <img th:src="${request.addressee.profileImage != null and !#strings.isEmpty(request.addressee.profileImage) ? request.addressee.profileImage : '/images/default-picture.png'}"
+                     class="rounded-circle"
+                     style="width: 36px; height: 36px; object-fit: cover;"
+                     alt="Profile picture">
+                <a th:href="@{/profile/{username}(username=${request.addressee.username})}"
+                   class="small fw-semibold"
+                   style="color: var(--memoir-accent); text-decoration: none;"
+                   th:text="${request.addressee.username}">Username</a>
+              </div>
+              <span class="small" style="color: var(--memoir-muted);">
+                <i class="bi bi-hourglass me-1"></i> Pending
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Blocked tab (own profile only) -->
+        <div id="tab-blocked" class="tab-pane" style="display: none;" th:if="${profileUser.username == loggedInUser.username}">
+          <div th:if="${#lists.isEmpty(blockedFriendships)}" class="text-center py-4">
+            <i class="bi bi-slash-circle fs-2 d-block mb-2" style="color: var(--memoir-muted)"></i>
+            <p class="small mb-0" style="color: var(--memoir-muted)">No blocked users</p>
+          </div>
+          <div class="d-flex flex-column gap-2" th:unless="${#lists.isEmpty(blockedFriendships)}">
+            <div th:each="blocked : ${blockedFriendships}"
+                 class="d-flex align-items-center justify-content-between p-2 rounded"
+                 style="border: 1px solid #f0d9c8;">
+              <div class="d-flex align-items-center gap-2">
+                <img th:src="${blocked.addressee.profileImage != null and !#strings.isEmpty(blocked.addressee.profileImage) ? blocked.addressee.profileImage : '/images/default-picture.png'}"
+                     class="rounded-circle"
+                     style="width: 36px; height: 36px; object-fit: cover;"
+                     alt="Profile picture">
+                <a th:href="@{/profile/{username}(username=${blocked.addressee.username})}"
+                   class="small fw-semibold"
+                   style="color: var(--memoir-accent); text-decoration: none;"
+                   th:text="${blocked.addressee.username}">Username</a>
+              </div>
+              <form th:action="@{/friends/unfriend/{username}(username=${blocked.addressee.username})}" method="post">
+                <button type="submit" class="btn btn-sm btn-outline-secondary">Unblock</button>
+              </form>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
   </div>
 
-</div>
+  <script>
+    function showTab(tabName, event) {
+      document.querySelectorAll('.tab-pane').forEach(tab => tab.style.display = 'none');
+      document.querySelectorAll('.nav-link').forEach(btn => btn.classList.remove('active'));
+      document.getElementById('tab-' + tabName).style.display = 'block';
+      event.target.closest('.nav-link').classList.add('active');
+    }
+  </script>
 
+</div>
 </body>
 </html>
