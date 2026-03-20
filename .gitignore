@@ -37,6 +37,13 @@ build/
 
 src/main/resources/env.properties
 
+application-prod.properties
+src/main/resources/application-prod.properties
+
 application.yaml
 
 .DS_Store
+
+.git
+.gitignore
+*.md
