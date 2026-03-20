@@ -77,6 +77,7 @@
       color: #fff;
     }
   </style>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 </th:block>
 
 <th:block layout:fragment="content">
@@ -108,7 +109,8 @@
           <option value="" disabled selected>Select a group</option>
           <option th:each="group : ${groups}"
                   th:value="${group.id}"
-                  th:text="${group.name}">
+                  th:text="${group.name}"
+                  th:selected="${group.id == preselectedGroupId}">
           </option>
         </select>
       </div>
@@ -125,14 +127,49 @@
 
       <!-- Location -->
       <div class="mb-4">
-        <label class="form-label" for="location">Location <span class="text-muted fw-normal">(optional)</span></label>
-        <input type="text"
-               class="form-control"
-               id="location"
-               name="location"
-               placeholder="e.g. Hyde Park, London"/>
-      </div>
+        <label class="form-label" for="locationSearch">
+          Location <span class="text-muted fw-normal">(Required For Events)</span>
+        </label>
+        <div class="input-group">
+          <input type="text" class="form-control" id="locationSearch"
+                 placeholder="Search for a location…" autocomplete="off"/>
+          <button class="btn btn-outline-secondary" type="button" id="locateBtn">
+            <i class="bi bi-search"></i>
+          </button>
+          <button class="btn btn-outline-secondary" type="button" id="gpsBtn"
+                  title="Use my current location">
+            <i class="bi bi-crosshair"></i>
+          </button>
+        </div>
+        <div id="locationResults" class="list-group mt-1" style="display:none;"></div>
 
+        <!-- Selected location display -->
+        <div id="locationSelected" class="mt-2" style="display:none;">
+        <span class="badge rounded-pill"
+              style="background:#f8fdf9; border:1px solid #c3e6cb;
+                     color:#2d6a4f; font-weight:400; font-size:0.8rem; padding: 6px 10px;">
+            <i class="bi bi-geo-alt-fill me-1"></i>
+            <span id="locationSelectedLabel"></span>
+            <button type="button" class="btn-close btn-close-sm ms-1"
+                    id="clearLocation" style="font-size:0.6rem;"></button>
+        </span>
+        </div>
+
+        <!-- Hidden field submitted with form -->
+        <input type="hidden" id="location" name="location"/>
+        <input type="hidden" id="latitude"   name="latitude"/>
+        <input type="hidden" id="longitude"  name="longitude"/>
+
+        <!-- Mini preview map -->
+        <div id="locationMapPreview" class="mt-3 overflow-hidden"
+             style="height:200px; border-radius:8px; display:none;"></div>
+      </div>
+      <div id="locationError" class="text-danger small mt-1" style="display:none;">
+        <i class="bi bi-exclamation-circle me-1"></i>
+        A location is required for event moments
+      </div>
+      <!-- Pass eventId through if coming from an event page -->
+      <input type="hidden" name="eventId" th:value="${eventId}"/>
       <button type="submit" class="btn btn-memoir-submit">Save moment</button>
     </form>
   </div>
@@ -153,6 +190,166 @@
           placeholder.style.display = 'none';
         };
         reader.readAsDataURL(file);
+      }
+    });
+  </script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script>
+    let previewMap    = null;
+    let previewMarker = null;
+    let debounce      = null;
+
+    const locationSearch  = document.getElementById('locationSearch');
+    const locationResults = document.getElementById('locationResults');
+    const locationField   = document.getElementById('location');
+    const selectedBox     = document.getElementById('locationSelected');
+    const selectedLabel   = document.getElementById('locationSelectedLabel');
+    const clearBtn        = document.getElementById('clearLocation');
+    const locateBtn       = document.getElementById('locateBtn');
+    const mapPreview      = document.getElementById('locationMapPreview');
+
+    async function searchLocation(query) {
+      if (!query.trim()) { locationResults.style.display = 'none'; return; }
+      try {
+        const res = await fetch(
+                `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=5`,
+                { headers: { 'Accept-Language': 'en' } }
+        );
+        renderResults(await res.json());
+      } catch (e) {
+        console.warn('Geocoding failed:', e);
+      }
+    }
+
+    function renderResults(results) {
+      if (!results.length) {
+        locationResults.innerHTML = '<div class="list-group-item text-muted small">No results found</div>';
+        locationResults.style.display = 'block';
+        return;
+      }
+      locationResults.innerHTML = results.map(r => `
+            <button type="button" class="list-group-item list-group-item-action small"
+                    data-lat="${r.lat}" data-lng="${r.lon}" data-name="${r.display_name}">
+                <i class="bi bi-geo-alt me-2 text-muted"></i>${r.display_name}
+            </button>
+        `).join('');
+      locationResults.style.display = 'block';
+      locationResults.querySelectorAll('button').forEach(btn => {
+        btn.addEventListener('click', () => selectLocation(
+                btn.dataset.name,
+                parseFloat(btn.dataset.lat),
+                parseFloat(btn.dataset.lng)
+        ));
+      });
+    }
+
+    function selectLocation(name, lat, lng) {
+      document.getElementById('locationError').style.display = 'none';
+      locationField.value = name;
+      document.getElementById('latitude').value = lat;
+      document.getElementById('longitude').value = lng;
+      selectedLabel.textContent = name.split(',').slice(0, 3).join(',');
+      selectedBox.style.display = 'block';
+      locationResults.style.display = 'none';
+      locationSearch.value = '';
+      mapPreview.style.display = 'block';
+      if (!previewMap) {
+        previewMap = L.map('locationMapPreview', {
+          zoomControl: false, dragging: false, scrollWheelZoom: false
+        });
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(previewMap);
+      }
+      previewMap.setView([lat, lng], 13);
+      if (previewMarker) previewMarker.remove();
+      previewMarker = L.circleMarker([lat, lng], {
+        radius: 8, color: '#C1603A', fillColor: '#C1603A', fillOpacity: 0.8
+      }).addTo(previewMap);
+      setTimeout(() => previewMap.invalidateSize(), 100);
+    }
+
+    clearBtn.addEventListener('click', () => {
+      locationField.value = '';
+      selectedBox.style.display = 'none';
+      mapPreview.style.display  = 'none';
+    });
+
+    locationSearch.addEventListener('input', () => {
+      clearTimeout(debounce);
+      debounce = setTimeout(() => searchLocation(locationSearch.value), 350);
+    });
+
+    locateBtn.addEventListener('click', () => searchLocation(locationSearch.value));
+
+    document.addEventListener('click', (e) => {
+      if (!locationSearch.contains(e.target) && !locationResults.contains(e.target)) {
+        locationResults.style.display = 'none';
+      }
+    });
+
+    const gpsBtn = document.getElementById('gpsBtn');
+
+    gpsBtn.addEventListener('click', () => {
+      if (!navigator.geolocation) {
+        alert('Geolocation is not supported by your browser.');
+        return;
+      }
+
+      // Show loading state
+      gpsBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+      gpsBtn.disabled = true;
+
+      navigator.geolocation.getCurrentPosition(
+              async (position) => {
+                const lat = position.coords.latitude;
+                const lng = position.coords.longitude;
+
+                // Reverse geocode to get a human-readable name
+                try {
+                  const res = await fetch(
+                          `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`,
+                          { headers: { 'Accept-Language': 'en' } }
+                  );
+                  const data = await res.json();
+                  selectLocation(data.display_name, lat, lng);
+                } catch (e) {
+                  // If reverse geocode fails just use the coordinates
+                  selectLocation(`${lat.toFixed(4)}, ${lng.toFixed(4)}`, lat, lng);
+                }
+
+                // Restore button
+                gpsBtn.innerHTML = '<i class="bi bi-crosshair"></i>';
+                gpsBtn.disabled = false;
+              },
+              (error) => {
+                gpsBtn.innerHTML = '<i class="bi bi-crosshair"></i>';
+                gpsBtn.disabled = false;
+
+                switch (error.code) {
+                  case error.PERMISSION_DENIED:
+                    alert('Location access was denied. Please use the search box instead.');
+                    break;
+                  case error.POSITION_UNAVAILABLE:
+                    alert('Location unavailable on this device. Please use the search box instead.');
+                    break;
+                  case error.TIMEOUT:
+                    alert('Location request timed out. Please use the search box instead.');
+                    break;
+                  default:
+                    alert('Could not get your location. Please use the search box instead.');
+                }
+              },
+              { enableHighAccuracy: true, timeout: 10000 }
+      );
+    });
+
+    // Validate on submit
+    document.querySelector('form').addEventListener('submit', (e) => {
+      const eventId = document.querySelector('input[name="eventId"]').value;
+      const location = document.getElementById('location').value;
+      if (eventId && !location) {
+        e.preventDefault();
+        document.getElementById('locationError').style.display = 'block';
+        document.getElementById('locationSearch').focus();
       }
     });
   </script>
