@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Controller
@@ -74,7 +75,19 @@ public class ProfileController {
             model.addAttribute("outgoingRequests", outgoingRequests);
             model.addAttribute("blockedFriendships", blockedFriendships);
         }
+        // Check friendship status between loggedInUser and profileUser
+        String friendshipStatus = null;
+        if (!isOwnProfile) {
+            Optional<Friend> friendship = friendRepository
+                    .findByIdRequesterIdAndIdAddresseeId(loggedInUser.getId(), profileUser.getId());
+            if (friendship.isEmpty()) {
+                friendship = friendRepository
+                        .findByIdRequesterIdAndIdAddresseeId(profileUser.getId(), loggedInUser.getId());
+            }
+            friendshipStatus = friendship.map(Friend::getStatus).orElse(null);
+        }
 
+        model.addAttribute("friendshipStatus", friendshipStatus);
         model.addAttribute("profileUser", profileUser);
         model.addAttribute("friends", friends);
         model.addAttribute("isOwnProfile", isOwnProfile);

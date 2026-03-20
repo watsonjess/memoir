@@ -51,17 +51,33 @@
             <i class="bi bi-pencil me-1"></i> Edit profile
           </a>
           <!-- Other profile: add friend button -->
-          <form th:unless="${profileUser.username.equals(loggedInUser.username)}"
-                th:action="@{/friends/request/{username}(username=${profileUser.username})}"
-                method="post">
-            <button type="submit" class="btn btn-memoir btn-sm">
-              <i class="bi bi-person-plus me-1"></i> Add friend
+          <div th:unless="${isOwnProfile}">
+            <!-- Already friends -->
+            <form th:if="${friendshipStatus == 'ACCEPTED'}"
+                  th:action="@{/friends/unfriend/{username}(username=${profileUser.username})}"
+                  method="post">
+              <button type="submit" class="btn btn-sm btn-outline-secondary">
+                <i class="bi bi-person-check me-1"></i> Friends
+              </button>
+            </form>
+            <!-- Pending -->
+            <button th:if="${friendshipStatus == 'PENDING'}"
+                    class="btn btn-sm btn-outline-secondary" disabled>
+              <i class="bi bi-hourglass me-1"></i> Pending
             </button>
-          </form>
+            <!-- Not friends -->
+            <form th:if="${friendshipStatus == null}"
+                  th:action="@{/friends/request/{username}(username=${profileUser.username})}"
+                  method="post">
+              <button type="submit" class="btn btn-memoir btn-sm">
+                <i class="bi bi-person-plus me-1"></i> Add friend
+              </button>
+            </form>
+          </div>
         </div>
-
       </div>
     </div>
+
 
     <!-- Friends section -->
     <div class="col-md-8 col-lg-5">
