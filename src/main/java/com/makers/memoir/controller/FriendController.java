@@ -91,7 +91,7 @@ public class FriendController {
     }
 
     @PostMapping("/accept/{username}")
-    public RedirectView acceptRequest(@PathVariable String username, Principal principal, @ModelAttribute("loggedInUser") User loggedInUser) {
+    public RedirectView acceptRequest(@PathVariable String username, Principal principal) {
         User addressee = userRepository.findByEmail(getUsernameFromPrincipal(principal));
         User requester = userRepository.findByUsername(username).orElseThrow();
 
@@ -103,21 +103,21 @@ public class FriendController {
             friendRepository.save(f);
         });
 
-        return new RedirectView("/profile/" + loggedInUser.getUsername());
+        return new RedirectView("/profile/" + addressee.getUsername());
     }
 
-    @PostMapping("/decline/{username}")
-    public RedirectView declineRequest(@PathVariable String username, Principal principal, @ModelAttribute("loggedInUser") User loggedInUser) {
-        User addressee = userRepository.findByEmail(getUsernameFromPrincipal(principal));
-        User requester = userRepository.findByUsername(username).orElseThrow();
+@PostMapping("/decline/{username}")
+public RedirectView declineRequest(@PathVariable String username, Principal principal) {
+    User addressee = userRepository.findByEmail(getUsernameFromPrincipal(principal));
+    User requester = userRepository.findByUsername(username).orElseThrow();
 
-        Optional<Friend> friendship = friendRepository
-                .findByIdRequesterIdAndIdAddresseeId(requester.getId(), addressee.getId());
+    Optional<Friend> friendship = friendRepository
+            .findByIdRequesterIdAndIdAddresseeId(requester.getId(), addressee.getId());
 
-        friendship.ifPresent(f -> friendRepository.delete(f));
+    friendship.ifPresent(f -> friendRepository.delete(f));
 
-        return new RedirectView("/profile/" + loggedInUser.getUsername());
-    }
+    return new RedirectView("/profile/" + addressee.getUsername());
+}
 
     @PostMapping("/block/{username}")
     public RedirectView blockUser(@PathVariable String username, Principal principal) {

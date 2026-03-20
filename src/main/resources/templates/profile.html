@@ -108,7 +108,7 @@
           <div th:if="${#lists.isEmpty(friends)}" class="text-center py-4">
             <i class="bi bi-people fs-2 d-block mb-2" style="color: var(--memoir-muted)"></i>
             <p class="small mb-0" style="color: var(--memoir-muted)"
-               th:text="${profileUser.username.equals(loggedInUser.username)} ? 'You have no friends yet' : profileUser.firstname + ' has no friends yet'">No friends yet</p>
+               th:text="${profileUser.username.equals(loggedInUser.username) ? 'You have no friends yet' : profileUser.firstname + ' has no friends yet'}"</p>
           </div>
           <div class="row g-2" th:unless="${#lists.isEmpty(friends)}">
             <div class="col-6 col-md-4" th:each="friend : ${friends}">
