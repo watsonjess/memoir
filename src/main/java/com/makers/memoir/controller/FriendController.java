@@ -91,7 +91,7 @@ public class FriendController {
     }
 
     @PostMapping("/accept/{username}")
-    public RedirectView acceptRequest(@PathVariable String username, Principal principal) {
+    public RedirectView acceptRequest(@PathVariable String username, Principal principal, @ModelAttribute("loggedInUser") User loggedInUser) {
         User addressee = userRepository.findByEmail(getUsernameFromPrincipal(principal));
         User requester = userRepository.findByUsername(username).orElseThrow();
 
@@ -103,11 +103,11 @@ public class FriendController {
             friendRepository.save(f);
         });
 
-        return new RedirectView("/friends");
+        return new RedirectView("/profile/" + loggedInUser.getUsername());
     }
 
     @PostMapping("/decline/{username}")
-    public RedirectView declineRequest(@PathVariable String username, Principal principal) {
+    public RedirectView declineRequest(@PathVariable String username, Principal principal, @ModelAttribute("loggedInUser") User loggedInUser) {
         User addressee = userRepository.findByEmail(getUsernameFromPrincipal(principal));
         User requester = userRepository.findByUsername(username).orElseThrow();
 
@@ -116,7 +116,7 @@ public class FriendController {
 
         friendship.ifPresent(f -> friendRepository.delete(f));
 
-        return new RedirectView("/friends");
+        return new RedirectView("/profile/" + loggedInUser.getUsername());
     }
 
     @PostMapping("/block/{username}")
