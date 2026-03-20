@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en"
       xmlns:th="http://www.thymeleaf.org"
-      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:layout="http://www.w3.org/1999/xhtml"
       xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
     <meta charset="UTF-8"/>
@@ -48,10 +48,13 @@
                     <a class="nav-link" th:href="@{/archive}">Newsletters</a>
                 </li>
                 <li class="nav-item">
+                    <a class="nav-link" th:href="@{/events}">Events</a>
+                </li>
+                <li class="nav-item">
                     <a class="nav-link" th:href="@{/groups}">Groups</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" th:href="@{/events}">Events</a>
+                    <a class="nav-link" th:href="@{/friends}">Friends</a>
                 </li>
             </ul>
 
@@ -83,14 +86,56 @@
                 <a th:href="@{/moments/new}" class="btn btn-memoir">
                     <i class="bi bi-plus-lg"></i> Add moment
                 </a>
-                <a th:href="@{/profile}" class="memoir-avatar"
-                   th:text="${#authentication.principal.attributes['given_name'] != null
-                              ? #authentication.principal.attributes['given_name'].substring(0,1).toUpperCase()
-                              : #authentication.principal.attributes['email'].substring(0,1).toUpperCase()}">
-                </a>
-            </div>
 
-            <div sec:authorize="!isAuthenticated()">
+                <div class="dropdown">
+                    <a href="#"
+                       class="d-block"
+                       data-bs-toggle="dropdown"
+                       aria-expanded="false"
+                       style="text-decoration: none;">
+
+
+                        <img th:if="${loggedInUser != null and loggedInUser.profileImage != null and !#strings.isEmpty(loggedInUser.profileImage)}"
+                             th:src="${loggedInUser.profileImage}"
+                             alt="Profile"
+                             class="rounded-circle memoir-avatar"
+                             style="width: 36px; height: 36px; object-fit: cover;">
+                        <span th:unless="${loggedInUser != null and loggedInUser.profileImage != null and !#strings.isEmpty(loggedInUser.profileImage)}"
+                              class="memoir-avatar"
+                              th:text="${#authentication.principal.attributes['given_name'] != null
+                                         ? #authentication.principal.attributes['given_name'].substring(0,1).toUpperCase()
+                                         : #authentication.principal.attributes['email'].substring(0,1).toUpperCase()}">
+                        </span>
+                    </a>
+
+                    <ul class="dropdown-menu dropdown-menu-end mt-2 shadow-sm"
+                        style="min-width: 180px; border-radius: 10px; border: 1px solid #f0d9c8;">
+
+                        <li class="px-3 py-2">
+                            <p class="mb-0 small fw-semibold"
+                               th:text="${loggedInUser != null ? loggedInUser.firstname + ' ' + loggedInUser.lastname : ''}">Name</p>
+                            <p class="mb-0 small" style="color: var(--memoir-muted);"
+                               th:text="${loggedInUser != null ? loggedInUser.email : ''}">Email</p>
+                        </li>
+                        <li><hr class="dropdown-divider" style="border-color: #f0d9c8;"></li>
+
+                        <li>
+                            <a class="dropdown-item small" th:href="@{/profile/{username}(username=${loggedInUser.username})}">
+                                <i class="bi bi-person me-2"></i>View profile
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item small" th:href="@{/profile/edit}">
+                                <i class="bi bi-pencil me-2"></i>Edit profile
+                            </a>
+                        </li>
+                        <li><hr class="dropdown-divider" style="border-color: #f0d9c8;"></li>
+
+                    </ul>
+                </div>
+
+
+                <div sec:authorize="!isAuthenticated()">
                 <a th:href="@{/oauth2/authorization/auth0}" class="btn btn-memoir">Login</a>
             </div>
         </div>
