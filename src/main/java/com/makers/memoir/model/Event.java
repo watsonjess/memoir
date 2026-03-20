@@ -5,6 +5,7 @@ import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
+import org.springframework.format.annotation.DateTimeFormat;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -31,12 +32,17 @@ public class Event {
     private String description;
 
     @Column(name = "start_date", nullable = false)
+    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
     private LocalDateTime startDate;
 
     @Column(name = "end_date", nullable = false)
+    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
     private LocalDateTime endDate;
 
     private String location;
+
+    private Double latitude;
+    private Double longitude;
 
     @ManyToOne
     @JoinColumn(name = "created_by", nullable = false)

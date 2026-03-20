@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/layout}">
+<head>
+  <title>New Event</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+</head>
+<body>
+
+<div layout:fragment="content">
+
+  <div class="mb-4">
+    <a th:href="@{/groups/{id}/events(id=${groupId})}"
+       class="text-muted small text-decoration-none">
+      <i class="bi bi-arrow-left me-1"></i> Back to events
+    </a>
+    <h1 class="memoir-page-title mt-2">New event</h1>
+    <p class="memoir-page-subtitle">Add a new event to your group</p>
+  </div>
+
+  <div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+      <div class="memoir-card">
+        <form th:action="@{/groups/{id}/events(id=${groupId})}" method="post">
+
+          <!-- Event name -->
+          <div class="mb-3">
+            <label for="name" class="form-label small fw-500">Event name</label>
+            <input type="text" class="form-control" id="name" name="name"
+                   placeholder="e.g. Summer Holiday 2026" required/>
+          </div>
+
+          <!-- Description -->
+          <div class="mb-3">
+            <label for="description" class="form-label small fw-500">
+              Description
+              <span class="text-muted">(optional)</span>
+            </label>
+            <textarea class="form-control" id="description" name="description"
+                      rows="2" placeholder="What's this event about?"></textarea>
+          </div>
+
+          <!-- Date range -->
+          <div class="row mb-3">
+            <div class="col">
+              <label for="startDate" class="form-label small fw-500">Start date</label>
+              <input type="datetime-local" class="form-control"
+                     id="startDate" name="startDate" required/>
+            </div>
+            <div class="col">
+              <label for="endDate" class="form-label small fw-500">End date</label>
+              <input type="datetime-local" class="form-control"
+                     id="endDate" name="endDate" required/>
+            </div>
+          </div>
+
+          <!-- Location search -->
+          <div class="mb-3">
+            <label for="locationSearch" class="form-label small fw-500">Location</label>
+            <div class="input-group">
+              <input type="text" class="form-control" id="locationSearch"
+                     placeholder="Search for a location…"
+                     autocomplete="off"/>
+              <button class="btn btn-outline-secondary" type="button" id="locateBtn">
+                <i class="bi bi-search"></i>
+              </button>
+            </div>
+            <div id="locationResults" class="list-group mt-1" style="display:none;"></div>
+
+            <!-- Hidden fields submitted with form -->
+            <input type="hidden" id="location"  name="location"/>
+            <input type="hidden" id="latitude"  name="latitude"/>
+            <input type="hidden" id="longitude" name="longitude"/>
+
+            <!-- Selected location display -->
+            <div id="locationSelected" class="mt-2" style="display:none;">
+                            <span class="badge rounded-pill"
+                                  style="background:#f8fdf9; border:1px solid #c3e6cb;
+                                         color:#2d6a4f; font-weight:400; font-size:0.8rem; padding: 6px 10px;">
+                                <i class="bi bi-geo-alt-fill me-1"></i>
+                                <span id="locationSelectedLabel"></span>
+                                <button type="button" class="btn-close btn-close-sm ms-1"
+                                        id="clearLocation" style="font-size:0.6rem;"></button>
+                            </span>
+            </div>
+
+            <!-- Mini preview map -->
+            <div id="locationMapPreview" class="mt-3 overflow-hidden"
+                 style="height:200px; border-radius:8px; display:none;"></div>
+          </div>
+
+          <!-- Submit -->
+          <div class="d-flex gap-2 mt-4">
+            <button type="submit" class="btn btn-memoir flex-grow-1">
+              Create event
+            </button>
+            <a th:href="@{/groups/{id}/events(id=${groupId})}"
+               class="btn btn-outline-secondary">Cancel</a>
+          </div>
+
+        </form>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<th:block layout:fragment="scripts">
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script>
+    let previewMap = null;
+    let previewMarker = null;
+
+    const locationSearch  = document.getElementById('locationSearch');
+    const locationResults = document.getElementById('locationResults');
+    const locationField   = document.getElementById('location');
+    const latField        = document.getElementById('latitude');
+    const lngField        = document.getElementById('longitude');
+    const selectedBox     = document.getElementById('locationSelected');
+    const selectedLabel   = document.getElementById('locationSelectedLabel');
+    const clearBtn        = document.getElementById('clearLocation');
+    const locateBtn       = document.getElementById('locateBtn');
+    const mapPreview      = document.getElementById('locationMapPreview');
+
+    let debounce = null;
+
+    async function searchLocation(query) {
+      if (!query.trim()) { locationResults.style.display = 'none'; return; }
+      try {
+        const res = await fetch(
+                `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=5`,
+                { headers: { 'Accept-Language': 'en' } }
+        );
+        const results = await res.json();
+        renderResults(results);
+      } catch (e) {
+        console.warn('Geocoding failed:', e);
+      }
+    }
+
+    function renderResults(results) {
+      if (!results.length) {
+        locationResults.innerHTML = '<div class="list-group-item text-muted small">No results found</div>';
+        locationResults.style.display = 'block';
+        return;
+      }
+      locationResults.innerHTML = results.map(r => `
+                <button type="button" class="list-group-item list-group-item-action small"
+                        data-lat="${r.lat}" data-lng="${r.lon}" data-name="${r.display_name}">
+                    <i class="bi bi-geo-alt me-2 text-muted"></i>${r.display_name}
+                </button>
+            `).join('');
+      locationResults.style.display = 'block';
+
+      locationResults.querySelectorAll('button').forEach(btn => {
+        btn.addEventListener('click', () => selectLocation(
+                btn.dataset.name,
+                parseFloat(btn.dataset.lat),
+                parseFloat(btn.dataset.lng)
+        ));
+      });
+    }
+
+    function selectLocation(name, lat, lng) {
+      locationField.value = name;
+      latField.value = lat;
+      lngField.value = lng;
+
+      // Truncate long display names for the badge
+      const shortName = name.split(',').slice(0, 3).join(',');
+      selectedLabel.textContent = shortName;
+      selectedBox.style.display = 'block';
+      locationResults.style.display = 'none';
+      locationSearch.value = '';
+
+      // Show preview map
+      mapPreview.style.display = 'block';
+      if (!previewMap) {
+        previewMap = L.map('locationMapPreview', {
+          zoomControl: false,
+          dragging: false,
+          scrollWheelZoom: false
+        });
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(previewMap);
+      }
+      previewMap.setView([lat, lng], 13);
+      if (previewMarker) previewMarker.remove();
+      previewMarker = L.circleMarker([lat, lng], {
+        radius: 8,
+        color: '#C1603A',
+        fillColor: '#C1603A',
+        fillOpacity: 0.8
+      }).addTo(previewMap);
+      setTimeout(() => previewMap.invalidateSize(), 100);
+    }
+
+    // Clear selection
+    clearBtn.addEventListener('click', () => {
+      locationField.value = '';
+      latField.value = '';
+      lngField.value = '';
+      selectedBox.style.display = 'none';
+      mapPreview.style.display = 'none';
+    });
+
+    // Debounced input search
+    locationSearch.addEventListener('input', () => {
+      clearTimeout(debounce);
+      debounce = setTimeout(() => searchLocation(locationSearch.value), 350);
+    });
+
+    // Button search
+    locateBtn.addEventListener('click', () => searchLocation(locationSearch.value));
+
+    // Close results on outside click
+    document.addEventListener('click', (e) => {
+      if (!locationSearch.contains(e.target) && !locationResults.contains(e.target)) {
+        locationResults.style.display = 'none';
+      }
+    });
+  </script>
+</th:block>
+
+</body>
+</html>
