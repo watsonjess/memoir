@@ -6,52 +6,41 @@
 <body>
 <div layout:fragment="content">
 
-  <!-- Page header -->
-  <div class="d-flex justify-content-between align-items-center mb-4">
-    <div>
+  <div th:if="${profileUser.username == loggedInUser.username}" class="d-flex justify-content-center align-items-center mb-4">
+    <div class="text-center">
       <h1 class="memoir-page-title"
-          th:text="'Welcome back, ' + ${loggedInUser.firstname} + '!'">Welcome back!</h1>
+          th:text="'Welcome back, ' + ${profileUser.firstname} + '!'">Welcome back!</h1>
     </div>
-  </div>
+  </>
 
-  <!-- Profile card -->
-  <div class="row g-3 mt-1">
+
+  <div class="row g-3 mt-1 justify-content-center">
     <div class="col-md-6 col-lg-4">
       <div class="memoir-card h-100 d-flex flex-column">
 
-        <!-- Card header -->
-        <div class="d-flex justify-content-between align-items-start mb-3">
-          <h5 class="mb-0">Your Profile</h5>
+
+        <div class="d-flex justify-content-center align-items-start mb-3">
+          <h5 class="mb-0"><span th:text="${profileUser.firstname + ' ' + profileUser.lastname}">}</h5>
         </div>
 
-        <!-- Profile photo -->
+
         <div class="d-flex justify-content-center mb-3">
-          <img th:src="${loggedInUser.profileImage != null and !#strings.isEmpty(loggedInUser.profileImage) ? loggedInUser.profileImage : '/images/default-picture.png'}"
+          <img th:src="${profileUser.profileImage != null and !#strings.isEmpty(profileUser.profileImage) ? profileUser.profileImage : '/images/default-picture.png'}"
                alt="Profile photo"
                class="rounded-circle"
                style="width: 80px; height: 80px; object-fit: cover; border: 2px solid #f0d9c8;">
         </div>
 
-        <!-- Profile details -->
-        <p class="small mb-2" style="color: var(--memoir-muted)">
-          <i class="bi bi-person me-2"></i>
-          <span th:text="${loggedInUser.firstname + ' ' + loggedInUser.lastname}">Full Name</span>
-        </p>
-        <p class="small mb-2" style="color: var(--memoir-muted)">
+
+        <p class="small mb-2 text-center" style="color: var(--memoir-muted)">
           <i class="bi bi-at me-2"></i>
-          <span th:text="${loggedInUser.username}">Username</span>
+          <span th:text="${profileUser.username}">Username</span>
         </p>
-        <p class="small mb-3" style="color: var(--memoir-muted)">
+        <p class="small mb-3 text-center" style="color: var(--memoir-muted)">
           <i class="bi bi-envelope me-2"></i>
-          <span th:text="${loggedInUser.email}">Email</span>
+          <span th:text="${profileUser.email}">Email</span>
         </p>
 
-        <!-- Actions -->
-        <div class="mt-auto d-flex gap-2">
-          <a th:href="@{/profile/edit}" class="btn btn-sm btn-outline-secondary">
-            <i class="bi bi-pencil me-1"></i> Edit profile
-          </a>
-        </div>
 
       </div>
     </div>

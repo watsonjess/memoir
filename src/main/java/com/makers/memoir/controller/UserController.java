@@ -119,7 +119,7 @@ public class UserController {
         if (isFirstSetup) {
             return new RedirectView("/");
         } else {
-            return new RedirectView("/profile");
+            return new RedirectView("/profile/" + user.getUsername());
         }
     }
 
