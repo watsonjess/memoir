@@ -1,0 +1,1 @@
+ALTER TABLE weekly ADD COLUMN html_content TEXT;

@@ -1,1 +1,0 @@
-ALTER TABLE weekly ADD COLUMN pdf_url VARCHAR(255);

@@ -122,14 +122,6 @@
                 transition: background 0.12s, color 0.12s;
             }
             .nl-day--empty .nl-day-num { color: var(--memoir-muted); }
-            .nl-event-dot {
-                width: 6px;
-                height: 6px;
-                border-radius: 50%;
-                background: var(--memoir-accent);
-                display: inline-block;
-                margin: 2px;
-            }
             .nl-event-pill {
                 display: block;
                 font-size: 0.68rem;
@@ -155,8 +147,6 @@
                 font-size: 0.65rem;
                 padding-left: 4px;
             }
-
-            /* Sliding panel */
             .nl-panel-overlay {
                 display: none;
                 position: fixed;
@@ -247,15 +237,14 @@
                 margin-top: 8px;
             }
             .nl-current-btn {
-                margin-top: 16px;
                 display: inline-block;
+                margin-bottom: 20px;
                 font-size: 0.8rem;
                 color: var(--memoir-accent);
                 text-decoration: none;
                 font-weight: 500;
             }
             .nl-current-btn:hover { text-decoration: underline; }
-
             @media (max-width: 991px) {
                 .nl-day { min-height: 64px; }
                 .nl-event-pill { display: none; }
@@ -310,10 +299,8 @@
         <div class="nl-date-grid" id="nlDateGrid"></div>
     </div>
 
-    <!-- Sliding panel overlay -->
     <div class="nl-panel-overlay" id="nlOverlay"></div>
 
-    <!-- Sliding panel -->
     <div class="nl-panel" id="nlPanel">
         <button class="nl-panel-close" id="nlPanelClose">&times;</button>
         <p class="nl-panel-kicker">Newsletters</p>
@@ -326,7 +313,6 @@
 <th:block layout:fragment="scripts">
     <script th:inline="javascript">
         (() => {
-            // Populate newsletter data from backend
             const data = {};
             /*[# th:each="nl : ${newsletters}"]*/
             /*[# th:if="${nl.sentAt != null}"]*/
@@ -338,8 +324,7 @@
                 data[key].push({
                     group: /*[[${nl.group.name}]]*/ '',
                     groupId: /*[[${nl.group.id}]]*/ 0,
-                    pdfUrl: /*[[${nl.pdfUrl}]]*/ '',
-                    sentAt: /*[[${nl.sentAt.year + '-' + nl.sentAt.monthValue + '-' + nl.sentAt.dayOfMonth}]]*/ ''
+                    pdfUrl: /*[[${nl.pdfUrl}]]*/ ''
                 });
             })();
             /*[/]*/
@@ -378,8 +363,7 @@
                     && month === today.getMonth()
                     && year === today.getFullYear();
 
-                const monthName = MONTHS[month];
-                panelDate.textContent = `${dayNum} ${monthName} ${year}`;
+                panelDate.textContent = `${dayNum} ${MONTHS[month]} ${year}`;
 
                 const key = `${year}-${month + 1}-${dayNum}`;
                 const events = data[key] ?? [];
@@ -504,7 +488,6 @@
                 num.className = "nl-day-num";
                 num.textContent = dayNum;
                 cell.appendChild(num);
-
 
                 events.slice(0, 2).forEach((ev, idx) => {
                     const pill = document.createElement("span");

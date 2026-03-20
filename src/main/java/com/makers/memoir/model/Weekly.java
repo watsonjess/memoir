@@ -46,6 +46,9 @@ public class Weekly {
     @Column(name = "pdf_url", length = 255)
     private String pdfUrl;
 
+    @Column(name = "html_content", columnDefinition = "text")
+    private String htmlContent;
+
     public Weekly() {}
 
     public Weekly(Group group, LocalDateTime weekStart, LocalDateTime sendDate) {

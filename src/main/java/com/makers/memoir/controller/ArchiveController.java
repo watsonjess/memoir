@@ -50,9 +50,11 @@ public class ArchiveController {
     @GetMapping("/archive")
     public String archive(Model model, Principal principal) {
         List<Long> groupIds = getGroupIds(principal);
+
         List<Weekly> newsletters = groupIds.isEmpty()
                 ? List.of()
                 : weeklyRepository.findByGroupIdInAndStatus(groupIds, "sent");
+
         model.addAttribute("newsletters", newsletters);
         return "archive/index";
     }
@@ -77,7 +79,6 @@ public class ArchiveController {
     public String currentNewsletters(Model model, Principal principal) {
         List<Long> groupIds = getGroupIds(principal);
 
-        // Get the most recent sent newsletter per group
         List<Weekly> newsletters = groupIds.isEmpty()
                 ? List.of()
                 : groupIds.stream()

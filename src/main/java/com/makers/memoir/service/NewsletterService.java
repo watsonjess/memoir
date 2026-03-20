@@ -196,7 +196,7 @@ public class NewsletterService {
     }
 
     @SuppressWarnings("unchecked")
-    public String generateUserSummary(String username, List<Moment> moments) {
+    public String generateUserSummary(String fullName, String firstName, List<Moment> moments) {
         List<Map<String, Object>> contents = new ArrayList<>();
 
         for (Moment moment : moments) {
@@ -210,13 +210,13 @@ public class NewsletterService {
                 "role", "user",
                 "parts", List.of(Map.of("text",
                         "You are writing a warm, personal weekly summary for a group memory app. " +
-                                "Based on the moments above captured by " + username + " this week, " +
+                                "Based on the moments above captured by " + fullName + " this week, " +
                                 "write a friendly 3-4 sentence paragraph in third person that captures " +
                                 "the essence of their week in a natural, engaging way. " +
+                                "Refer to them by their first name (" + firstName + ") throughout the narrative. " +
                                 "Weave the images, descriptions and locations together into a flowing narrative — " +
                                 "avoid listing the moments one by one."))
         ));
-
         Map<String, Object> requestBody = Map.of("contents", contents);
         String url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=" + apiKey;
         Map<String, Object> response = (Map<String, Object>) restTemplate.postForObject(url, requestBody, Map.class);
@@ -243,7 +243,9 @@ public class NewsletterService {
         try {
             StringBuilder input = new StringBuilder();
             for (Map.Entry<User, String> entry : summaries.entrySet()) {
-                input.append(entry.getKey().getUsername())
+                input.append(entry.getKey().getFirstname())
+                        .append(" ")
+                        .append(entry.getKey().getLastname())
                         .append(": ")
                         .append(entry.getValue())
                         .append("\n\n");
