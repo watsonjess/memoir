@@ -1,17 +1,52 @@
 <!DOCTYPE html>
 <html layout:decorate="~{layout/layout}" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.w3.org/1999/xhtml">
 <head>
-  <title>Home</title>
+  <title>Profile</title>
 </head>
 <body>
 <div layout:fragment="content">
-  <h1>Hello</h1>
 
-  <p>You are logged in.</p>
+  <div th:if="${profileUser.username == loggedInUser.username}" class="d-flex justify-content-center align-items-center mb-4">
+    <div class="text-center">
+      <h1 class="memoir-page-title"
+          th:text="'Welcome back, ' + ${profileUser.firstname} + '!'">Welcome back!</h1>
+    </div>
+  </div>
 
-  <p>Name: <span th:text="${#authentication.principal.attributes['nickname']}"></span></p>
-  <p>Email: <span th:text="${#authentication.principal.attributes['email']}"></span></p>
+
+  <div class="row g-3 mt-1 justify-content-center">
+    <div class="col-md-6 col-lg-4">
+      <div class="memoir-card h-100 d-flex flex-column">
+
+
+        <div class="d-flex justify-content-center align-items-start mb-3">
+          <h5 class="mb-0"><span th:text="${profileUser.firstname + ' ' + profileUser.lastname}">}</h5>
+        </div>
+
+
+        <div class="d-flex justify-content-center mb-3">
+          <img th:src="${profileUser.profileImage != null and !#strings.isEmpty(profileUser.profileImage) ? profileUser.profileImage : '/images/default-picture.png'}"
+               alt="Profile photo"
+               class="rounded-circle"
+               style="width: 80px; height: 80px; object-fit: cover; border: 2px solid #f0d9c8;">
+        </div>
+
+
+        <p class="small mb-2 text-center" style="color: var(--memoir-muted)">
+          <i class="bi bi-at me-2"></i>
+          <span th:text="${profileUser.username}">Username</span>
+        </p>
+        <p class="small mb-3 text-center" style="color: var(--memoir-muted)">
+          <i class="bi bi-envelope me-2"></i>
+          <span th:text="${profileUser.email}">Email</span>
+        </p>
+
+
+      </div>
+    </div>
+  </div>
 
 </div>
+
 </body>
 </html>

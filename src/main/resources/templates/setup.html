@@ -1,68 +1,117 @@
 <html layout:decorate="~{layout/layout}" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.w3.org/1999/xhtml">
 <head>
     <meta charset="UTF-8">
-    <title>Profile</title>
-    <link rel="stylesheet" href="/main.css"/>
+    <title th:text="${isFirstSetup} ? 'Create Profile' : 'Edit Profile'">Profile</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 </head>
 
 <body>
+
 <div layout:fragment="content">
-<div th:if="${!isFirstSetup}">
-</div>
-<main class="setup-main">
-    <div class="create-profile-container">
-        <h1 th:text="${isFirstSetup} ? 'Create your profile' : 'Edit profile'"></h1>
 
-        <form class="form-container" th:action="@{/setup}" enctype="multipart/form-data" method="post">
-            <input type="hidden" name="isFirstSetup" th:value="${isFirstSetup}">
-            <div class="profile-picture-div">
-
-                <!-- Button to select profile picture -->
-                <div id="add-profile-pic-div">
-                    <label id="add-profile-pic-btn" for="profile-picture" style="cursor: pointer">
-                        <img alt="add-profile-picture"
-                             th:src="${user != null and user.profileImage != null and !#strings.isEmpty(user.profileImage) ? user.profileImage : '/images/default-picture.png'}"></label>
-                    <input hidden id="profile-picture" name="profile-picture" type="file" accept="image/*">
-
-                    <i class="fa-solid fa-plus center-overlay" style="color: dimgrey; font-size: 40px"></i>
-                </div>
-
-                <!--  Profile pic preview with button to remove -->
-                <div id="rmv-profile-pic-div" style="display: none">
-                    <img id="profile-pic-img"
-                         alt="remove-profile-picture"
-                         src=""/>
-                    <button type="button" id="rmv-profile-pic-btn" class="remove-img-btn">✕</button>
-                </div>
-            </div>
-            <div class="create-profile-form-div">
-                <label for="firstName">First Name:</label>
-                <input class="create-profile-input" type="text" id="firstName" name="firstName"
-                        th:value="${user != null ? user.firstname : ''}" required>
-            </div>
-            <div class="create-profile-form-div">
-                <label for="lastName">Last Name:</label>
-                <input class="create-profile-input" type="text" id="lastName" name="lastName"
-                       th:value="${user != null ? user.lastname : ''}" required>
-            </div>
-            <div class="create-profile-form-div">
-                <label for="username">Username:</label>
-                <input class="create-profile-input" type="text" id="username" name="username"
-                       th:value="${user != null ? user.username : ''}" required>
-            </div>
-            <div class="create-profile-form-div">
-                <label for="email">Email:</label>
-                <input class="create-profile-input" type="text" id="email" name="email" th:value="${user.email}" readonly>
-            </div>
-            <div class="create-profile-button-div">
-                <button class="create-profile-button" name="updateUserBtn" type="submit"
-                    th:text="${isFirstSetup} ? 'Continue' : 'Update'"> </button>
-            </div>
-        </form>
-        <script src="/scripts/profile-picture-preview.js"></script>
+    <div class="d-flex justify-content-center align-items-center mb-4">
+        <div class="text-center">
+            <h1 class="memoir-page-title"
+                th:text="${isFirstSetup} ? 'Create your profile' : 'Edit profile'">Profile</h1>
+        </div>
     </div>
-</main>
+
+
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-5">
+            <div class="memoir-card">
+
+                <form th:action="@{/setup}" enctype="multipart/form-data" method="post">
+                    <input type="hidden" name="isFirstSetup" th:value="${isFirstSetup}">
+
+                    <div class="d-flex justify-content-center mb-4">
+                        <div class="position-relative" style="width: 100px; height: 100px;">
+
+                            <div id="add-profile-pic-div">
+                                <label for="profile-picture" style="cursor: pointer; display: block;">
+                                    <img alt="Profile picture"
+                                         th:src="${user != null and user.profileImage != null and !#strings.isEmpty(user.profileImage) ? user.profileImage : '/images/default-picture.png'}"
+                                         class="rounded-circle"
+                                         style="width: 100px; height: 100px; object-fit: cover; border: 2px solid #f0d9c8;">
+                                </label>
+                                <input hidden id="profile-picture" name="profile-picture" type="file" accept="image/*">
+                                <i class="fa-solid fa-plus position-absolute bottom-0 end-0"
+                                   style="color: var(--memoir-accent); font-size: 20px; pointer-events: none;"></i>
+                            </div>
+
+                            <div id="rmv-profile-pic-div" style="display: none;">
+                                <img id="profile-pic-img"
+                                     alt="Profile picture preview"
+                                     src=""
+                                     class="rounded-circle"
+                                     style="width: 100px; height: 100px; object-fit: cover; border: 2px solid #f0d9c8;">
+                                <button type="button" id="rmv-profile-pic-btn"
+                                        class="btn btn-sm position-absolute bottom-0 end-0"
+                                        style="width: 26px; height: 26px; padding: 0; border-radius: 50%; background: #f0d9c8; color: var(--memoir-accent); font-size: 12px; line-height: 1;">
+                                    ✕
+                                </button>
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="firstName" class="form-label small" style="color: var(--memoir-muted);">First Name</label>
+                        <input type="text"
+                               class="form-control"
+                               id="firstName"
+                               name="firstName"
+                               th:value="${user != null ? user.firstname : ''}"
+                               required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="lastName" class="form-label small" style="color: var(--memoir-muted);">Last Name</label>
+                        <input type="text"
+                               class="form-control"
+                               id="lastName"
+                               name="lastName"
+                               th:value="${user != null ? user.lastname : ''}"
+                               required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="username" class="form-label small" style="color: var(--memoir-muted);">Username</label>
+                        <input type="text"
+                               class="form-control"
+                               id="username"
+                               name="username"
+                               th:value="${user != null ? user.username : ''}"
+                               required>
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="email" class="form-label small" style="color: var(--memoir-muted);">Email</label>
+                        <input type="text"
+                               class="form-control"
+                               id="email"
+                               name="email"
+                               th:value="${user.email}"
+                               readonly
+                               style="background-color: #f5f5f5; color: #aaa; cursor: not-allowed;">
+                        <div class="form-text small" style="color: var(--memoir-muted);">
+                        </div>
+                    </div>
+
+                    <div class="d-grid">
+                        <button type="submit"
+                                name="updateUserBtn"
+                                class="btn btn-memoir"
+                                th:text="${isFirstSetup} ? 'Continue' : 'Update'">
+                        </button>
+                    </div>
+
+                </form>
+            </div>
+        </div>
+    </div>
+
 </div>
+
 </body>
 </html>
