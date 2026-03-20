@@ -6,6 +6,8 @@ import com.makers.memoir.repository.FriendRepository;
 import com.makers.memoir.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.core.oidc.user.DefaultOidcUser;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -31,10 +33,17 @@ public class ProfileController {
     }
 
     @GetMapping("/profile/{username}")
-    public String profileByUsername(@PathVariable String username, Model model,
-                                    @ModelAttribute("loggedInUser") User loggedInUser) {
+    public String profileByUsername(@PathVariable String username, Model model) {
+        DefaultOidcUser principal = (DefaultOidcUser) SecurityContextHolder
+                .getContext()
+                .getAuthentication()
+                .getPrincipal();
+        String email = (String) principal.getAttributes().get("email");
+        User loggedInUser = userRepository.findByEmail(email);
+
         User profileUser = userRepository.findByUsername(username).orElse(null);
         if (profileUser == null) return "redirect:/";
+
 
         // Friends list
         List<Friend> acceptedFriends = friendRepository

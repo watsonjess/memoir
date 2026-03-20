@@ -7,18 +7,12 @@
 <div layout:fragment="content">
 
   <!-- Own profile header -->
-  <div th:if="${profileUser.username == loggedInUser.username}" class="d-flex justify-content-center align-items-center mb-4">
+  <div th:if="${profileUser.username.equals(loggedInUser.username)}" class="d-flex justify-content-center align-items-center mb-4">
     <div class="text-center">
       <h1 class="memoir-page-title"
           th:text="'Welcome back, ' + ${profileUser.firstname} + '!'">Welcome back!</h1>
-    </div>
-  </div>
-
-  <!-- Other user's profile header -->
-  <div th:unless="${profileUser.username == loggedInUser.username}" class="d-flex justify-content-center align-items-center mb-4">
-    <div class="text-center">
-      <h1 class="memoir-page-title"
-          th:text="${profileUser.firstname + '\'s profile'}">Profile</h1>
+      <p th:text="'loggedInUser: ' + ${loggedInUser.username}"></p>
+      <p th:text="'profileUser: ' + ${profileUser.username}"></p>
     </div>
   </div>
 
@@ -51,13 +45,13 @@
         <!-- Actions -->
         <div class="mt-auto d-flex gap-2 justify-content-center">
           <!-- Own profile: edit button -->
-          <a th:if="${profileUser.username == loggedInUser.username}"
+          <a th:if="${profileUser.username.equals(loggedInUser.username)}"
              th:href="@{/profile/edit}"
              class="btn btn-sm btn-outline-secondary">
             <i class="bi bi-pencil me-1"></i> Edit profile
           </a>
           <!-- Other profile: add friend button -->
-          <form th:unless="${profileUser.username == loggedInUser.username}"
+          <form th:unless="${profileUser.username.equals(loggedInUser.username)}"
                 th:action="@{/friends/request/{username}(username=${profileUser.username})}"
                 method="post">
             <button type="submit" class="btn btn-memoir btn-sm">
@@ -83,7 +77,7 @@
                     th:text="${#lists.size(friends)}">0</span>
             </button>
           </li>
-          <li class="nav-item" th:if="${profileUser.username == loggedInUser.username}">
+          <li class="nav-item" th:if="${profileUser.username.equals(loggedInUser.username)}">
             <button class="nav-link" onclick="showTab('requests', event)" style="color: var(--memoir-muted);">
               <i class="bi bi-person-check me-1"></i> Requests
               <span class="badge rounded-pill ms-1"
@@ -91,7 +85,7 @@
                     th:text="${#lists.size(incomingRequests)}">0</span>
             </button>
           </li>
-          <li class="nav-item" th:if="${profileUser.username == loggedInUser.username}">
+          <li class="nav-item" th:if="${profileUser.username.equals(loggedInUser.username)}">
             <button class="nav-link" onclick="showTab('outgoing', event)" style="color: var(--memoir-muted);">
               <i class="bi bi-hourglass me-1"></i> Outgoing
               <span class="badge rounded-pill ms-1"
@@ -99,7 +93,7 @@
                     th:text="${#lists.size(outgoingRequests)}">0</span>
             </button>
           </li>
-          <li class="nav-item" th:if="${profileUser.username == loggedInUser.username}">
+          <li class="nav-item" th:if="${profileUser.username.equals(loggedInUser.username)}">
             <button class="nav-link" onclick="showTab('blocked', event)" style="color: var(--memoir-muted);">
               <i class="bi bi-slash-circle me-1"></i> Blocked
               <span class="badge rounded-pill ms-1"
@@ -114,7 +108,7 @@
           <div th:if="${#lists.isEmpty(friends)}" class="text-center py-4">
             <i class="bi bi-people fs-2 d-block mb-2" style="color: var(--memoir-muted)"></i>
             <p class="small mb-0" style="color: var(--memoir-muted)"
-               th:text="${profileUser.username == loggedInUser.username} ? 'You have no friends yet' : profileUser.firstname + ' has no friends yet'">No friends yet</p>
+               th:text="${profileUser.username.equals(loggedInUser.username)} ? 'You have no friends yet' : profileUser.firstname + ' has no friends yet'">No friends yet</p>
           </div>
           <div class="row g-2" th:unless="${#lists.isEmpty(friends)}">
             <div class="col-6 col-md-4" th:each="friend : ${friends}">
@@ -129,7 +123,7 @@
                      style="color: var(--memoir-accent); text-decoration: none;"
                      th:text="${friend.username}">Username</a>
                 </div>
-                <form th:if="${profileUser.username == loggedInUser.username}"
+                <form th:if="${profileUser.username.equals(loggedInUser.username)}"
                       th:action="@{/friends/unfriend/{username}(username=${friend.username})}"
                       method="post">
                   <button type="submit" class="btn btn-sm" style="color: var(--memoir-muted); padding: 0 4px;" title="Unfriend">
@@ -142,7 +136,7 @@
         </div>
 
         <!-- Incoming requests tab (own profile only) -->
-        <div id="tab-requests" class="tab-pane" style="display: none;" th:if="${profileUser.username == loggedInUser.username}">
+        <div id="tab-requests" class="tab-pane" style="display: none;" th:if="${profileUser.username.equals(loggedInUser.username)}">
           <div th:if="${#lists.isEmpty(incomingRequests)}" class="text-center py-4">
             <i class="bi bi-inbox fs-2 d-block mb-2" style="color: var(--memoir-muted)"></i>
             <p class="small mb-0" style="color: var(--memoir-muted)">No incoming requests</p>
@@ -174,7 +168,7 @@
         </div>
 
         <!-- Outgoing requests tab (own profile only) -->
-        <div id="tab-outgoing" class="tab-pane" style="display: none;" th:if="${profileUser.username == loggedInUser.username}">
+        <div id="tab-outgoing" class="tab-pane" style="display: none;" th:if="${profileUser.username.equals(loggedInUser.username)}">
           <div th:if="${#lists.isEmpty(outgoingRequests)}" class="text-center py-4">
             <i class="bi bi-hourglass fs-2 d-block mb-2" style="color: var(--memoir-muted)"></i>
             <p class="small mb-0" style="color: var(--memoir-muted)">No outgoing requests</p>
@@ -201,7 +195,7 @@
         </div>
 
         <!-- Blocked tab (own profile only) -->
-        <div id="tab-blocked" class="tab-pane" style="display: none;" th:if="${profileUser.username == loggedInUser.username}">
+        <div id="tab-blocked" class="tab-pane" style="display: none;" th:if="${profileUser.username.equals(loggedInUser.username)}">
           <div th:if="${#lists.isEmpty(blockedFriendships)}" class="text-center py-4">
             <i class="bi bi-slash-circle fs-2 d-block mb-2" style="color: var(--memoir-muted)"></i>
             <p class="small mb-0" style="color: var(--memoir-muted)">No blocked users</p>
