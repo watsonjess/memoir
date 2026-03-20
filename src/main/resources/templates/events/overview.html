@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/layout}">
+<head>
+  <title>Events</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+</head>
+<body>
+
+<div layout:fragment="content">
+
+  <!-- Page header -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h1 class="memoir-page-title">Events</h1>
+      <p class="memoir-page-subtitle">Click a pin to explore moments from each event</p>
+    </div>
+  </div>
+
+  <!-- Empty state -->
+  <div th:if="${#lists.isEmpty(events)}" class="memoir-card text-center py-5">
+    <i class="bi bi-calendar-x fs-1 d-block mb-3" style="color: var(--memoir-muted)"></i>
+    <p class="mb-3" style="color: var(--memoir-muted)">You have no events yet</p>
+    <a th:href="@{/groups/new}" class="btn btn-memoir">
+      Create an event group
+    </a>
+  </div>
+
+  <div th:unless="${#lists.isEmpty(events)}">
+
+    <!-- Map -->
+    <div class="memoir-card p-0 mb-4 overflow-hidden">
+      <div id="map" style="height: 520px; width: 100%; border-radius: 12px;"></div>
+    </div>
+
+    <!-- Events list below map -->
+    <div class="row g-3">
+      <div class="col-md-6 col-lg-4" th:each="event : ${events}">
+        <a th:href="@{/groups/{gid}/events/{id}(gid=${event.group.id}, id=${event.id})}"
+           class="text-decoration-none">
+          <div class="memoir-card h-100 event-card">
+            <div class="d-flex justify-content-between align-items-start mb-2">
+              <h5 class="mb-0" style="color: var(--memoir-ink)"
+                  th:text="${event.name}">Event name</h5>
+              <i class="bi bi-geo-alt" style="color: var(--memoir-accent)"
+                 th:if="${event.latitude != null}"></i>
+            </div>
+            <p class="small mb-1" style="color: var(--memoir-accent)"
+               th:text="${event.group.name}"></p>
+            <p class="small mb-2" style="color: var(--memoir-muted)"
+               th:if="${event.location}"
+               th:text="${event.location.split(',')[0]}"></p>
+            <p class="small mb-0" style="color: var(--memoir-muted)">
+              <i class="bi bi-calendar3 me-1"></i>
+              <span th:text="${#temporals.format(event.startDate, 'd MMM yyyy')}"></span>
+              <span th:if="${event.endDate != null}"> &rarr;
+                                <span th:text="${#temporals.format(event.endDate, 'd MMM yyyy')}"></span>
+                            </span>
+            </p>
+          </div>
+        </a>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+<th:block layout:fragment="styles">
+  <style>
+    .event-card {
+      transition: border-color 0.15s, transform 0.15s;
+      cursor: pointer;
+    }
+    .event-card:hover {
+      border-color: var(--memoir-accent);
+      transform: translateY(-2px);
+    }
+    .leaflet-popup-content-wrapper {
+      border-radius: 10px;
+      font-family: 'DM Sans', sans-serif;
+    }
+    .memoir-map-popup-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 1rem;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+    .memoir-map-popup-dates {
+      font-size: 0.8rem;
+      color: #6B6860;
+      margin-bottom: 8px;
+    }
+    .memoir-map-popup-group {
+      font-size: 0.75rem;
+      color: #C1603A;
+      margin-bottom: 6px;
+    }
+    .memoir-map-popup-link {
+      display: inline-block;
+      font-size: 0.8rem;
+      color: #C1603A;
+      text-decoration: none;
+      font-weight: 500;
+    }
+    .memoir-map-popup-link:hover { text-decoration: underline; }
+  </style>
+</th:block>
+
+<th:block layout:fragment="scripts">
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script th:unless="${#lists.isEmpty(events)}" th:inline="javascript">
+    const events = /*[[${eventMaps}]]*/ [];
+
+    const map = L.map('map', { zoomControl: true });
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+      maxZoom: 18
+    }).addTo(map);
+
+    const accentIcon = L.divIcon({
+      className: '',
+      html: `<div style="
+                width: 16px; height: 16px;
+                background: #C1603A;
+                border: 2px solid #fff;
+                border-radius: 50%;
+                box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+            "></div>`,
+      iconSize: [16, 16],
+      iconAnchor: [8, 8],
+      popupAnchor: [0, -12]
+    });
+
+    const markers = [];
+
+    events.forEach(event => {
+      if (event.latitude && event.longitude) {
+        const startDate = event.startDate
+                ? new Date(event.startDate).toLocaleDateString('en-GB', {
+                  day: 'numeric', month: 'short', year: 'numeric'
+                })
+                : '';
+        const endDate = event.endDate
+                ? new Date(event.endDate).toLocaleDateString('en-GB', {
+                  day: 'numeric', month: 'short', year: 'numeric'
+                })
+                : '';
+
+        const popup = `
+                    <div style="min-width: 200px;">
+                        <div class="memoir-map-popup-title">${event.name}</div>
+                        <div class="memoir-map-popup-group">${event.groupName}</div>
+                        <div class="memoir-map-popup-dates">${startDate}${endDate ? ' → ' + endDate : ''}</div>
+                        <a class="memoir-map-popup-link"
+                           href="/groups/${event.groupId}/events/${event.id}">
+                           View moments &rarr;
+                        </a>
+                    </div>`;
+
+        const marker = L.marker([event.latitude, event.longitude], { icon: accentIcon })
+                .addTo(map)
+                .bindPopup(popup);
+
+        markers.push(marker);
+      }
+    });
+
+    // Fit map to all markers, or default to Europe view
+    if (markers.length > 0) {
+      const group = L.featureGroup(markers);
+      map.fitBounds(group.getBounds().pad(0.3));
+    } else {
+      map.setView([51.5, -0.1], 4);
+    }
+  </script>
+</th:block>
+
+</body>
+</html>
