@@ -74,6 +74,8 @@ public class MomentController {
 									 @RequestParam("location") String location,
 									 @RequestParam("groupId") Long groupId,
 									 @RequestParam(value = "eventId", required = false) Long eventId,
+									 @RequestParam(value = "latitude",  required = false) Double latitude,
+									 @RequestParam(value = "longitude", required = false) Double longitude,
 									 Principal principal) throws Exception {
 		User currentUser = userRepository.findByEmail(getUsernameFromPrincipal(principal));
 
@@ -91,6 +93,8 @@ public class MomentController {
 		moment.setContent(content);
 		moment.setLocation(location.isEmpty() ? null : location);
 		moment.getGroups().add(group);
+		moment.setLatitude(latitude);
+		moment.setLongitude(longitude);
 		momentRepository.save(moment);
 
 		if (eventId != null) {
