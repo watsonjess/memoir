@@ -9,4 +9,9 @@ public interface MomentRepository extends CrudRepository<Moment, Long> {
     List<Moment> findByCreatedByIdAndCreatedAtBetween(Long userId, LocalDateTime start, LocalDateTime end);
     List<Moment> findByCreatedById(Long userId);
     List<Moment> findByCreatedByIdOrderByCreatedAtDesc(Long userId);
+    List<Moment> findByCreatedByIdInAndCreatedAtBetweenOrderByCreatedAtAsc(
+            List<Long> userIds, LocalDateTime start, LocalDateTime end);
+
+    List<Moment> findByCreatedByIdInAndCreatedAtBetweenOrderByCreatedAtDesc(
+            List<Long> userIds, LocalDateTime start, LocalDateTime end);
 }

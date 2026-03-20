@@ -48,7 +48,7 @@ public class NewsletterServiceTest {
 
         List<Moment> moments = List.of(m1, m2, m3, m4);
 
-        String summary = newsletterService.generateUserSummary("reece", moments);
+        String summary = newsletterService.generateUserSummary("Reece Ogidih", "Reece", moments);
 
         System.out.println("=== GENERATED SUMMARY ===");
         System.out.println(summary);

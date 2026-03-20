@@ -61,6 +61,12 @@
 <body>
 <div class="container py-5">
 
+    <div class="container pt-4">
+        <a href="/archive" style="font-size:0.85rem; color:#888; text-decoration:none;">
+            <i class="bi bi-arrow-left"></i> Back to archive
+        </a>
+    </div>
+
     <!-- Header -->
     <div class="newsletter-header">
         <div class="d-flex justify-content-between align-items-start">
@@ -94,7 +100,7 @@
         <!-- Per user summaries -->
         <p class="section-title">What everyone got up to</p>
         <div th:each="entry : ${summaries}" class="mb-4">
-            <div class="member-name" th:text="${entry.key.username}"></div>
+            <div class="member-name" th:text="${entry.key.firstname + ' ' + entry.key.lastname}"></div>
             <p class="summary-text" th:text="${entry.value}"></p>
             <hr/>
         </div>

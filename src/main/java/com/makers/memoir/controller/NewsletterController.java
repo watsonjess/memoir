@@ -1,12 +1,12 @@
 package com.makers.memoir.controller;
 
+import com.cloudinary.Cloudinary;
+import com.makers.memoir.model.Group;
 import com.makers.memoir.model.GroupMember;
 import com.makers.memoir.model.Moment;
 import com.makers.memoir.model.User;
-import com.makers.memoir.repository.GroupMemberRepository;
-import com.makers.memoir.repository.GroupRepository;
-import com.makers.memoir.repository.MomentRepository;
-import com.makers.memoir.repository.UserRepository;
+import com.makers.memoir.model.Weekly;
+import com.makers.memoir.repository.*;
 import com.makers.memoir.service.EmailService;
 import com.makers.memoir.service.NewsletterService;
 import com.makers.memoir.service.PdfService;
@@ -58,6 +58,12 @@ public class NewsletterController {
     @Autowired
     GroupMemberRepository groupMemberRepository;
 
+    @Autowired
+    Cloudinary cloudinary;
+
+    @Autowired
+    WeeklyRepository weeklyRepository;
+
     private String getUsernameFromPrincipal(Principal principal) {
         if (principal instanceof OAuth2AuthenticationToken) {
             OAuth2AuthenticationToken token = (OAuth2AuthenticationToken) principal;
@@ -66,7 +72,6 @@ public class NewsletterController {
         return principal.getName();
     }
 
-    // Converts image rows from URLs to base64 for Flying Saucer PDF rendering
     private List<List<String>> toBase64ImageRows(List<List<String>> imageRows) {
         return imageRows.stream()
                 .map(row -> row.stream()
@@ -78,7 +83,6 @@ public class NewsletterController {
     private void populatePdfContext(Context context, NewsletterData data,
                                     Long groupId, LocalDateTime weekStart) {
         List<List<String>> base64ImageRows = toBase64ImageRows(data.imageRows);
-
         context.setVariable("summaries", data.summaries);
         context.setVariable("memberMoments", data.memberMoments);
         context.setVariable("allImageUrls", data.allImageUrls);
@@ -90,7 +94,21 @@ public class NewsletterController {
         context.setVariable("weekStart", weekStart);
     }
 
-    private NewsletterData buildNewsletterData(Long groupId, LocalDateTime weekStart, LocalDateTime weekEnd) {
+    private void populateWebContext(Model model, NewsletterData data,
+                                    Long groupId, LocalDateTime weekStart) {
+        model.addAttribute("summaries", data.summaries);
+        model.addAttribute("memberMoments", data.memberMoments);
+        model.addAttribute("allImageUrls", data.allImageUrls);
+        model.addAttribute("imageRows", data.imageRows);
+        model.addAttribute("colWidth", data.colWidth);
+        model.addAttribute("imageHeight", data.imageHeight);
+        model.addAttribute("groupSummary", data.groupSummary);
+        model.addAttribute("groupId", groupId);
+        model.addAttribute("weekStart", weekStart);
+    }
+
+    private NewsletterData buildNewsletterData(Long groupId, LocalDateTime weekStart,
+                                               LocalDateTime weekEnd) {
         List<GroupMember> groupMembers = groupMemberRepository
                 .findByGroupIdAndStatus(groupId, "joined");
         List<User> members = groupMembers.stream()
@@ -107,9 +125,9 @@ public class NewsletterController {
             );
 
             if (!moments.isEmpty()) {
-                String summary = newsletterService.generateUserSummary(
-                        member.getUsername(), moments
-                );
+                String fullName = member.getFirstname() + " " + member.getLastname();
+                String firstName = member.getFirstname();
+                String summary = newsletterService.generateUserSummary(fullName, firstName, moments);
                 summaries.put(member, summary);
                 memberMoments.put(member, moments);
                 moments.stream()
@@ -146,7 +164,8 @@ public class NewsletterController {
 
         List<List<String>> imageRows = new ArrayList<>();
         for (int i = 0; i < allImageUrls.size(); i += bestColumns) {
-            imageRows.add(allImageUrls.subList(i, Math.min(i + bestColumns, allImageUrls.size())));
+            imageRows.add(allImageUrls.subList(i,
+                    Math.min(i + bestColumns, allImageUrls.size())));
         }
 
         String groupSummary = summaries.isEmpty()
@@ -157,7 +176,8 @@ public class NewsletterController {
                 imageRows, colWidth, imageHeight, groupSummary, members);
     }
 
-    private String buildNewsletterHtml(Long groupId, LocalDateTime weekStart, LocalDateTime weekEnd) {
+    private String buildNewsletterHtml(Long groupId, LocalDateTime weekStart,
+                                       LocalDateTime weekEnd) {
         NewsletterData data = buildNewsletterData(groupId, weekStart, weekEnd);
         Context context = new Context();
         populatePdfContext(context, data, groupId, weekStart);
@@ -165,45 +185,72 @@ public class NewsletterController {
     }
 
     @GetMapping("/group/{groupId}")
-    public String viewNewsletter(@PathVariable Long groupId, Model model, Principal principal) {
+    public String viewNewsletter(@PathVariable Long groupId, Model model,
+                                 Principal principal) {
         LocalDateTime weekStart = LocalDateTime.now()
                 .with(DayOfWeek.MONDAY)
                 .truncatedTo(ChronoUnit.DAYS);
         LocalDateTime weekEnd = weekStart.plusDays(7);
 
+        Group group = groupRepository.findById(groupId).orElseThrow();
+        Optional<Weekly> existingWeekly = weeklyRepository
+                .findByGroupAndWeekStart(group, weekStart);
+
+        // Serve cached version if it exists
+        if (existingWeekly.isPresent() && existingWeekly.get().getHtmlContent() != null) {
+            Weekly cached = existingWeekly.get();
+            model.addAttribute("cachedHtml", cached.getHtmlContent());
+            model.addAttribute("groupId", groupId);
+            model.addAttribute("weekStart", weekStart);
+            return "newsletter/cached";
+        }
+
+        // Generate fresh newsletter
         NewsletterData data = buildNewsletterData(groupId, weekStart, weekEnd);
+        populateWebContext(model, data, groupId, weekStart);
 
-        // Web view uses original Cloudinary URLs
-        model.addAttribute("summaries", data.summaries);
-        model.addAttribute("memberMoments", data.memberMoments);
-        model.addAttribute("allImageUrls", data.allImageUrls);
-        model.addAttribute("imageRows", data.imageRows);
-        model.addAttribute("colWidth", data.colWidth);
-        model.addAttribute("imageHeight", data.imageHeight);
-        model.addAttribute("groupSummary", data.groupSummary);
-        model.addAttribute("groupId", groupId);
-        model.addAttribute("weekStart", weekStart);
-
-        // PDF uses base64 encoded images
         try {
-            Context context = new Context();
-            populatePdfContext(context, data, groupId, weekStart);
-            String htmlContent = templateEngine.process("newsletter/pdf", context);
-            byte[] pdfBytes = pdfService.generatePdf(htmlContent);
+            // Build PDF context with base64 images
+            Context pdfContext = new Context();
+            populatePdfContext(pdfContext, data, groupId, weekStart);
+            String pdfHtml = templateEngine.process("newsletter/pdf", pdfContext);
+            byte[] pdfBytes = pdfService.generatePdf(pdfHtml);
 
-            for (GroupMember gm : groupMemberRepository.findByGroupIdAndStatus(groupId, "joined")) {
-                try {
-                    emailService.sendNewsletterEmail(
-                            gm.getUser().getEmail(),
-                            "Your Weekly Memoir Newsletter",
-                            pdfBytes
-                    );
-                } catch (MessagingException e) {
-                    System.err.println("Failed to send email to " + gm.getUser().getEmail() + ": " + e.getMessage());
-                }
-            }
+            // Build web HTML for caching
+            Context webContext = new Context();
+            webContext.setVariable("summaries", data.summaries);
+            webContext.setVariable("memberMoments", data.memberMoments);
+            webContext.setVariable("allImageUrls", data.allImageUrls);
+            webContext.setVariable("imageRows", data.imageRows);
+            webContext.setVariable("colWidth", data.colWidth);
+            webContext.setVariable("imageHeight", data.imageHeight);
+            webContext.setVariable("groupSummary", data.groupSummary);
+            webContext.setVariable("groupId", groupId);
+            webContext.setVariable("weekStart", weekStart);
+            String webHtml = templateEngine.process("newsletter/index", webContext);
+
+            // Upload PDF to Cloudinary
+            Map<String, Object> uploadOptions = new HashMap<>();
+            uploadOptions.put("resource_type", "raw");
+            uploadOptions.put("public_id", "newsletters/group_" + groupId + "_"
+                    + weekStart.toLocalDate());
+            uploadOptions.put("overwrite", true);
+            Map pdfUploadResult = cloudinary.uploader().upload(pdfBytes, uploadOptions);
+            String pdfUrl = (String) pdfUploadResult.get("secure_url");
+
+            // Save Weekly record with cached HTML and PDF URL
+            Weekly weekly = existingWeekly.orElse(
+                    new Weekly(group, weekStart, weekStart.plusDays(6)));
+            weekly.setStatus("sent");
+            weekly.setSentAt(LocalDateTime.now());
+            weekly.setPdfUrl(pdfUrl);
+            weekly.setHtmlContent(webHtml);
+            weeklyRepository.save(weekly);
+
+            // Email sending will be handled by scheduler on release day
+
         } catch (Exception e) {
-            System.err.println("Failed to generate or send PDF: " + e.getMessage());
+            System.err.println("Failed to generate newsletter: " + e.getMessage());
         }
 
         return "newsletter/index";
@@ -211,7 +258,8 @@ public class NewsletterController {
 
     @GetMapping("/group/{groupId}/pdf")
     @ResponseBody
-    public ResponseEntity<byte[]> downloadNewsletter(@PathVariable Long groupId, Principal principal) {
+    public ResponseEntity<byte[]> downloadNewsletter(@PathVariable Long groupId,
+                                                     Principal principal) {
         LocalDateTime weekStart = LocalDateTime.now()
                 .with(DayOfWeek.MONDAY)
                 .truncatedTo(ChronoUnit.DAYS);
@@ -243,7 +291,8 @@ public class NewsletterController {
 
         NewsletterData(Map<User, String> summaries, Map<User, List<Moment>> memberMoments,
                        List<String> allImageUrls, List<List<String>> imageRows,
-                       int colWidth, int imageHeight, String groupSummary, List<User> members) {
+                       int colWidth, int imageHeight, String groupSummary,
+                       List<User> members) {
             this.summaries = summaries;
             this.memberMoments = memberMoments;
             this.allImageUrls = allImageUrls;

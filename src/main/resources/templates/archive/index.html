@@ -16,7 +16,6 @@
                 flex-wrap: wrap;
                 gap: 1rem;
             }
-
             .nl-kicker {
                 font-size: 0.7rem;
                 font-weight: 500;
@@ -25,13 +24,11 @@
                 color: var(--memoir-accent);
                 margin-bottom: 0.35rem;
             }
-
             .nl-month-nav {
                 display: flex;
                 align-items: center;
                 gap: 0.5rem;
             }
-
             .nl-month-btn {
                 width: 34px;
                 height: 34px;
@@ -48,13 +45,11 @@
                 padding: 0;
                 line-height: 1;
             }
-
             .nl-month-btn:hover {
                 border-color: var(--memoir-accent);
                 color: var(--memoir-accent);
                 background: #FAECE7;
             }
-
             .nl-month-label {
                 font-family: 'Playfair Display', serif;
                 font-size: 1.1rem;
@@ -63,21 +58,18 @@
                 text-align: center;
                 letter-spacing: -0.01em;
             }
-
             .nl-calendar-wrap {
                 background: var(--memoir-surface);
                 border: 1px solid var(--memoir-border);
                 border-radius: 16px;
                 overflow: hidden;
             }
-
             .nl-dow-row {
                 display: grid;
                 grid-template-columns: repeat(7, 1fr);
                 border-bottom: 1px solid var(--memoir-border);
                 background: var(--memoir-cream);
             }
-
             .nl-dow-cell {
                 padding: 0.7rem 0;
                 text-align: center;
@@ -87,12 +79,10 @@
                 text-transform: uppercase;
                 color: var(--memoir-muted);
             }
-
             .nl-date-grid {
                 display: grid;
                 grid-template-columns: repeat(7, 1fr);
             }
-
             .nl-day {
                 min-height: 100px;
                 border-right: 1px solid var(--memoir-border);
@@ -102,38 +92,22 @@
                 cursor: default;
                 transition: background 0.12s;
             }
-
-            .nl-day:nth-child(7n) {
-                border-right: none;
-            }
-
+            .nl-day:nth-child(7n) { border-right: none; }
             .nl-day--empty {
                 background: var(--memoir-cream);
                 opacity: 0.45;
             }
-
-            .nl-day--clickable {
-                cursor: pointer;
-            }
-
-            .nl-day--clickable:hover {
-                background: #FBF3F0;
-            }
-
+            .nl-day--clickable { cursor: pointer; }
+            .nl-day--clickable:hover { background: #FBF3F0; }
             .nl-day--today .nl-day-num {
                 background: var(--memoir-accent);
                 color: #fff;
             }
-
-            .nl-day--selected {
-                background: #FAECE7;
-            }
-
+            .nl-day--selected { background: #FAECE7; }
             .nl-day--selected .nl-day-num {
                 background: var(--memoir-accent);
                 color: #fff;
             }
-
             .nl-day-num {
                 display: inline-flex;
                 align-items: center;
@@ -147,11 +121,7 @@
                 margin-bottom: 0.35rem;
                 transition: background 0.12s, color 0.12s;
             }
-
-            .nl-day--empty .nl-day-num {
-                color: var(--memoir-muted);
-            }
-
+            .nl-day--empty .nl-day-num { color: var(--memoir-muted); }
             .nl-event-pill {
                 display: block;
                 font-size: 0.68rem;
@@ -167,28 +137,117 @@
                 line-height: 1.5;
                 max-width: 100%;
             }
-
             .nl-event-pill--light {
                 background: #FAECE7;
                 color: #712B13;
             }
-
             .nl-event-pill--more {
                 background: transparent;
                 color: var(--memoir-muted);
                 font-size: 0.65rem;
                 padding-left: 4px;
             }
-
+            .nl-panel-overlay {
+                display: none;
+                position: fixed;
+                inset: 0;
+                background: rgba(0,0,0,0.3);
+                z-index: 100;
+            }
+            .nl-panel-overlay.active { display: block; }
+            .nl-panel {
+                position: fixed;
+                top: 0;
+                right: -420px;
+                width: 400px;
+                max-width: 95vw;
+                height: 100vh;
+                background: #fff;
+                box-shadow: -4px 0 24px rgba(0,0,0,0.12);
+                z-index: 101;
+                transition: right 0.3s ease;
+                display: flex;
+                flex-direction: column;
+                padding: 32px 28px;
+                overflow-y: auto;
+            }
+            .nl-panel.active { right: 0; }
+            .nl-panel-close {
+                position: absolute;
+                top: 16px;
+                right: 16px;
+                background: none;
+                border: none;
+                font-size: 1.4rem;
+                cursor: pointer;
+                color: var(--memoir-muted);
+                line-height: 1;
+            }
+            .nl-panel-close:hover { color: var(--memoir-ink); }
+            .nl-panel-date {
+                font-family: 'Playfair Display', serif;
+                font-size: 1.4rem;
+                font-weight: 600;
+                margin-bottom: 4px;
+            }
+            .nl-panel-kicker {
+                font-size: 0.7rem;
+                text-transform: uppercase;
+                letter-spacing: 0.1em;
+                color: var(--memoir-muted);
+                margin-bottom: 24px;
+            }
+            .nl-panel-item {
+                border: 1px solid var(--memoir-border);
+                border-radius: 12px;
+                padding: 16px 18px;
+                margin-bottom: 12px;
+            }
+            .nl-panel-group-name {
+                font-weight: 600;
+                font-size: 0.95rem;
+                margin-bottom: 10px;
+            }
+            .nl-panel-links {
+                display: flex;
+                gap: 8px;
+            }
+            .nl-panel-link {
+                flex: 1;
+                text-align: center;
+                padding: 6px 0;
+                border-radius: 8px;
+                font-size: 0.8rem;
+                font-weight: 500;
+                text-decoration: none;
+                transition: opacity 0.15s;
+            }
+            .nl-panel-link:hover { opacity: 0.8; }
+            .nl-panel-link--html {
+                background: var(--memoir-accent);
+                color: #fff;
+            }
+            .nl-panel-link--pdf {
+                background: #f0f0f0;
+                color: var(--memoir-ink);
+            }
+            .nl-panel-empty {
+                color: var(--memoir-muted);
+                font-size: 0.9rem;
+                margin-top: 8px;
+            }
+            .nl-current-btn {
+                display: inline-block;
+                margin-bottom: 20px;
+                font-size: 0.8rem;
+                color: var(--memoir-accent);
+                text-decoration: none;
+                font-weight: 500;
+            }
+            .nl-current-btn:hover { text-decoration: underline; }
             @media (max-width: 991px) {
-                .nl-day {
-                    min-height: 64px;
-                }
-
-                .nl-event-pill {
-                    display: none;
-                }
-
+                .nl-day { min-height: 64px; }
+                .nl-event-pill { display: none; }
                 .nl-day--has-events::after {
                     content: '';
                     display: block;
@@ -199,18 +258,9 @@
                     margin: 4px auto 0;
                 }
             }
-
             @media (max-width: 575px) {
-                .nl-day {
-                    min-height: 48px;
-                    padding: 0.35rem;
-                }
-
-                .nl-day-num {
-                    width: 24px;
-                    height: 24px;
-                    font-size: 0.75rem;
-                }
+                .nl-day { min-height: 48px; padding: 0.35rem; }
+                .nl-day-num { width: 24px; height: 24px; font-size: 0.75rem; }
             }
         </style>
     </th:block>
@@ -249,17 +299,40 @@
         <div class="nl-date-grid" id="nlDateGrid"></div>
     </div>
 
+    <div class="nl-panel-overlay" id="nlOverlay"></div>
+
+    <div class="nl-panel" id="nlPanel">
+        <button class="nl-panel-close" id="nlPanelClose">&times;</button>
+        <p class="nl-panel-kicker">Newsletters</p>
+        <div class="nl-panel-date" id="nlPanelDate"></div>
+        <div id="nlPanelContent"></div>
+    </div>
+
 </div>
 
 <th:block layout:fragment="scripts">
-    <script>
+    <script th:inline="javascript">
         (() => {
-
             const data = {};
+            /*[# th:each="nl : ${newsletters}"]*/
+            /*[# th:if="${nl.sentAt != null}"]*/
+            (function() {
+                const key = /*[[${nl.sentAt.year}]]*/ 0
+                    + '-' + /*[[${nl.sentAt.monthValue}]]*/ 0
+                    + '-' + /*[[${nl.sentAt.dayOfMonth}]]*/ 0;
+                if (!data[key]) data[key] = [];
+                data[key].push({
+                    group: /*[[${nl.group.name}]]*/ '',
+                    groupId: /*[[${nl.group.id}]]*/ 0,
+                    pdfUrl: /*[[${nl.pdfUrl}]]*/ ''
+                });
+            })();
+            /*[/]*/
+            /*[/]*/
 
             const MONTHS = [
-                "January", "February", "March", "April", "May", "June",
-                "July", "August", "September", "October", "November", "December"
+                "January","February","March","April","May","June",
+                "July","August","September","October","November","December"
             ];
 
             const today = new Date();
@@ -269,20 +342,91 @@
 
             const grid = document.getElementById("nlDateGrid");
             const monthLabel = document.getElementById("nlMonthLabel");
+            const panel = document.getElementById("nlPanel");
+            const overlay = document.getElementById("nlOverlay");
+            const panelClose = document.getElementById("nlPanelClose");
+            const panelDate = document.getElementById("nlPanelDate");
+            const panelContent = document.getElementById("nlPanelContent");
+
+            panelClose.addEventListener("click", closePanel);
+            overlay.addEventListener("click", closePanel);
+
+            function closePanel() {
+                panel.classList.remove("active");
+                overlay.classList.remove("active");
+                selectedDay = null;
+                render();
+            }
+
+            function openPanel(dayNum) {
+                const isToday = dayNum === today.getDate()
+                    && month === today.getMonth()
+                    && year === today.getFullYear();
+
+                panelDate.textContent = `${dayNum} ${MONTHS[month]} ${year}`;
+
+                const key = `${year}-${month + 1}-${dayNum}`;
+                const events = data[key] ?? [];
+
+                panelContent.innerHTML = "";
+
+                if (isToday) {
+                    const link = document.createElement("a");
+                    link.href = "/newsletters/current";
+                    link.className = "nl-current-btn";
+                    link.textContent = "→ View current newsletters";
+                    panelContent.appendChild(link);
+                }
+
+                if (events.length === 0 && !isToday) {
+                    const empty = document.createElement("p");
+                    empty.className = "nl-panel-empty";
+                    empty.textContent = "No newsletters released on this day.";
+                    panelContent.appendChild(empty);
+                } else {
+                    events.forEach(ev => {
+                        const item = document.createElement("div");
+                        item.className = "nl-panel-item";
+
+                        const name = document.createElement("div");
+                        name.className = "nl-panel-group-name";
+                        name.textContent = ev.group;
+                        item.appendChild(name);
+
+                        const links = document.createElement("div");
+                        links.className = "nl-panel-links";
+
+                        const htmlLink = document.createElement("a");
+                        htmlLink.href = `/newsletter/group/${ev.groupId}`;
+                        htmlLink.className = "nl-panel-link nl-panel-link--html";
+                        htmlLink.textContent = "View newsletter";
+                        links.appendChild(htmlLink);
+
+                        if (ev.pdfUrl) {
+                            const pdfLink = document.createElement("a");
+                            pdfLink.href = ev.pdfUrl;
+                            pdfLink.target = "_blank";
+                            pdfLink.className = "nl-panel-link nl-panel-link--pdf";
+                            pdfLink.textContent = "Download PDF";
+                            links.appendChild(pdfLink);
+                        }
+
+                        item.appendChild(links);
+                        panelContent.appendChild(item);
+                    });
+                }
+
+                panel.classList.add("active");
+                overlay.classList.add("active");
+            }
 
             document.getElementById("nlPrevMonth").addEventListener("click", () => navigate(-1));
             document.getElementById("nlNextMonth").addEventListener("click", () => navigate(+1));
 
             function navigate(dir) {
                 month += dir;
-                if (month > 11) {
-                    month = 0;
-                    year++;
-                }
-                if (month < 0) {
-                    month = 11;
-                    year--;
-                }
+                if (month > 11) { month = 0; year++; }
+                if (month < 0) { month = 11; year--; }
                 render();
             }
 
@@ -311,13 +455,11 @@
             function buildEmptyCell(dayNum, daysInMonth) {
                 const cell = document.createElement("div");
                 cell.className = "nl-day nl-day--empty";
-
                 const num = document.createElement("span");
                 num.className = "nl-day-num";
                 num.textContent = dayNum < 1
                     ? new Date(year, month, 0).getDate() + dayNum
                     : dayNum - daysInMonth;
-
                 cell.appendChild(num);
                 return cell;
             }
@@ -339,7 +481,7 @@
                     "nl-day nl-day--clickable",
                     isToday ? "nl-day--today" : "",
                     isSelected ? "nl-day--selected" : "",
-                    events.length ? "nl-day--has-events" : "",
+                    events.length || isToday ? "nl-day--has-events" : "",
                 ].filter(Boolean).join(" ");
 
                 const num = document.createElement("span");
@@ -350,7 +492,7 @@
                 events.slice(0, 2).forEach((ev, idx) => {
                     const pill = document.createElement("span");
                     pill.className = `nl-event-pill${idx === 1 ? " nl-event-pill--light" : ""}`;
-                    pill.textContent = ev.title;
+                    pill.textContent = ev.group;
                     cell.appendChild(pill);
                 });
 
@@ -364,6 +506,7 @@
                 cell.addEventListener("click", () => {
                     selectedDay = {year, month, day: dayNum};
                     render();
+                    openPanel(dayNum);
                 });
 
                 return cell;

@@ -132,7 +132,7 @@
   <!-- Per user summaries -->
   <p class="section-title">What everyone got up to</p>
   <div th:each="entry : ${summaries}">
-    <div class="member-name" th:text="${entry.key.username}"></div>
+    <div class="member-name" th:text="${entry.key.firstname + ' ' + entry.key.lastname}"></div>
     <p class="summary-text" th:text="${entry.value}"></p>
     <hr class="divider"/>
   </div>
