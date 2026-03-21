@@ -58,13 +58,15 @@
 
                 <!-- Card header -->
                 <div class="d-flex justify-content-between align-items-start mb-3">
-                    <h5 class="mb-0" th:text="${m.group.name}">Group name</h5>
-                    <!-- Type badge -->
+                    <a th:href="@{/groups/{id}(id=${m.group.id})}"
+                       style="text-decoration:none;color:inherit;">
+                        <h5 class="mb-0" th:text="${m.group.name}">Group name</h5>
+                    </a>
                     <span class="badge rounded-pill"
                           th:classappend="${m.group.type == 'weekly'} ? 'bg-success' : 'bg-warning text-dark'"
                           th:text="${m.group.type == 'weekly'} ? 'Weekly' : 'Event'">
-                        Type
-                    </span>
+                Type
+            </span>
                 </div>
 
                 <!-- Description -->
@@ -79,20 +81,22 @@
                     <i class="bi bi-people me-1"></i>
                     <span th:text="${m.group.members.size()}">0</span> members
                     <span class="ms-2">
-                        <i class="bi bi-person-badge me-1"></i>
-                        <span th:text="${m.role}">member</span>
-                    </span>
+                <i class="bi bi-person-badge me-1"></i>
+                <span th:text="${m.role}">member</span>
+            </span>
                 </p>
 
                 <!-- Actions -->
                 <div class="mt-auto d-flex gap-2">
-
-                    <!-- Group detail -->
+                    <a th:href="@{/groups/{id}/feed(id=${m.group.id})}"
+                       class="btn btn-sm btn-memoir"
+                       th:if="${m.group.type == 'weekly'}">
+                        <i class="bi bi-grid"></i> Feed
+                    </a>
                     <a th:href="@{/groups/{id}(id=${m.group.id})}"
                        class="btn btn-sm btn-outline-secondary">
                         <i class="bi bi-gear"></i>
                     </a>
-
                 </div>
             </div>
         </div>
