@@ -6,6 +6,8 @@
 <head>
   <title>Events</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css"/>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css"/>
 </head>
 <body>
 
@@ -71,110 +73,140 @@
 <th:block layout:fragment="styles">
   <style>
     .event-card {
-      transition: border-color 0.15s, transform 0.15s;
-      cursor: pointer;
+        transition: border-color 0.15s, transform 0.15s;
+        cursor: pointer;
     }
     .event-card:hover {
-      border-color: var(--memoir-accent);
-      transform: translateY(-2px);
+        border-color: var(--memoir-accent);
+        transform: translateY(-2px);
     }
     .leaflet-popup-content-wrapper {
-      border-radius: 10px;
-      font-family: 'DM Sans', sans-serif;
+        border-radius: 10px;
+        font-family: 'DM Sans', sans-serif;
     }
     .memoir-map-popup-title {
-      font-family: 'Playfair Display', serif;
-      font-size: 1rem;
-      font-weight: 600;
-      margin-bottom: 4px;
+        font-family: 'Playfair Display', serif;
+        font-size: 1rem;
+        font-weight: 600;
+        margin-bottom: 4px;
     }
     .memoir-map-popup-dates {
-      font-size: 0.8rem;
-      color: #6B6860;
-      margin-bottom: 8px;
+        font-size: 0.8rem;
+        color: #6B6860;
+        margin-bottom: 8px;
     }
     .memoir-map-popup-group {
-      font-size: 0.75rem;
-      color: #C1603A;
-      margin-bottom: 6px;
+        font-size: 0.75rem;
+        color: #C1603A;
+        margin-bottom: 6px;
     }
     .memoir-map-popup-link {
-      display: inline-block;
-      font-size: 0.8rem;
-      color: #C1603A;
-      text-decoration: none;
-      font-weight: 500;
+        display: inline-block;
+        font-size: 0.8rem;
+        color: #C1603A;
+        text-decoration: none;
+        font-weight: 500;
     }
     .memoir-map-popup-link:hover { text-decoration: underline; }
+    .marker-cluster { background: none !important; }
+    .marker-cluster div { background: none !important; }
   </style>
 </th:block>
 
 <th:block layout:fragment="scripts">
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
   <script th:unless="${#lists.isEmpty(events)}" th:inline="javascript">
     const events = /*[[${eventMaps}]]*/ [];
 
     const map = L.map('map', { zoomControl: true });
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-      maxZoom: 18
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+        maxZoom: 18
     }).addTo(map);
 
     const accentIcon = L.divIcon({
-      className: '',
-      html: `<div style="
-                width: 16px; height: 16px;
-                background: #C1603A;
-                border: 2px solid #fff;
-                border-radius: 50%;
-                box-shadow: 0 1px 4px rgba(0,0,0,0.3);
-            "></div>`,
-      iconSize: [16, 16],
-      iconAnchor: [8, 8],
-      popupAnchor: [0, -12]
+        className: '',
+        html: `<div style="
+            width: 16px; height: 16px;
+            background: #C1603A;
+            border: 2px solid #fff;
+            border-radius: 50%;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+        "></div>`,
+        iconSize: [16, 16],
+        iconAnchor: [8, 8],
+        popupAnchor: [0, -12]
+    });
+
+    // Cluster group with custom accent styling
+    const clusterGroup = L.markerClusterGroup({
+        maxClusterRadius: 40,
+        iconCreateFunction: (cluster) => {
+            const count = cluster.getChildCount();
+            return L.divIcon({
+                className: '',
+                html: `<div style="
+                    width:32px; height:32px;
+                    background:#C1603A;
+                    border:2px solid #fff;
+                    border-radius:50%;
+                    display:flex; align-items:center; justify-content:center;
+                    color:#fff; font-size:0.75rem; font-weight:500;
+                    box-shadow:0 2px 6px rgba(0,0,0,0.3);
+                ">${count}</div>`,
+                iconSize: [32, 32],
+                iconAnchor: [16, 16],
+                popupAnchor: [0, -18]
+            });
+        }
     });
 
     const markers = [];
 
     events.forEach(event => {
-      if (event.latitude && event.longitude) {
-        const startDate = event.startDate
+        if (event.latitude && event.longitude) {
+            const startDate = event.startDate
                 ? new Date(event.startDate).toLocaleDateString('en-GB', {
-                  day: 'numeric', month: 'short', year: 'numeric'
-                })
+                    day: 'numeric', month: 'short', year: 'numeric'
+                  })
                 : '';
-        const endDate = event.endDate
+            const endDate = event.endDate
                 ? new Date(event.endDate).toLocaleDateString('en-GB', {
-                  day: 'numeric', month: 'short', year: 'numeric'
-                })
+                    day: 'numeric', month: 'short', year: 'numeric'
+                  })
                 : '';
 
-        const popup = `
-                    <div style="min-width: 200px;">
-                        <div class="memoir-map-popup-title">${event.name}</div>
-                        <div class="memoir-map-popup-group">${event.groupName}</div>
-                        <div class="memoir-map-popup-dates">${startDate}${endDate ? ' → ' + endDate : ''}</div>
-                        <a class="memoir-map-popup-link"
-                           href="/groups/${event.groupId}/events/${event.id}">
-                           View moments &rarr;
-                        </a>
-                    </div>`;
+            const popup = `
+                <div style="min-width: 200px;">
+                    <div class="memoir-map-popup-title">${event.name}</div>
+                    <div class="memoir-map-popup-group">${event.groupName}</div>
+                    <div class="memoir-map-popup-dates">${startDate}${endDate ? ' → ' + endDate : ''}</div>
+                    <a class="memoir-map-popup-link"
+                       href="/groups/${event.groupId}/events/${event.id}">
+                       View moments &rarr;
+                    </a>
+                </div>`;
 
-        const marker = L.marker([event.latitude, event.longitude], { icon: accentIcon })
-                .addTo(map)
+            const marker = L.marker([event.latitude, event.longitude], { icon: accentIcon })
                 .bindPopup(popup);
 
-        markers.push(marker);
-      }
+            clusterGroup.addLayer(marker);
+            markers.push(marker);
+        }
     });
 
-    // Fit map to all markers, or default to Europe view
-    if (markers.length > 0) {
-      const group = L.featureGroup(markers);
-      map.fitBounds(group.getBounds().pad(0.3));
+    map.addLayer(clusterGroup);
+
+    // Fit map to all markers
+    if (markers.length > 1) {
+        const group = L.featureGroup(markers);
+        map.fitBounds(group.getBounds().pad(0.3));
+    } else if (markers.length === 1) {
+        map.setView(markers[0].getLatLng(), 10);
     } else {
-      map.setView([51.5, -0.1], 4);
+        map.setView([51.5, -0.1], 4);
     }
   </script>
 </th:block>
