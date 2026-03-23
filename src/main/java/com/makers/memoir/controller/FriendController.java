@@ -127,7 +127,6 @@ public RedirectView declineRequest(@PathVariable String username, Principal prin
         Optional<Friend> existing = friendRepository
                 .findByIdRequesterIdAndIdAddresseeId(requester.getId(), addressee.getId());
 
-        // Also check reverse direction - fix from old project
         if (existing.isEmpty()) {
             existing = friendRepository
                     .findByIdRequesterIdAndIdAddresseeId(addressee.getId(), requester.getId());
@@ -162,6 +161,6 @@ public RedirectView declineRequest(@PathVariable String username, Principal prin
 
         friendship.ifPresent(f -> friendRepository.delete(f));
 
-        return new RedirectView("/profile/" + username);
+        return new RedirectView("/profile/" + currentUser.getUsername());
     }
 }

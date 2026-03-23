@@ -11,8 +11,6 @@
     <div class="text-center">
       <h1 class="memoir-page-title"
           th:text="'Welcome back, ' + ${profileUser.firstname} + '!'">Welcome back!</h1>
-      <p th:text="'loggedInUser: ' + ${loggedInUser.username}"></p>
-      <p th:text="'profileUser: ' + ${profileUser.username}"></p>
     </div>
   </div>
 
@@ -34,7 +32,7 @@
         </div>
 
         <p class="small mb-2 text-center" style="color: var(--memoir-muted)">
-          <i class="bi bi-at me-2"></i>
+          <i class="bi bi-at me-1"></i>
           <span th:text="${profileUser.username}">Username</span>
         </p>
         <p class="small mb-3 text-center" style="color: var(--memoir-muted)">
@@ -52,6 +50,7 @@
           </a>
           <!-- Other profile: add friend button -->
           <div th:unless="${isOwnProfile}">
+
             <!-- Already friends -->
             <form th:if="${friendshipStatus == 'ACCEPTED'}"
                   th:action="@{/friends/unfriend/{username}(username=${profileUser.username})}"
@@ -79,12 +78,12 @@
     </div>
 
 
-    <!-- Friends section -->
-    <div class="col-md-8 col-lg-5">
+    <!-- Friends card -->
+    <div class="col-md-8 col-lg-6">
       <div class="memoir-card">
 
         <!-- Tab buttons -->
-        <ul class="nav nav-tabs mb-3" style="border-bottom: 1px solid #f0d9c8;">
+        <ul class="nav nav-tabs mb-3 flex-nowrap" style="border-bottom: 1px solid #f0d9c8;">
           <li class="nav-item">
             <button class="nav-link active" onclick="showTab('friends', event)" style="color: var(--memoir-muted);">
               <i class="bi bi-people me-1"></i> Friends
@@ -151,7 +150,8 @@
           </div>
         </div>
 
-        <!-- Incoming requests tab (own profile only) -->
+        <!-- Own profile only -->
+        <!-- Incoming requests tab -->
         <div id="tab-requests" class="tab-pane" style="display: none;" th:if="${profileUser.username.equals(loggedInUser.username)}">
           <div th:if="${#lists.isEmpty(incomingRequests)}" class="text-center py-4">
             <i class="bi bi-inbox fs-2 d-block mb-2" style="color: var(--memoir-muted)"></i>
@@ -183,7 +183,7 @@
           </div>
         </div>
 
-        <!-- Outgoing requests tab (own profile only) -->
+        <!-- Outgoing requests -->
         <div id="tab-outgoing" class="tab-pane" style="display: none;" th:if="${profileUser.username.equals(loggedInUser.username)}">
           <div th:if="${#lists.isEmpty(outgoingRequests)}" class="text-center py-4">
             <i class="bi bi-hourglass fs-2 d-block mb-2" style="color: var(--memoir-muted)"></i>
@@ -210,7 +210,7 @@
           </div>
         </div>
 
-        <!-- Blocked tab (own profile only) -->
+        <!-- Blocked tab -->
         <div id="tab-blocked" class="tab-pane" style="display: none;" th:if="${profileUser.username.equals(loggedInUser.username)}">
           <div th:if="${#lists.isEmpty(blockedFriendships)}" class="text-center py-4">
             <i class="bi bi-slash-circle fs-2 d-block mb-2" style="color: var(--memoir-muted)"></i>
