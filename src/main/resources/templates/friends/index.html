@@ -1,10 +1,203 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/layout}">
 <head>
-    <meta charset="UTF-8">
-    <title>Title</title>
+    <title>Friends</title>
 </head>
 <body>
+
+<div layout:fragment="content">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="memoir-page-title">Friends</h1>
+        </div>
+    </div>
+
+    <div class="memoir-card">
+
+        <ul class="nav nav-tabs mb-3" style="border-bottom: 1px solid #f0d9c8;">
+            <li class="nav-item">
+                <button class="nav-link active" onclick="showTab('friends', event)"
+                        style="color: var(--memoir-muted);">
+                    <i class="bi bi-people me-1"></i> Friends
+                    <span class="badge rounded-pill ms-1"
+                          style="background: #f0d9c8; color: var(--memoir-accent);"
+                          th:text="${#lists.size(friends)}">0</span>
+                </button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link" onclick="showTab('requests', event)"
+                        style="color: var(--memoir-muted);">
+                    <i class="bi bi-person-check me-1"></i> Requests
+                    <span class="badge rounded-pill ms-1"
+                          style="background: #f0d9c8; color: var(--memoir-accent);"
+                          th:text="${#lists.size(incomingRequests)}">0</span>
+                </button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link" onclick="showTab('outgoing', event)"
+                        style="color: var(--memoir-muted);">
+                    <i class="bi bi-hourglass me-1"></i> Outgoing
+                    <span class="badge rounded-pill ms-1"
+                          style="background: #f0d9c8; color: var(--memoir-accent);"
+                          th:text="${#lists.size(outgoingRequests)}">0</span>
+                </button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link" onclick="showTab('blocked', event)"
+                        style="color: var(--memoir-muted);">
+                    <i class="bi bi-slash-circle me-1"></i> Blocked
+                    <span class="badge rounded-pill ms-1"
+                          style="background: #f0d9c8; color: var(--memoir-accent);"
+                          th:text="${#lists.size(blockedFriendships)}">0</span>
+                </button>
+            </li>
+        </ul>
+
+        <div id="tab-friends" class="tab-pane">
+            <div th:if="${#lists.isEmpty(friends)}" class="text-center py-5">
+                <i class="bi bi-people fs-1 d-block mb-3" style="color: var(--memoir-muted)"></i>
+                <p class="mb-0" style="color: var(--memoir-muted)">You have no friends yet</p>
+            </div>
+            <div class="row g-3" th:unless="${#lists.isEmpty(friends)}">
+                <div class="col-md-6 col-lg-4" th:each="friend : ${friends}">
+                    <div class="d-flex align-items-center justify-content-between p-3 rounded"
+                         style="border: 1px solid #f0d9c8;">
+                        <div class="d-flex align-items-center gap-3">
+                            <img th:src="${friend.profileImage != null and !#strings.isEmpty(friend.profileImage) ? friend.profileImage : '/images/default-picture.png'}"
+                                 class="rounded-circle"
+                                 style="width: 44px; height: 44px; object-fit: cover; border: 2px solid #f0d9c8;"
+                                 alt="Profile picture">
+                            <div>
+                                <a th:href="@{/profile/{username}(username=${friend.username})}"
+                                   class="small fw-semibold d-block"
+                                   style="color: var(--memoir-accent); text-decoration: none;"
+                                   th:text="${friend.firstname + ' ' + friend.lastname}">Full Name</a>
+                                <span class="small" style="color: var(--memoir-muted);"
+                                      th:text="'@' + ${friend.username}">@username</span>
+                            </div>
+                        </div>
+                        <form th:action="@{/friends/unfriend/{username}(username=${friend.username})}" method="post">
+                            <button type="submit" class="btn btn-sm btn-outline-secondary">
+                                <i class="bi bi-x me-1"></i> Unfriend
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="tab-requests" class="tab-pane" style="display: none;">
+            <div th:if="${#lists.isEmpty(incomingRequests)}" class="text-center py-5">
+                <i class="bi bi-inbox fs-1 d-block mb-3" style="color: var(--memoir-muted)"></i>
+                <p class="mb-0" style="color: var(--memoir-muted)">No incoming friend requests</p>
+            </div>
+            <div class="d-flex flex-column gap-2" th:unless="${#lists.isEmpty(incomingRequests)}">
+                <div th:each="request : ${incomingRequests}"
+                     class="d-flex align-items-center justify-content-between p-3 rounded"
+                     style="border: 1px solid #f0d9c8;">
+                    <div class="d-flex align-items-center gap-3">
+                        <img th:src="${request.requester.profileImage != null and !#strings.isEmpty(request.requester.profileImage) ? request.requester.profileImage : '/images/default-picture.png'}"
+                             class="rounded-circle"
+                             style="width: 44px; height: 44px; object-fit: cover; border: 2px solid #f0d9c8;"
+                             alt="Profile picture">
+                        <div>
+                            <a th:href="@{/profile/{username}(username=${request.requester.username})}"
+                               class="small fw-semibold d-block"
+                               style="color: var(--memoir-accent); text-decoration: none;"
+                               th:text="${request.requester.firstname + ' ' + request.requester.lastname}">Full Name</a>
+                            <span class="small" style="color: var(--memoir-muted);"
+                                  th:text="'@' + ${request.requester.username}">@username</span>
+                        </div>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <form th:action="@{/friends/accept/{username}(username=${request.requester.username})}" method="post">
+                            <button type="submit" class="btn btn-memoir btn-sm">Accept</button>
+                        </form>
+                        <form th:action="@{/friends/decline/{username}(username=${request.requester.username})}" method="post">
+                            <button type="submit" class="btn btn-sm btn-outline-secondary">Decline</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="tab-outgoing" class="tab-pane" style="display: none;">
+            <div th:if="${#lists.isEmpty(outgoingRequests)}" class="text-center py-5">
+                <i class="bi bi-hourglass fs-1 d-block mb-3" style="color: var(--memoir-muted)"></i>
+                <p class="mb-0" style="color: var(--memoir-muted)">No outgoing requests</p>
+            </div>
+            <div class="d-flex flex-column gap-2" th:unless="${#lists.isEmpty(outgoingRequests)}">
+                <div th:each="request : ${outgoingRequests}"
+                     class="d-flex align-items-center justify-content-between p-3 rounded"
+                     style="border: 1px solid #f0d9c8;">
+                    <div class="d-flex align-items-center gap-3">
+                        <img th:src="${request.addressee.profileImage != null and !#strings.isEmpty(request.addressee.profileImage) ? request.addressee.profileImage : '/images/default-picture.png'}"
+                             class="rounded-circle"
+                             style="width: 44px; height: 44px; object-fit: cover; border: 2px solid #f0d9c8;"
+                             alt="Profile picture">
+                        <div>
+                            <a th:href="@{/profile/{username}(username=${request.addressee.username})}"
+                               class="small fw-semibold d-block"
+                               style="color: var(--memoir-accent); text-decoration: none;"
+                               th:text="${request.addressee.firstname + ' ' + request.addressee.lastname}">Full Name</a>
+                            <span class="small" style="color: var(--memoir-muted);"
+                                  th:text="'@' + ${request.addressee.username}">@username</span>
+                        </div>
+                    </div>
+                    <span class="small" style="color: var(--memoir-muted);">
+                        <i class="bi bi-hourglass me-1"></i> Pending
+                    </span>
+                </div>
+            </div>
+        </div>
+
+
+        <div id="tab-blocked" class="tab-pane" style="display: none;">
+            <div th:if="${#lists.isEmpty(blockedFriendships)}" class="text-center py-5">
+                <i class="bi bi-slash-circle fs-1 d-block mb-3" style="color: var(--memoir-muted)"></i>
+                <p class="mb-0" style="color: var(--memoir-muted)">No blocked users</p>
+            </div>
+            <div class="d-flex flex-column gap-2" th:unless="${#lists.isEmpty(blockedFriendships)}">
+                <div th:each="blocked : ${blockedFriendships}"
+                     class="d-flex align-items-center justify-content-between p-3 rounded"
+                     style="border: 1px solid #f0d9c8;">
+                    <div class="d-flex align-items-center gap-3">
+                        <img th:src="${blocked.addressee.profileImage != null and !#strings.isEmpty(blocked.addressee.profileImage) ? blocked.addressee.profileImage : '/images/default-picture.png'}"
+                             class="rounded-circle"
+                             style="width: 44px; height: 44px; object-fit: cover; border: 2px solid #f0d9c8;"
+                             alt="Profile picture">
+                        <div>
+                            <a th:href="@{/profile/{username}(username=${blocked.addressee.username})}"
+                               class="small fw-semibold d-block"
+                               style="color: var(--memoir-accent); text-decoration: none;"
+                               th:text="${blocked.addressee.firstname + ' ' + blocked.addressee.lastname}">Full Name</a>
+                            <span class="small" style="color: var(--memoir-muted);"
+                                  th:text="'@' + ${blocked.addressee.username}">@username</span>
+                        </div>
+                    </div>
+                    <form th:action="@{/friends/unfriend/{username}(username=${blocked.addressee.username})}" method="post">
+                        <button type="submit" class="btn btn-sm btn-outline-secondary">Unblock</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        function showTab(tabName, event) {
+            document.querySelectorAll('.tab-pane').forEach(tab => tab.style.display = 'none');
+            document.querySelectorAll('.nav-link').forEach(btn => btn.classList.remove('active'));
+            document.getElementById('tab-' + tabName).style.display = 'block';
+            event.target.closest('.nav-link').classList.add('active');
+        }
+    </script>
+
+</div>
 
 </body>
 </html>
