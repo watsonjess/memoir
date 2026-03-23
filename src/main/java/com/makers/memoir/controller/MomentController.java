@@ -5,14 +5,18 @@ import com.cloudinary.utils.ObjectUtils;
 import com.makers.memoir.model.*;
 import com.makers.memoir.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
+import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 
 import java.security.Principal;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -141,6 +145,50 @@ public class MomentController {
 		List<Moment> moments = momentRepository.findByCreatedByIdOrderByCreatedAtDesc(currentUser.getId());
 		model.addAttribute("moments", moments);
 		return "moments/index";
+	}
+
+	@GetMapping("/{id}/edit")
+	public ModelAndView editMoment(@PathVariable Long id,
+								   Principal principal) {
+		User user = userRepository.findByEmail(getUsernameFromPrincipal(principal));
+		Moment moment = momentRepository.findById(id)
+				.orElseThrow(() -> new RuntimeException("Moment not found"));
+
+		if (!moment.getCreatedBy().getId().equals(user.getId())) {
+			return new ModelAndView("redirect:/moments/" + id);
+		}
+
+		if (!moment.getCreatedAt().toLocalDate().equals(LocalDate.now())) {
+			return new ModelAndView("redirect:/moments/" + id);
+		}
+
+		ModelAndView modelAndView = new ModelAndView("moments/edit");
+		modelAndView.addObject("moment", moment);
+		return modelAndView;
+	}
+
+	@PostMapping("/{id}/edit")
+	public RedirectView updateMoment(@PathVariable Long id,
+									 @RequestParam String content,
+									 @RequestParam(required = false) String location,
+									 Principal principal) {
+		User user = userRepository.findByEmail(getUsernameFromPrincipal(principal));
+		Moment moment = momentRepository.findById(id)
+				.orElseThrow(() -> new RuntimeException("Moment not found"));
+
+		if (!moment.getCreatedBy().getId().equals(user.getId())) {
+			return new RedirectView("/moments/" + id);
+		}
+
+		if (!moment.getCreatedAt().toLocalDate().equals(LocalDate.now())) {
+			return new RedirectView("/moments/" + id);
+		}
+
+		moment.setContent(content);
+		moment.setLocation(location);
+		momentRepository.save(moment);
+
+		return new RedirectView("/moments/" + id);
 	}
 
 	@RequestMapping(value = "/")
