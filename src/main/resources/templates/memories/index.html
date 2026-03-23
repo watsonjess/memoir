@@ -1,10 +1,478 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>$Title$</title>
-</head>
-<body>
-$END$
-</body>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/layout}">
+
+<th:block layout:fragment="styles">
+  <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;600;700&display=swap"
+        rel="stylesheet"/>
+  <style>
+    .pinboard-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 32px;
+      margin-bottom: 24px;
+    }
+    .pinboard-kicker {
+      font-size: 0.7rem;
+      font-weight: 500;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--memoir-accent);
+      margin-bottom: 0.35rem;
+    }
+
+    /* The board itself */
+    .pinboard {
+      position: relative;
+      width: 100%;
+      min-height: 80vh;
+      background-color: #f0ebe3;
+      background-image:
+              radial-gradient(circle, #c8bfb0 1px, transparent 1px);
+      background-size: 28px 28px;
+      border-radius: 16px;
+      border: 1px solid #ddd5c8;
+      overflow: hidden;
+    }
+
+    /* Empty state */
+    .pinboard-empty {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      text-align: center;
+      color: #b0a898;
+      pointer-events: none;
+    }
+    .pinboard-empty i {
+      font-size: 3rem;
+      margin-bottom: 12px;
+      display: block;
+    }
+
+    /* Each polaroid */
+    .polaroid {
+      position: absolute;
+      width: 180px;
+      background: #fff;
+      padding: 12px 12px 40px 12px;
+      box-shadow: 2px 4px 16px rgba(0,0,0,0.18);
+      cursor: grab;
+      user-select: none;
+      transition: box-shadow 0.2s, transform 0.1s;
+      border-radius: 2px;
+    }
+    .polaroid:hover {
+      box-shadow: 4px 8px 28px rgba(0,0,0,0.25);
+      z-index: 10;
+    }
+    .polaroid.dragging {
+      box-shadow: 8px 16px 40px rgba(0,0,0,0.3);
+      cursor: grabbing;
+      z-index: 100;
+      transform: rotate(0deg) scale(1.04);
+    }
+    .polaroid-img {
+      width: 100%;
+      height: 160px;
+      object-fit: cover;
+      display: block;
+      background: #e8e0d8;
+    }
+    .polaroid-img-placeholder {
+      width: 100%;
+      height: 160px;
+      background: linear-gradient(135deg, #e8e0d8, #d5ccc2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #b0a898;
+      font-size: 2rem;
+    }
+    .polaroid-title {
+      font-family: 'Caveat', cursive;
+      font-size: 1.15rem;
+      font-weight: 600;
+      color: #333;
+      text-align: center;
+      margin-top: 8px;
+      line-height: 1.2;
+      word-break: break-word;
+    }
+
+    /* Pin at top */
+    .polaroid-pin {
+      position: absolute;
+      top: -10px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 40% 35%, #ff6b6b, #c0392b);
+      box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+      z-index: 1;
+    }
+    .polaroid-pin::after {
+      content: '';
+      position: absolute;
+      bottom: -3px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 2px;
+      height: 6px;
+      background: #999;
+      border-radius: 0 0 2px 2px;
+    }
+
+    /* Slight random rotation applied via JS */
+    .pinboard-add-btn {
+      position: fixed;
+      bottom: 32px;
+      right: 32px;
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      background: var(--memoir-accent);
+      color: #fff;
+      border: none;
+      font-size: 1.5rem;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-decoration: none;
+      transition: transform 0.15s, box-shadow 0.15s;
+      z-index: 50;
+    }
+    .pinboard-add-btn:hover {
+      transform: scale(1.08);
+      box-shadow: 0 6px 24px rgba(0,0,0,0.25);
+      color: #fff;
+    }
+
+    /* Expanded memory overlay */
+    .memory-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 200;
+      align-items: center;
+      justify-content: center;
+    }
+    .memory-overlay.active {
+      display: flex;
+    }
+    .memory-expanded {
+      background: #fff;
+      border-radius: 16px;
+      width: 90vw;
+      max-width: 800px;
+      max-height: 85vh;
+      overflow-y: auto;
+      box-shadow: 0 24px 80px rgba(0,0,0,0.3);
+      position: relative;
+      animation: expandIn 0.25s ease;
+    }
+    @keyframes expandIn {
+      from { transform: scale(0.85); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+    .memory-expanded-cover {
+      width: 100%;
+      height: 240px;
+      object-fit: cover;
+      border-radius: 16px 16px 0 0;
+    }
+    .memory-expanded-cover-placeholder {
+      width: 100%;
+      height: 240px;
+      background: linear-gradient(135deg, #e8e0d8, #d5ccc2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #b0a898;
+      font-size: 3rem;
+      border-radius: 16px 16px 0 0;
+    }
+    .memory-expanded-body {
+      padding: 28px 32px 32px;
+    }
+    .memory-expanded-title {
+      font-family: 'Caveat', cursive;
+      font-size: 2rem;
+      font-weight: 700;
+      color: #222;
+      margin-bottom: 8px;
+    }
+    .memory-expanded-description {
+      color: var(--memoir-muted);
+      font-size: 0.95rem;
+      line-height: 1.7;
+      margin-bottom: 20px;
+    }
+    .memory-expanded-meta {
+      font-size: 0.8rem;
+      color: var(--memoir-muted);
+      margin-bottom: 20px;
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    .memory-expanded-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .memory-expanded-close {
+      position: absolute;
+      top: 14px;
+      right: 14px;
+      background: rgba(0,0,0,0.4);
+      color: #fff;
+      border: none;
+      border-radius: 50%;
+      width: 32px;
+      height: 32px;
+      font-size: 1.1rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      line-height: 1;
+      z-index: 10;
+    }
+    .memory-expanded-close:hover {
+      background: rgba(0,0,0,0.65);
+    }
+  </style>
+</th:block>
+
+<th:block layout:fragment="content">
+
+  <div class="pinboard-header">
+    <div>
+      <p class="pinboard-kicker">Your memories</p>
+      <h1 class="memoir-page-title">Pinboard</h1>
+      <p class="memoir-page-subtitle">Drag your memories around the board.</p>
+    </div>
+  </div>
+
+  <div class="pinboard" id="pinboard">
+
+    <div th:if="${memories.isEmpty()}" class="pinboard-empty">
+      <i class="bi bi-image"></i>
+      <p>No memories yet — add your first one!</p>
+    </div>
+
+    <div th:each="memory : ${memories}"
+         class="polaroid"
+         th:id="'polaroid-' + ${memory.id}"
+         th:attr="data-id=${memory.id},
+                      data-x=${memory.pinX},
+                      data-y=${memory.pinY},
+                      data-name=${memory.name},
+                      data-description=${memory.description},
+                      data-cover=${memory.coverImageUrl},
+                      data-members=${memory.members.size()},
+                      data-url=@{/memories/{id}(id=${memory.id})}">
+
+      <div class="polaroid-pin"></div>
+
+      <img th:if="${memory.coverImageUrl != null}"
+           th:src="${memory.coverImageUrl}"
+           th:alt="${memory.name}"
+           class="polaroid-img"/>
+      <div th:unless="${memory.coverImageUrl != null}"
+           class="polaroid-img-placeholder">
+        <i class="bi bi-image"></i>
+      </div>
+
+      <div class="polaroid-title" th:text="${memory.name}"></div>
+    </div>
+
+  </div>
+
+  <!-- Memory expanded overlay -->
+  <div class="memory-overlay" id="memoryOverlay">
+    <div class="memory-expanded" id="memoryExpanded">
+      <button class="memory-expanded-close" id="overlayClose">&times;</button>
+      <img id="expandedCover" src="" alt="" class="memory-expanded-cover"
+           style="display:none;"/>
+      <div id="expandedCoverPlaceholder"
+           class="memory-expanded-cover-placeholder">
+        <i class="bi bi-image"></i>
+      </div>
+      <div class="memory-expanded-body">
+        <div class="memory-expanded-title" id="expandedTitle"></div>
+        <p class="memory-expanded-description" id="expandedDescription"></p>
+        <div class="memory-expanded-meta">
+                    <span><i class="bi bi-people me-1"></i>
+                        <span id="expandedMembers"></span> members
+                    </span>
+        </div>
+        <div class="memory-expanded-actions">
+          <a id="expandedViewLink" href="#"
+             class="btn btn-memoir">
+            <i class="bi bi-journal-text"></i> View thoughts
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Floating add button -->
+  <a th:href="@{/memories/new}" class="pinboard-add-btn" title="New memory">
+    <i class="bi bi-plus-lg"></i>
+  </a>
+
+</th:block>
+
+<th:block layout:fragment="scripts">
+  <script>
+    (() => {
+      const pinboard = document.getElementById('pinboard');
+      const overlay = document.getElementById('memoryOverlay');
+      const overlayClose = document.getElementById('overlayClose');
+
+      // Small random rotations to make it feel natural
+      const rotations = [-4, -3, -2, -1, 0, 1, 2, 3, 4];
+
+      // Position and set up each polaroid
+      document.querySelectorAll('.polaroid').forEach(card => {
+        const x = parseFloat(card.dataset.x) || 0;
+        const y = parseFloat(card.dataset.y) || 0;
+        const rot = rotations[Math.floor(Math.random() * rotations.length)];
+
+        card.style.left = x + 'px';
+        card.style.top = y + 'px';
+        card.style.transform = `rotate(${rot}deg)`;
+        card.dataset.rot = rot;
+
+        makeDraggable(card);
+        card.addEventListener('click', (e) => {
+          if (!card.dataset.dragged || card.dataset.dragged === 'false') {
+            openOverlay(card);
+          }
+        });
+      });
+
+      // Scatter new memories that have 0,0 position
+      let col = 0, row = 0;
+      document.querySelectorAll('.polaroid').forEach(card => {
+        if (parseFloat(card.dataset.x) === 0 && parseFloat(card.dataset.y) === 0) {
+          const x = 40 + col * 220;
+          const y = 40 + row * 280;
+          card.style.left = x + 'px';
+          card.style.top = y + 'px';
+          col++;
+          if (col > 4) { col = 0; row++; }
+        }
+      });
+
+      function makeDraggable(card) {
+        let startX, startY, startLeft, startTop, moved;
+
+        card.addEventListener('mousedown', (e) => {
+          if (e.button !== 0) return;
+          moved = false;
+          startX = e.clientX;
+          startY = e.clientY;
+          startLeft = parseInt(card.style.left) || 0;
+          startTop = parseInt(card.style.top) || 0;
+          card.classList.add('dragging');
+          card.dataset.dragged = 'false';
+          e.preventDefault();
+
+          function onMouseMove(e) {
+            const dx = e.clientX - startX;
+            const dy = e.clientY - startY;
+            if (Math.abs(dx) > 4 || Math.abs(dy) > 4) {
+              moved = true;
+              card.dataset.dragged = 'true';
+            }
+            card.style.left = (startLeft + dx) + 'px';
+            card.style.top = (startTop + dy) + 'px';
+          }
+
+          function onMouseUp(e) {
+            card.classList.remove('dragging');
+            card.style.transform = `rotate(${card.dataset.rot}deg)`;
+            document.removeEventListener('mousemove', onMouseMove);
+            document.removeEventListener('mouseup', onMouseUp);
+
+            if (moved) {
+              // Save position to backend
+              const newX = parseInt(card.style.left);
+              const newY = parseInt(card.style.top);
+              savePosition(card.dataset.id, newX, newY);
+
+              // Reset dragged flag after a short delay
+              // so click event doesn't fire
+              setTimeout(() => {
+                card.dataset.dragged = 'false';
+              }, 100);
+            }
+          }
+
+          document.addEventListener('mousemove', onMouseMove);
+          document.addEventListener('mouseup', onMouseUp);
+        });
+      }
+
+      function savePosition(id, x, y) {
+        fetch(`/memories/${id}/position`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: `x=${x}&y=${y}`
+        }).catch(err => console.error('Failed to save position:', err));
+      }
+
+      function openOverlay(card) {
+        const cover = document.getElementById('expandedCover');
+        const placeholder = document.getElementById('expandedCoverPlaceholder');
+
+        if (card.dataset.cover && card.dataset.cover !== 'null') {
+          cover.src = card.dataset.cover;
+          cover.style.display = 'block';
+          placeholder.style.display = 'none';
+        } else {
+          cover.style.display = 'none';
+          placeholder.style.display = 'flex';
+        }
+
+        document.getElementById('expandedTitle').textContent = card.dataset.name;
+        document.getElementById('expandedDescription').textContent =
+                card.dataset.description && card.dataset.description !== 'null'
+                        ? card.dataset.description : '';
+        document.getElementById('expandedMembers').textContent = card.dataset.members;
+        document.getElementById('expandedViewLink').href = card.dataset.url;
+
+        overlay.classList.add('active');
+      }
+
+      overlayClose.addEventListener('click', () => {
+        overlay.classList.remove('active');
+      });
+
+      overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) {
+          overlay.classList.remove('active');
+        }
+      });
+
+      // Keyboard escape to close
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') overlay.classList.remove('active');
+      });
+    })();
+  </script>
+</th:block>
+
 </html>
