@@ -1,26 +1,312 @@
 <!DOCTYPE html>
-<html layout:decorate="~{layout/layout}" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.w3.org/1999/xhtml"
-      xmlns:sec="http://www.w3.org/1999/xhtml">
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
-    <title>Memoir</title>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Memoir — Remember everything</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400;1,600&family=Playfair+Display:wght@400;600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --cream:  #FAF8F4;
+            --ink:    #1C1C1A;
+            --muted:  #6B6860;
+            --accent: #C1603A;
+            --border: #E4E1DA;
+        }
+
+        html, body {
+            height: 100%;
+            overflow: hidden;
+        }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: var(--cream);
+            color: var(--ink);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .bg-lines {
+            position: fixed;
+            inset: 0;
+            background-image: repeating-linear-gradient(
+                0deg,
+                transparent,
+                transparent 79px,
+                rgba(28,28,26,0.04) 79px,
+                rgba(28,28,26,0.04) 80px
+            );
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .bg-letter {
+            position: fixed;
+            right: -0.08em;
+            bottom: -0.18em;
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 55vw;
+            font-weight: 300;
+            color: rgba(28,28,26,0.04);
+            line-height: 1;
+            pointer-events: none;
+            user-select: none;
+            z-index: 0;
+        }
+
+        /* Nav floats over the image */
+        .l-nav {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 20;
+            padding: 1.5rem 3rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .l-brand {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #fff;
+            text-decoration: none;
+            letter-spacing: 0.02em;
+            text-shadow: 0 1px 4px rgba(0,0,0,0.25);
+            background: var(--accent);
+            color: #fff;
+            border: 1px solid var(--accent);
+            padding: 0.55rem 1.4rem;
+            border-radius: 2px;
+        }
+
+        .l-btn-outline {
+            background: var(--accent);
+            color: #fff;
+            border: 1px solid var(--accent);
+            padding: 0.55rem 1.4rem;
+            border-radius: 2px;
+            font-size: 0.78rem;
+            font-weight: 500;
+            font-family: 'DM Sans', sans-serif;
+            text-decoration: none;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            transition: all 0.2s;
+        }
+        .l-btn-outline:hover {
+            background: #A8522F;
+            border-color: #A8522F;
+            color: #fff;
+        }
+
+        /* Hero image — full width, starts at very top */
+        .l-hero-img {
+            position: relative;
+            z-index: 10;
+            flex-shrink: 0;
+            height: 45vh;
+            overflow: hidden;
+        }
+
+        .l-hero-img img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: center;
+            display: block;
+        }
+
+        .l-main {
+            position: relative;
+            z-index: 10;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 1.5rem 3rem 2rem;
+        }
+
+        .l-eyebrow {
+            font-size: 0.68rem;
+            font-weight: 400;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            color: var(--accent);
+            margin-bottom: 1.1rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        .l-eyebrow::after {
+            content: '';
+            width: 48px;
+            height: 1px;
+            background: var(--accent);
+            flex-shrink: 0;
+        }
+
+        .l-title {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: clamp(3.5rem, 7vw, 7rem);
+            font-weight: 300;
+            line-height: 1.0;
+            letter-spacing: -0.015em;
+            color: var(--ink);
+            margin-bottom: 1.5rem;
+        }
+
+        .l-title em {
+            font-style: italic;
+            font-weight: 300;
+            color: var(--muted);
+        }
+
+        .l-title strong {
+            font-weight: 600;
+            color: var(--accent);
+        }
+
+        .l-bottom {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            gap: 2rem;
+            width: 100%;
+        }
+
+        .l-sub {
+            font-size: 0.9rem;
+            line-height: 1.8;
+            color: var(--ink);
+            opacity: 0.55;
+            max-width: 480px;
+            font-weight: 300;
+        }
+
+        .l-cta {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            flex-shrink: 0;
+        }
+
+        .l-btn-primary {
+            background: var(--accent);
+            color: #fff;
+            border: none;
+            padding: 0.9rem 2.2rem;
+            border-radius: 2px;
+            font-size: 0.78rem;
+            font-weight: 500;
+            font-family: 'DM Sans', sans-serif;
+            text-decoration: none;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            transition: background 0.2s;
+            display: inline-block;
+        }
+        .l-btn-primary:hover {
+            background: #A8522F;
+            color: #fff;
+        }
+
+        .l-footer {
+            position: relative;
+            z-index: 10;
+            padding: 0.875rem 3rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-top: 1px solid var(--border);
+            flex-shrink: 0;
+        }
+
+        .l-footer-copy {
+            font-size: 0.72rem;
+            color: var(--muted);
+            letter-spacing: 0.06em;
+        }
+
+        .l-footer-tagline {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 0.85rem;
+            font-style: italic;
+            color: var(--muted);
+        }
+
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(12px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        .l-hero-img { animation: fadeUp 0.8s ease 0.1s both; }
+        .l-main     { animation: fadeUp 0.8s ease 0.25s both; }
+
+        @media (max-width: 768px) {
+            html, body { overflow: auto; }
+            .l-nav     { padding: 1.25rem 1.5rem; }
+            .l-hero-img { height: 35vh; }
+            .l-main    { padding: 1.25rem 1.5rem 2rem; flex: none; }
+            .l-title   { font-size: clamp(2.5rem, 9vw, 4rem); margin-bottom: 1.25rem; }
+            .l-bottom  { flex-direction: column; align-items: flex-start; gap: 1.25rem; }
+            .l-footer  { padding: 0.875rem 1.5rem; }
+        }
+    </style>
 </head>
 <body>
-    <th:block layout:fragment="styles">
-        <div th:replace="~{dashboard/index :: styles}"></div>
-    </th:block>
 
-    <div layout:fragment="content">
+<div class="bg-lines"></div>
+<div class="bg-letter">M</div>
 
+<nav class="l-nav">
+    <a href="/" class="l-brand">Memoir</a>
+    <a th:href="@{/oauth2/authorization/auth0}"
+       class="l-btn-outline"
+       sec:authorize="!isAuthenticated()">Sign in</a>
+    <a th:href="@{/dashboard}"
+       class="l-btn-outline"
+       sec:authorize="isAuthenticated()">Open Memoir</a>
+</nav>
 
-        <div sec:authorize="!isAuthenticated()">
-            <h1>Welcome</h1>
-            <p>Please log in to view your memories</p>
-            <a th:href="@{/oauth2/authorization/auth0}" class="btn btn-memoir">Login</a>
-        </div>
+<div class="l-hero-img">
+    <img src="/images/hero.jpg" alt=""/>
+</div>
 
-        <div sec:authorize="isAuthenticated()">
-            <div th:replace="~{dashboard/index :: dashboard}"></div>
+<main class="l-main">
+    <p class="l-eyebrow">A place for your memories</p>
+
+    <h1 class="l-title">
+        The moments that <em>make</em> a life <strong>remembered</strong>
+    </h1>
+
+    <div class="l-bottom">
+        <p class="l-sub">
+            Collect photos and notes throughout your week.
+            Share them with the people who matter.
+            Never lose what made today worth remembering.
+        </p>
+        <div class="l-cta">
+            <a th:href="@{/oauth2/authorization/auth0}"
+               class="l-btn-primary"
+               sec:authorize="!isAuthenticated()">Begin →</a>
+            <a th:href="@{/dashboard}"
+               class="l-btn-primary"
+               sec:authorize="isAuthenticated()">Open Memoir →</a>
         </div>
     </div>
+</main>
+
+<footer class="l-footer">
+    <span class="l-footer-copy">Memoir © 2026</span>
+</footer>
+
 </body>
 </html>
