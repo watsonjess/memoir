@@ -1,8 +1,10 @@
 package com.makers.memoir.controller;
 
+import com.makers.memoir.model.Event;
 import com.makers.memoir.model.GroupMember;
 import com.makers.memoir.model.User;
 import com.makers.memoir.model.Weekly;
+import com.makers.memoir.repository.EventRepository;
 import com.makers.memoir.repository.GroupMemberRepository;
 import com.makers.memoir.repository.UserRepository;
 import com.makers.memoir.repository.WeeklyRepository;
@@ -30,6 +32,9 @@ public class ArchiveController {
     @Autowired
     WeeklyRepository weeklyRepository;
 
+    @Autowired
+    EventRepository eventRepository;
+
     private String getUsernameFromPrincipal(Principal principal) {
         if (principal instanceof OAuth2AuthenticationToken) {
             OAuth2AuthenticationToken token = (OAuth2AuthenticationToken) principal;
@@ -55,7 +60,14 @@ public class ArchiveController {
                 ? List.of()
                 : weeklyRepository.findByGroupIdInAndStatus(groupIds, "sent");
 
+        List<Event> events = groupIds.isEmpty()
+                ? List.of()
+                : groupIds.stream()
+                .flatMap(id -> eventRepository.findByGroupId(id).stream())
+                .collect(Collectors.toList());
+
         model.addAttribute("newsletters", newsletters);
+        model.addAttribute("events", events);
         return "archive/index";
     }
 
