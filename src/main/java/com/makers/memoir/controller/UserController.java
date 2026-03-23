@@ -67,13 +67,13 @@ public class UserController {
             URI uri = URI.create(targetUrl);
 
             if (uri.getPath().equals("/")) {
-                return new RedirectView("/profile");
+                return new RedirectView("/");
             }
 
             return new RedirectView(targetUrl);
         }
 
-        return new RedirectView("/profile");
+        return new RedirectView("/");
     }
 
     @GetMapping("/setup")
