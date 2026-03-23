@@ -26,8 +26,6 @@ public class SecurityConfiguration {
     @Bean
     public SecurityFilterChain configure(HttpSecurity http) throws Exception {
 
-
-
         HttpSessionRequestCache requestCache = new HttpSessionRequestCache();
         requestCache.setRequestMatcher(request -> {
             String accept = request.getHeader("Accept");
@@ -36,6 +34,9 @@ public class SecurityConfiguration {
 
         http
                 .requestCache(cache -> cache.requestCache(requestCache))
+                .csrf(csrf -> csrf
+                        .ignoringRequestMatchers("/memories/*/position")
+                )
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers("/", "/images/**", "/main.css").permitAll()
                         .anyRequest().authenticated()
@@ -44,7 +45,8 @@ public class SecurityConfiguration {
                         .successHandler((request, response, authentication) -> {
                             response.sendRedirect("/after-login");
                         })
-                ).logout(logout -> logout
+                )
+                .logout(logout -> logout
                         .logoutSuccessHandler((request, response, authentication) -> {
                             response.sendRedirect(issuer + "v2/logout?returnTo="
                                     + returnTo + "&client_id=" + clientId);
