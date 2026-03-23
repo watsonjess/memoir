@@ -37,7 +37,7 @@ public class SecurityConfiguration {
         http
                 .requestCache(cache -> cache.requestCache(requestCache))
                 .authorizeHttpRequests(authorize -> authorize
-                        .requestMatchers("/", "/main.css").permitAll()
+                        .requestMatchers("/", "/images/**", "/main.css").permitAll()
                         .anyRequest().authenticated()
                 )
                 .oauth2Login(oauth -> oauth
