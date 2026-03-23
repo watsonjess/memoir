@@ -262,6 +262,87 @@
                 .nl-day { min-height: 48px; padding: 0.35rem; }
                 .nl-day-num { width: 24px; height: 24px; font-size: 0.75rem; }
             }
+            .nl-picker-overlay {
+                display: none;
+                position: fixed;
+                inset: 0;
+                z-index: 200;
+            }
+            .nl-picker-overlay.active { display: block; }
+
+            .nl-picker {
+                position: absolute;
+                background: var(--memoir-surface);
+                border: 1px solid var(--memoir-border);
+                border-radius: 14px;
+                box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+                padding: 20px;
+                width: 280px;
+                z-index: 201;
+            }
+
+            .nl-picker-header {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                margin-bottom: 16px;
+            }
+
+            .nl-picker-year {
+                font-family: 'Playfair Display', serif;
+                font-size: 1.1rem;
+                font-weight: 600;
+            }
+
+            .nl-picker-year-btn {
+                background: none;
+                border: 1px solid var(--memoir-border);
+                border-radius: 50%;
+                width: 28px;
+                height: 28px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                cursor: pointer;
+                color: var(--memoir-muted);
+                font-size: 0.8rem;
+                transition: all 0.15s;
+            }
+
+            .nl-picker-year-btn:hover {
+                border-color: var(--memoir-accent);
+                color: var(--memoir-accent);
+            }
+
+            .nl-picker-months {
+                display: grid;
+                grid-template-columns: repeat(3, 1fr);
+                gap: 6px;
+            }
+
+            .nl-picker-month-btn {
+                padding: 8px 4px;
+                border: 1px solid var(--memoir-border);
+                border-radius: 8px;
+                background: var(--memoir-surface);
+                font-size: 0.8rem;
+                cursor: pointer;
+                transition: all 0.15s;
+                color: var(--memoir-ink);
+                text-align: center;
+            }
+
+            .nl-picker-month-btn:hover {
+                border-color: var(--memoir-accent);
+                color: var(--memoir-accent);
+                background: #FAECE7;
+            }
+
+            .nl-picker-month-btn.active {
+                background: var(--memoir-accent);
+                color: #fff;
+                border-color: var(--memoir-accent);
+            }
         </style>
     </th:block>
 </head>
@@ -279,11 +360,28 @@
             <button class="nl-month-btn" id="nlPrevMonth" aria-label="Previous month">
                 <i class="bi bi-chevron-left"></i>
             </button>
-            <span class="nl-month-label" id="nlMonthLabel"></span>
+            <span class="nl-month-label" id="nlMonthLabel"
+                  style="cursor: pointer; user-select: none;"
+                  title="Click to jump to a month">
+            </span>
             <button class="nl-month-btn" id="nlNextMonth" aria-label="Next month">
                 <i class="bi bi-chevron-right"></i>
             </button>
         </div>
+    </div>
+
+    <div class="nl-picker-overlay" id="nlPickerOverlay"></div>
+    <div class="nl-picker" id="nlPicker" style="display:none;">
+        <div class="nl-picker-header">
+            <button class="nl-picker-year-btn" id="nlPickerPrevYear">
+                <i class="bi bi-chevron-left"></i>
+            </button>
+            <span class="nl-picker-year" id="nlPickerYear"></span>
+            <button class="nl-picker-year-btn" id="nlPickerNextYear">
+                <i class="bi bi-chevron-right"></i>
+            </button>
+        </div>
+        <div class="nl-picker-months" id="nlPickerMonths"></div>
     </div>
 
     <div class="nl-calendar-wrap">
@@ -511,7 +609,69 @@
 
                 return cell;
             }
+// ── Month/year picker ─────────────────────────────────────
+const picker         = document.getElementById('nlPicker');
+const pickerOverlay  = document.getElementById('nlPickerOverlay');
+const pickerYear     = document.getElementById('nlPickerYear');
+const pickerMonths   = document.getElementById('nlPickerMonths');
+let pickerYearVal    = year;
 
+const SHORT_MONTHS = ['Jan','Feb','Mar','Apr','May','Jun',
+                      'Jul','Aug','Sep','Oct','Nov','Dec'];
+
+function renderPicker() {
+    pickerYear.textContent = pickerYearVal;
+    pickerMonths.innerHTML = '';
+    SHORT_MONTHS.forEach((m, i) => {
+        const btn = document.createElement('button');
+        btn.className = 'nl-picker-month-btn'
+            + (i === month && pickerYearVal === year ? ' active' : '');
+        btn.textContent = m;
+        btn.addEventListener('click', () => {
+            month = i;
+            year = pickerYearVal;
+            closePicker();
+            render();
+        });
+        pickerMonths.appendChild(btn);
+    });
+}
+
+function openPicker() {
+    pickerYearVal = year;
+    renderPicker();
+
+    // Position picker below the month label
+    const label = document.getElementById('nlMonthLabel');
+    const rect = label.getBoundingClientRect();
+    picker.style.top = (rect.bottom + window.scrollY + 8) + 'px';
+    picker.style.left = (rect.left + rect.width / 2 - 140) + 'px';
+    picker.style.display = 'block';
+    pickerOverlay.classList.add('active');
+}
+
+function closePicker() {
+    picker.style.display = 'none';
+    pickerOverlay.classList.remove('active');
+}
+
+document.getElementById('nlMonthLabel').addEventListener('click', openPicker);
+pickerOverlay.addEventListener('click', closePicker);
+
+document.getElementById('nlPickerPrevYear').addEventListener('click', () => {
+    pickerYearVal--;
+    renderPicker();
+});
+
+document.getElementById('nlPickerNextYear').addEventListener('click', () => {
+    pickerYearVal++;
+    renderPicker();
+});
+
+// Close picker on escape
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closePicker();
+});
             render();
         })();
     </script>
