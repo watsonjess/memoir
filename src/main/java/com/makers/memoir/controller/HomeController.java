@@ -38,15 +38,23 @@ public class HomeController {
 
     @GetMapping("/")
     public String home(Model model, @AuthenticationPrincipal OidcUser principal, @RequestParam(defaultValue = "0") int page) {
-        if(principal != null){
+        if (principal != null) {
             User currentUser = userRepository.findByEmail(principal.getEmail());
 
             if (currentUser != null) {
                 model.addAttribute("firstName", currentUser.getFirstname());
 
+                LocalDateTime end = LocalDateTime.now();
+                LocalDateTime start = end.minusDays(7);
+
                 Page<Moment> momentPage = momentRepository
-                        .findByCreatedByIdOrderByCreatedAtDesc(
-                                currentUser.getId(), PageRequest.of(page, 2));
+                        .findByCreatedByIdAndCreatedAtBetweenOrderByCreatedAtDesc(
+                                currentUser.getId(),
+                                start,
+                                end,
+                                PageRequest.of(page, 2)
+                        );
+
                 model.addAttribute("moments", momentPage.getContent());
                 model.addAttribute("currentPage", page);
                 model.addAttribute("totalPages", momentPage.getTotalPages());
