@@ -3,17 +3,20 @@ package com.makers.memoir.controller;
 import com.makers.memoir.model.*;
 import com.makers.memoir.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
+import java.awt.print.Pageable;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Controller for the home page.
@@ -34,15 +37,22 @@ public class HomeController {
     private WeeklyRepository weeklyRepository;
 
     @GetMapping("/")
-    public String home(Model model, @AuthenticationPrincipal OidcUser principal) {
+    public String home(Model model, @AuthenticationPrincipal OidcUser principal, @RequestParam(defaultValue = "0") int page) {
         if(principal != null){
             User currentUser = userRepository.findByEmail(principal.getEmail());
 
             if (currentUser != null) {
                 model.addAttribute("firstName", currentUser.getFirstname());
 
-                List<Moment> moments = momentRepository.findByCreatedByIdOrderByCreatedAtDesc(currentUser.getId());
-                model.addAttribute("moments", moments);
+                Page<Moment> momentPage = momentRepository
+                        .findByCreatedByIdOrderByCreatedAtDesc(
+                                currentUser.getId(), PageRequest.of(page, 2));
+                model.addAttribute("moments", momentPage.getContent());
+                model.addAttribute("currentPage", page);
+                model.addAttribute("totalPages", momentPage.getTotalPages());
+                model.addAttribute("hasNext", momentPage.hasNext());
+                model.addAttribute("hasPrev", momentPage.hasPrevious());
+
 
                 List<GroupMember> userGroups = groupMemberRepository.findByUserId(currentUser.getId());
                 model.addAttribute("userGroups", userGroups);
@@ -65,12 +75,31 @@ public class HomeController {
                         .toList();
                 model.addAttribute("newsletters", newsletters);
 
+                LocalDateTime todayStart = LocalDate.now().atStartOfDay();
+                LocalDateTime todayEnd = todayStart.plusDays(1);
+
+                List<Moment> todayMoments = momentRepository.findByCreatedByIdAndCreatedAtBetween(currentUser.getId(), todayStart, todayEnd);
+
+                Set<Long> groupsPostedToday = todayMoments.stream()
+                        .flatMap(m -> m.getGroups().stream())
+                        .map(Group::getId)
+                        .collect(Collectors.toSet());
+
+                List<Group> groupsMissingToday = userGroups.stream()
+                        .filter(g -> g.getStatus().equals("joined"))
+                        .map(GroupMember::getGroup)
+                        .filter(g -> !groupsPostedToday.contains(g.getId()))
+                        .toList();
+
+                model.addAttribute("groupsMissingToday", groupsMissingToday);
+
 
             } else {
                 model.addAttribute("moments", new ArrayList<>());
                 model.addAttribute("userGroups", new ArrayList<>());
                 model.addAttribute("events", new ArrayList<>());
                 model.addAttribute("newsletters", new ArrayList<>());
+                model.addAttribute("groupsMissingToday", new ArrayList<>());
             }
         }
 
