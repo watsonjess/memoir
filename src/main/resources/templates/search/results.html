@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/layout}"
+>
+  <th:block layout:fragment="styles">
+    <style>
+      .search-result-label{
+        font-family: DM Sans, sans-serif;
+        font-size: 0.75rem;
+        font-weight: 500;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--memoir-muted, #6B6860);
+        margin-bottom: 0.3rem;
+      }
+
+      .search-query {
+        font-family: 'Playfair Display', serif;
+        font-size: 2rem;
+        font-weight: 600;
+        color: var(--memoir-ink, #1C1C1C);
+        word-break: break-word;
+      }
+
+      .people-grid {
+        display: grid;
+        gap: 1rem;
+        padding-top: 1.5rem;
+        grid-template-columns: repeat(auto-fill, minmax(25rem, 1fr));
+      }
+
+      .person-card {
+        background: var(--memoir-surface, #FFFFFF);
+        border: 1px solid var(--memoir-border, #E4E1DA);  /* was --memoir-muted */
+        border-radius: 14px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        text-decoration: none;
+        padding: 1.5rem 1.25rem 1.1rem;
+        transition: box-shadow 0.15s, transform 0.15s, border-color 0.15s;
+      }
+
+      .person-card:hover {
+        box-shadow: 0 6px 24px rgba(193, 96, 58, 0.13);
+        transform: translateY(-2px);
+        border-color: var(--memoir-accent, #C1603A);
+        text-decoration: none;
+      }
+
+      .person-card-img {
+        width: 64px;
+        height: 64px;
+        border-radius: 50%;
+        background: var(--memoir-cream, #FAF8F4);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-family: 'Playfair Display', serif;
+        font-size: 1.4rem;
+        font-weight: 600;
+        color: var(--memoir-accent, #C1603A);
+        margin-bottom: 0.85rem;
+        flex-shrink: 0;
+        overflow: hidden;
+      }
+
+      .person-card-img img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        border-radius: 50%;
+        display: block;
+      }
+
+      .person-card-name {
+        font-family: 'Playfair Display', serif;
+        font-size: 1rem;
+        font-weight: 600;
+        color: var(--memoir-ink, #1C1C1C);
+        margin-bottom: 0.15rem;
+      }
+
+      .person-card-username {
+        font-family: 'DM Sans', sans-serif;
+        font-size: 0.8rem;
+        color: var(--memoir-muted, #6B6860);
+        margin-bottom: 1rem;
+      }
+
+      .search-state {
+        padding: 4rem 0 3rem;
+        text-align: center;
+      }
+
+      .search-state-icon {
+        font-size: 2.5rem;
+        color: var(--memoir-border, #E4E1DA);
+        margin-bottom: 1rem;
+      }
+
+      .search-state-title {
+        font-family: 'Playfair Display', serif;
+        font-size: 1.2rem;
+        font-weight: 600;
+        color: var(--memoir-ink, #1C1C1A);
+        margin-bottom: 0.4rem;
+      }
+
+      .search-state-sub {
+        font-family: 'DM Sans', sans-serif;
+        font-size: 0.9rem;
+        color: var(--memoir-muted, #6B6860);
+      }
+
+    </style>
+  </th:block>
+
+  <th:block layout:fragment="content">
+    <p class="search-result-label">Search results</p>
+    <h1 th:text="${query != null and !#strings.isEmpty(query) ? query : 'All'}" class="search-query">Query</h1>
+    <div>
+      <div th:if="${users != null and !users.isEmpty()}" class="people-grid">
+        <a th:each="user : ${users}" class="person-card"
+        th:href="@{/profile/{username}(username=${user.username})}">
+          <div class="person-card-img">
+            <img th:if="${user.profileImage != null}" th:src="${user.profileImage}" th:alt="${user.firstname + ' ' + user.lastname}"/>
+          </div>
+          <div th:text="${user.firstname + ' ' + user.lastname}" class="person-card-name">
+            Name
+          </div>
+          <div th:text="${'@' + user.username}" class="person-card-username">
+            @username
+          </div>
+        </a>
+      </div>
+      <div class="search-state" th:if="${users == null or users.isEmpty()}">
+        <div class="search-state-icon"><i class="bi bi-person-x"></i></div>
+        <p class="search-state-title">
+          No results for &ldquo;<span th:text="${query}">query</span>&rdquo;
+        </p>
+        <p class="search-state-sub">Try a different name or username.</p>
+      </div>
+    </div>
+
+  </th:block>
+</html>
