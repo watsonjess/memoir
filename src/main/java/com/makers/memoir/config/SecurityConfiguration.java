@@ -20,7 +20,7 @@ public class SecurityConfiguration {
     @Value("${spring.security.oauth2.client.registration.auth0.client-id}")
     private String clientId;
 
-    @Value("${app.base-url:http://localhost:8080}")
+    @Value("${app.base-url}")
     private String returnTo;
 
     @Bean
