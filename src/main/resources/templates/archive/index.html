@@ -393,20 +393,35 @@
             /*[/]*/
             /*[/]*/
 
-            // ── Event data from backend ───────────────────────────
+                        // ── Event data from backend ───────────────────────────
             const eventData = {};
             /*[# th:each="ev : ${events}"]*/
             /*[# th:if="${ev.startDate != null}"]*/
             (function() {
-                const key = /*[[${ev.startDate.year}]]*/ 0
-                    + '-' + /*[[${ev.startDate.monthValue}]]*/ 0
-                    + '-' + /*[[${ev.startDate.dayOfMonth}]]*/ 0;
-                if (!eventData[key]) eventData[key] = [];
-                eventData[key].push({
-                    name: /*[[${ev.name}]]*/ '',
+                const start = new Date(/*[[${ev.startDate.year}]]*/ 0,
+                                       /*[[${ev.startDate.monthValue}]]*/ 0 - 1,
+                                       /*[[${ev.startDate.dayOfMonth}]]*/ 0);
+                const end   = new Date(/*[[${ev.endDate != null ? ev.endDate.year : ev.startDate.year}]]*/ 0,
+                                       /*[[${ev.endDate != null ? ev.endDate.monthValue : ev.startDate.monthValue}]]*/ 0 - 1,
+                                       /*[[${ev.endDate != null ? ev.endDate.dayOfMonth : ev.startDate.dayOfMonth}]]*/ 0);
+
+                const eventObj = {
+                    name:    /*[[${ev.name}]]*/ '',
                     groupId: /*[[${ev.group.id}]]*/ 0,
                     eventId: /*[[${ev.id}]]*/ 0
-                });
+                };
+
+                // Add to every day between start and end inclusive
+                const current = new Date(start);
+                while (current <= end) {
+                    const key = `${current.getFullYear()}-${current.getMonth() + 1}-${current.getDate()}`;
+                    if (!eventData[key]) eventData[key] = [];
+                    // Avoid duplicates if somehow the same event appears twice
+                    if (!eventData[key].find(e => e.eventId === eventObj.eventId)) {
+                        eventData[key].push(eventObj);
+                    }
+                    current.setDate(current.getDate() + 1);
+                }
             })();
             /*[/]*/
             /*[/]*/
