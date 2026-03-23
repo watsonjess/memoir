@@ -62,6 +62,23 @@ public class MomentController {
 				.map(GroupMember::getGroup)
 				.collect(Collectors.toList()));
 
+		List<Group> groups = memberships.stream()
+				.map(GroupMember::getGroup)
+				.collect(Collectors.toList());
+
+		Map<Long, Long> groupEventMap = groups.stream()
+				.filter(g -> g.getType().equals("event"))
+				.collect(Collectors.toMap(
+						Group::getId,
+						g -> eventRepository.findByGroupIdOrderByStartDateDesc(g.getId())
+								.stream().findFirst()
+								.map(Event::getId)
+								.orElse(null),
+						(a, b) -> a
+				));
+
+		model.addAttribute("groups", groups);
+		model.addAttribute("groupEventMap", groupEventMap);
 		model.addAttribute("eventId", eventId);
 		model.addAttribute("preselectedGroupId", groupId);
 

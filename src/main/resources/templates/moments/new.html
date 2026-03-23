@@ -105,15 +105,23 @@
       <!-- Group selection -->
       <div class="mb-3">
         <label class="form-label" for="groupId">Group</label>
-        <select class="form-select" id="groupId" name="groupId" required>
-          <option value="" disabled selected>Select a group</option>
+        <select class="form-select" id="groupId" name="groupId" required
+                th:disabled="${preselectedGroupId != null}">
+          <option value="" disabled th:unless="${preselectedGroupId != null}" selected>
+            Select a group
+          </option>
           <option th:each="group : ${groups}"
                   th:value="${group.id}"
                   th:text="${group.name}"
-                  th:selected="${group.id == preselectedGroupId}">
+                  th:selected="${group.id == preselectedGroupId}"
+                  th:data-event-id="${groupEventMap[group.id]}">
           </option>
         </select>
       </div>
+      <input type="hidden" name="groupId"
+             th:if="${preselectedGroupId != null}"
+             th:value="${preselectedGroupId}"/>
+      <input type="hidden" id="eventId" name="eventId" th:value="${eventId}"/>
 
       <!-- Description -->
       <div class="mb-3">
@@ -192,6 +200,17 @@
         reader.readAsDataURL(file);
       }
     });
+
+    const groupSelect = document.getElementById('groupId');
+
+groupSelect.addEventListener('change', function() {
+    const selected = this.options[this.selectedIndex];
+    const eventId = selected.dataset.eventId || '';
+    document.getElementById('eventId').value = eventId;
+});
+
+// Trigger on page load in case group is preselected
+groupSelect.dispatchEvent(new Event('change'));
   </script>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script>
