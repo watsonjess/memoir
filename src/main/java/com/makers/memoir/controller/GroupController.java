@@ -7,12 +7,16 @@ import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.ModelAndView;
 
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 
 @Controller
 @RequestMapping("/groups")
@@ -32,6 +36,9 @@ public class GroupController {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private MomentRepository momentRepository;
 
     // List all groups the current user belongs to
     @GetMapping
@@ -66,7 +73,6 @@ public class GroupController {
         modelAndView.addObject("currentMembership", currentMembership.orElse(null));
         modelAndView.addObject("pendingMembers", pendingMembers);
 
-        // Add date based on group type
         if (group.getType().equals("weekly")) {
             weeklyRepository.findFirstByGroupIdAndStatusOrderByWeekStartDesc(id, "open")
                     .ifPresent(w -> modelAndView.addObject("currentWeekly", w));
@@ -106,12 +112,10 @@ public class GroupController {
         group.setCreatedBy(user);
         groupRepository.save(group);
 
-        // Add creator as owner member with status joined
         GroupMember ownerMembership = new GroupMember(group, user, "owner");
         ownerMembership.setStatus("joined");
         groupMemberRepository.save(ownerMembership);
 
-        // Create the first weekly or event record
         if (group.getType().equals("weekly") && sendDate != null) {
             Weekly weekly = new Weekly();
             weekly.setGroup(group);
@@ -204,7 +208,6 @@ public class GroupController {
                 .orElseThrow(() -> new RuntimeException("Group not found"));
         User user = getCurrentUser(principal);
 
-        // Only the owner can delete
         GroupMember membership = groupMemberRepository
                 .findByGroupIdAndUserId(id, user.getId())
                 .orElseThrow(() -> new RuntimeException("Membership not found"));
@@ -214,6 +217,82 @@ public class GroupController {
         }
 
         return new ModelAndView("redirect:/groups");
+    }
+
+    // Group feed — shows all moments from the last newsletter week
+    @GetMapping("/{id}/feed")
+    public String groupFeed(@PathVariable Long id,
+                            @RequestParam(defaultValue = "desc") String order,
+                            @RequestParam(defaultValue = "grid") String layout,
+                            @RequestParam(defaultValue = "none") String groupBy,
+                            Model model,
+                            @AuthenticationPrincipal OAuth2User principal) {
+
+        User currentUser = getCurrentUser(principal);
+
+        Group group = groupRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Group not found"));
+
+        boolean isMember = groupMemberRepository
+                .findByGroupIdAndStatus(id, "joined")
+                .stream()
+                .anyMatch(gm -> gm.getUser().getId().equals(currentUser.getId()));
+
+        if (!isMember) {
+            return "redirect:/moments";
+        }
+
+        Optional<Weekly> latestWeekly = weeklyRepository
+                .findFirstByGroupIdAndStatusOrderByWeekStartDesc(id, "sent");
+
+        List<Moment> moments = List.of();
+        LocalDateTime weekStart = null;
+        LocalDateTime weekEnd = null;
+
+        if (latestWeekly.isPresent()) {
+            Weekly weekly = latestWeekly.get();
+            weekStart = weekly.getWeekStart();
+            weekEnd = weekly.getSendDate();
+
+            List<Long> memberIds = groupMemberRepository
+                    .findByGroupIdAndStatus(id, "joined")
+                    .stream()
+                    .map(gm -> gm.getUser().getId())
+                    .collect(Collectors.toList());
+
+            if (order.equals("asc")) {
+                moments = momentRepository
+                        .findByCreatedByIdInAndCreatedAtBetweenOrderByCreatedAtAsc(
+                                memberIds, weekStart, weekEnd);
+            } else {
+                moments = momentRepository
+                        .findByCreatedByIdInAndCreatedAtBetweenOrderByCreatedAtDesc(
+                                memberIds, weekStart, weekEnd);
+            }
+        }
+
+        // Build grouped map if needed
+        if (groupBy.equals("user") && !moments.isEmpty()) {
+            LinkedHashMap<User, List<Moment>> momentsByUser = new LinkedHashMap<>();
+            for (Moment moment : moments) {
+                momentsByUser
+                        .computeIfAbsent(moment.getCreatedBy(), k -> new ArrayList<>())
+                        .add(moment);
+            }
+            model.addAttribute("momentsByUser", momentsByUser);
+        }
+
+        model.addAttribute("group", group);
+        model.addAttribute("moments", moments);
+        model.addAttribute("weekStart", weekStart);
+        model.addAttribute("weekEnd", weekEnd);
+        model.addAttribute("order", order);
+        model.addAttribute("layout", layout);
+        model.addAttribute("groupBy", groupBy);
+        model.addAttribute("hasNewsletter", latestWeekly.isPresent());
+        model.addAttribute("latestWeekly", latestWeekly.orElse(null));
+
+        return "groups/feed";
     }
 
     private User getCurrentUser(OAuth2User principal) {
