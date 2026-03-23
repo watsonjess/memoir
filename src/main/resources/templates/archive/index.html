@@ -122,31 +122,6 @@
                 transition: background 0.12s, color 0.12s;
             }
             .nl-day--empty .nl-day-num { color: var(--memoir-muted); }
-            .nl-event-pill {
-                display: block;
-                font-size: 0.68rem;
-                font-weight: 500;
-                padding: 2px 7px;
-                border-radius: 20px;
-                background: var(--memoir-accent);
-                color: #fff;
-                white-space: nowrap;
-                overflow: hidden;
-                text-overflow: ellipsis;
-                margin-bottom: 3px;
-                line-height: 1.5;
-                max-width: 100%;
-            }
-            .nl-event-pill--light {
-                background: #FAECE7;
-                color: #712B13;
-            }
-            .nl-event-pill--more {
-                background: transparent;
-                color: var(--memoir-muted);
-                font-size: 0.65rem;
-                padding-left: 4px;
-            }
             .nl-panel-overlay {
                 display: none;
                 position: fixed;
@@ -245,9 +220,80 @@
                 font-weight: 500;
             }
             .nl-current-btn:hover { text-decoration: underline; }
+            .nl-picker-overlay {
+                display: none;
+                position: fixed;
+                inset: 0;
+                z-index: 200;
+            }
+            .nl-picker-overlay.active { display: block; }
+            .nl-picker {
+                position: absolute;
+                background: var(--memoir-surface);
+                border: 1px solid var(--memoir-border);
+                border-radius: 14px;
+                box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+                padding: 20px;
+                width: 280px;
+                z-index: 201;
+            }
+            .nl-picker-header {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                margin-bottom: 16px;
+            }
+            .nl-picker-year {
+                font-family: 'Playfair Display', serif;
+                font-size: 1.1rem;
+                font-weight: 600;
+            }
+            .nl-picker-year-btn {
+                background: none;
+                border: 1px solid var(--memoir-border);
+                border-radius: 50%;
+                width: 28px;
+                height: 28px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                cursor: pointer;
+                color: var(--memoir-muted);
+                font-size: 0.8rem;
+                transition: all 0.15s;
+            }
+            .nl-picker-year-btn:hover {
+                border-color: var(--memoir-accent);
+                color: var(--memoir-accent);
+            }
+            .nl-picker-months {
+                display: grid;
+                grid-template-columns: repeat(3, 1fr);
+                gap: 6px;
+            }
+            .nl-picker-month-btn {
+                padding: 8px 4px;
+                border: 1px solid var(--memoir-border);
+                border-radius: 8px;
+                background: var(--memoir-surface);
+                font-size: 0.8rem;
+                cursor: pointer;
+                transition: all 0.15s;
+                color: var(--memoir-ink);
+                text-align: center;
+            }
+            .nl-picker-month-btn:hover {
+                border-color: var(--memoir-accent);
+                color: var(--memoir-accent);
+                background: #FAECE7;
+            }
+            .nl-picker-month-btn.active {
+                background: var(--memoir-accent);
+                color: #fff;
+                border-color: var(--memoir-accent);
+            }
             @media (max-width: 991px) {
                 .nl-day { min-height: 64px; }
-                .nl-event-pill { display: none; }
                 .nl-day--has-events::after {
                     content: '';
                     display: block;
@@ -272,18 +318,34 @@
     <div class="nl-header">
         <div>
             <p class="nl-kicker">Archive</p>
-            <h1 class="memoir-page-title">Newsletters</h1>
-            <p class="memoir-page-subtitle">See all your newsletters.</p>
+            <h1 class="memoir-page-title">Calendar</h1>
         </div>
         <div class="nl-month-nav">
             <button class="nl-month-btn" id="nlPrevMonth" aria-label="Previous month">
                 <i class="bi bi-chevron-left"></i>
             </button>
-            <span class="nl-month-label" id="nlMonthLabel"></span>
+            <span class="nl-month-label" id="nlMonthLabel"
+                  style="cursor: pointer; user-select: none;"
+                  title="Click to jump to a month">
+            </span>
             <button class="nl-month-btn" id="nlNextMonth" aria-label="Next month">
                 <i class="bi bi-chevron-right"></i>
             </button>
         </div>
+    </div>
+
+    <div class="nl-picker-overlay" id="nlPickerOverlay"></div>
+    <div class="nl-picker" id="nlPicker" style="display:none;">
+        <div class="nl-picker-header">
+            <button class="nl-picker-year-btn" id="nlPickerPrevYear">
+                <i class="bi bi-chevron-left"></i>
+            </button>
+            <span class="nl-picker-year" id="nlPickerYear"></span>
+            <button class="nl-picker-year-btn" id="nlPickerNextYear">
+                <i class="bi bi-chevron-right"></i>
+            </button>
+        </div>
+        <div class="nl-picker-months" id="nlPickerMonths"></div>
     </div>
 
     <div class="nl-calendar-wrap">
@@ -303,7 +365,7 @@
 
     <div class="nl-panel" id="nlPanel">
         <button class="nl-panel-close" id="nlPanelClose">&times;</button>
-        <p class="nl-panel-kicker">Newsletters</p>
+        <p class="nl-panel-kicker">Activity</p>
         <div class="nl-panel-date" id="nlPanelDate"></div>
         <div id="nlPanelContent"></div>
     </div>
@@ -313,6 +375,7 @@
 <th:block layout:fragment="scripts">
     <script th:inline="javascript">
         (() => {
+            // ── Newsletter data from backend ──────────────────────
             const data = {};
             /*[# th:each="nl : ${newsletters}"]*/
             /*[# th:if="${nl.sentAt != null}"]*/
@@ -330,6 +393,24 @@
             /*[/]*/
             /*[/]*/
 
+            // ── Event data from backend ───────────────────────────
+            const eventData = {};
+            /*[# th:each="ev : ${events}"]*/
+            /*[# th:if="${ev.startDate != null}"]*/
+            (function() {
+                const key = /*[[${ev.startDate.year}]]*/ 0
+                    + '-' + /*[[${ev.startDate.monthValue}]]*/ 0
+                    + '-' + /*[[${ev.startDate.dayOfMonth}]]*/ 0;
+                if (!eventData[key]) eventData[key] = [];
+                eventData[key].push({
+                    name: /*[[${ev.name}]]*/ '',
+                    groupId: /*[[${ev.group.id}]]*/ 0,
+                    eventId: /*[[${ev.id}]]*/ 0
+                });
+            })();
+            /*[/]*/
+            /*[/]*/
+
             const MONTHS = [
                 "January","February","March","April","May","June",
                 "July","August","September","October","November","December"
@@ -340,12 +421,12 @@
             let month = today.getMonth();
             let selectedDay = null;
 
-            const grid = document.getElementById("nlDateGrid");
-            const monthLabel = document.getElementById("nlMonthLabel");
-            const panel = document.getElementById("nlPanel");
-            const overlay = document.getElementById("nlOverlay");
-            const panelClose = document.getElementById("nlPanelClose");
-            const panelDate = document.getElementById("nlPanelDate");
+            const grid        = document.getElementById("nlDateGrid");
+            const monthLabel  = document.getElementById("nlMonthLabel");
+            const panel       = document.getElementById("nlPanel");
+            const overlay     = document.getElementById("nlOverlay");
+            const panelClose  = document.getElementById("nlPanelClose");
+            const panelDate   = document.getElementById("nlPanelDate");
             const panelContent = document.getElementById("nlPanelContent");
 
             panelClose.addEventListener("click", closePanel);
@@ -366,25 +447,36 @@
                 panelDate.textContent = `${dayNum} ${MONTHS[month]} ${year}`;
 
                 const key = `${year}-${month + 1}-${dayNum}`;
-                const events = data[key] ?? [];
+                const newsletters = data[key] ?? [];
+                const dayEvents   = eventData[key] ?? [];
 
                 panelContent.innerHTML = "";
 
-                if (isToday) {
-                    const link = document.createElement("a");
-                    link.href = "/newsletters/current";
-                    link.className = "nl-current-btn";
-                    link.textContent = "→ View current newsletters";
-                    panelContent.appendChild(link);
-                }
+                // Today shortcut
+<!--                if (isToday) {-->
+<!--                    const link = document.createElement("a");-->
+<!--                    link.href = "/newsletters/current";-->
+<!--                    link.className = "nl-current-btn";-->
+<!--                    link.textContent = "→ View current newsletters";-->
+<!--                    panelContent.appendChild(link);-->
+<!--                }-->
 
-                if (events.length === 0 && !isToday) {
+                // Empty state
+                if (newsletters.length === 0 && dayEvents.length === 0 && !isToday) {
                     const empty = document.createElement("p");
                     empty.className = "nl-panel-empty";
-                    empty.textContent = "No newsletters released on this day.";
+                    empty.textContent = "Nothing on this day.";
                     panelContent.appendChild(empty);
-                } else {
-                    events.forEach(ev => {
+                }
+
+                // ── Newsletters section ───────────────────────────
+                if (newsletters.length > 0) {
+                    const nlHeader = document.createElement("p");
+                    nlHeader.style.cssText = "font-size:0.7rem; text-transform:uppercase; letter-spacing:0.1em; color:var(--memoir-accent); font-weight:500; margin:0 0 8px;";
+                    nlHeader.textContent = "Newsletters";
+                    panelContent.appendChild(nlHeader);
+
+                    newsletters.forEach(ev => {
                         const item = document.createElement("div");
                         item.className = "nl-panel-item";
 
@@ -416,6 +508,37 @@
                     });
                 }
 
+                // ── Events section ────────────────────────────────
+                if (dayEvents.length > 0) {
+                    const evHeader = document.createElement("p");
+                    evHeader.style.cssText = "font-size:0.7rem; text-transform:uppercase; letter-spacing:0.1em; color:#1C6B5A; font-weight:500; margin:16px 0 8px;";
+                    evHeader.textContent = "Events";
+                    panelContent.appendChild(evHeader);
+
+                    dayEvents.forEach(ev => {
+                        const item = document.createElement("div");
+                        item.className = "nl-panel-item";
+
+                        const name = document.createElement("div");
+                        name.className = "nl-panel-group-name";
+                        name.textContent = ev.name;
+                        item.appendChild(name);
+
+                        const links = document.createElement("div");
+                        links.className = "nl-panel-links";
+
+                        const evLink = document.createElement("a");
+                        evLink.href = `/groups/${ev.groupId}/events/${ev.eventId}`;
+                        evLink.className = "nl-panel-link";
+                        evLink.style.cssText = "background:#1C6B5A; color:#fff;";
+                        evLink.textContent = "View event";
+                        links.appendChild(evLink);
+
+                        item.appendChild(links);
+                        panelContent.appendChild(item);
+                    });
+                }
+
                 panel.classList.add("active");
                 overlay.classList.add("active");
             }
@@ -426,7 +549,7 @@
             function navigate(dir) {
                 month += dir;
                 if (month > 11) { month = 0; year++; }
-                if (month < 0) { month = 11; year--; }
+                if (month < 0)  { month = 11; year--; }
                 render();
             }
 
@@ -434,9 +557,9 @@
                 monthLabel.textContent = `${MONTHS[month]} ${year}`;
                 grid.innerHTML = "";
 
-                let startOffset = (new Date(year, month, 1).getDay() + 6) % 7;
-                const daysInMonth = new Date(year, month + 1, 0).getDate();
-                const totalCells = Math.ceil((startOffset + daysInMonth) / 7) * 7;
+                const startOffset  = (new Date(year, month, 1).getDay() + 6) % 7;
+                const daysInMonth  = new Date(year, month + 1, 0).getDate();
+                const totalCells   = Math.ceil((startOffset + daysInMonth) / 7) * 7;
 
                 for (let i = 0; i < totalCells; i++) {
                     const dayNum = i - startOffset + 1;
@@ -465,8 +588,9 @@
             }
 
             function buildDayCell(dayNum) {
-                const key = `${year}-${month + 1}-${dayNum}`;
-                const events = data[key] ?? [];
+                const key         = `${year}-${month + 1}-${dayNum}`;
+                const newsletters = data[key] ?? [];
+                const dayEvents   = eventData[key] ?? [];
 
                 const isToday = dayNum === today.getDate()
                     && month === today.getMonth()
@@ -481,7 +605,7 @@
                     "nl-day nl-day--clickable",
                     isToday ? "nl-day--today" : "",
                     isSelected ? "nl-day--selected" : "",
-                    events.length || isToday ? "nl-day--has-events" : "",
+                    newsletters.length || dayEvents.length || isToday ? "nl-day--has-events" : "",
                 ].filter(Boolean).join(" ");
 
                 const num = document.createElement("span");
@@ -489,19 +613,29 @@
                 num.textContent = dayNum;
                 cell.appendChild(num);
 
-                events.slice(0, 2).forEach((ev, idx) => {
-                    const pill = document.createElement("span");
-                    pill.className = `nl-event-pill${idx === 1 ? " nl-event-pill--light" : ""}`;
-                    pill.textContent = ev.group;
-                    cell.appendChild(pill);
-                });
+                // ── Pills ─────────────────────────────────────────
+                const pillWrap = document.createElement("div");
+                pillWrap.style.cssText = "position:absolute; bottom:8px; left:8px; right:8px; display:flex; flex-direction:column; gap:3px;";
 
-                if (events.length > 2) {
-                    const more = document.createElement("span");
-                    more.className = "nl-event-pill nl-event-pill--more";
-                    more.textContent = `+${events.length - 2} more`;
-                    cell.appendChild(more);
+                if (newsletters.length > 0) {
+                    const nlPill = document.createElement("span");
+                    nlPill.style.cssText = "display:block; font-size:0.65rem; font-weight:500; padding:2px 8px; border-radius:20px; background:#C1603A; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; line-height:1.6;";
+                    nlPill.textContent = newsletters.length === 1
+                        ? `📰 ${newsletters[0].group}`
+                        : `📰 ${newsletters.length} newsletters`;
+                    pillWrap.appendChild(nlPill);
                 }
+
+                if (dayEvents.length > 0) {
+                    const evPill = document.createElement("span");
+                    evPill.style.cssText = "display:block; font-size:0.65rem; font-weight:500; padding:2px 8px; border-radius:20px; background:#1C6B5A; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; line-height:1.6;";
+                    evPill.textContent = dayEvents.length === 1
+                        ? `📅 ${dayEvents[0].name}`
+                        : `📅 ${dayEvents.length} events`;
+                    pillWrap.appendChild(evPill);
+                }
+
+                cell.appendChild(pillWrap);
 
                 cell.addEventListener("click", () => {
                     selectedDay = {year, month, day: dayNum};
@@ -512,10 +646,69 @@
                 return cell;
             }
 
+            // ── Month/year picker ─────────────────────────────────
+            const picker        = document.getElementById('nlPicker');
+            const pickerOverlay = document.getElementById('nlPickerOverlay');
+            const pickerYear    = document.getElementById('nlPickerYear');
+            const pickerMonths  = document.getElementById('nlPickerMonths');
+            let pickerYearVal   = year;
+
+            const SHORT_MONTHS = ['Jan','Feb','Mar','Apr','May','Jun',
+                                   'Jul','Aug','Sep','Oct','Nov','Dec'];
+
+            function renderPicker() {
+                pickerYear.textContent = pickerYearVal;
+                pickerMonths.innerHTML = '';
+                SHORT_MONTHS.forEach((m, i) => {
+                    const btn = document.createElement('button');
+                    btn.className = 'nl-picker-month-btn'
+                        + (i === month && pickerYearVal === year ? ' active' : '');
+                    btn.textContent = m;
+                    btn.addEventListener('click', () => {
+                        month = i;
+                        year = pickerYearVal;
+                        closePicker();
+                        render();
+                    });
+                    pickerMonths.appendChild(btn);
+                });
+            }
+
+            function openPicker() {
+                pickerYearVal = year;
+                renderPicker();
+                const label = document.getElementById('nlMonthLabel');
+                const rect  = label.getBoundingClientRect();
+                picker.style.top  = (rect.bottom + window.scrollY + 8) + 'px';
+                picker.style.left = (rect.left + rect.width / 2 - 140) + 'px';
+                picker.style.display = 'block';
+                pickerOverlay.classList.add('active');
+            }
+
+            function closePicker() {
+                picker.style.display = 'none';
+                pickerOverlay.classList.remove('active');
+            }
+
+            document.getElementById('nlMonthLabel').addEventListener('click', openPicker);
+            pickerOverlay.addEventListener('click', closePicker);
+
+            document.getElementById('nlPickerPrevYear').addEventListener('click', () => {
+                pickerYearVal--;
+                renderPicker();
+            });
+            document.getElementById('nlPickerNextYear').addEventListener('click', () => {
+                pickerYearVal++;
+                renderPicker();
+            });
+
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') { closePicker(); closePanel(); }
+            });
+
             render();
         })();
     </script>
 </th:block>
-
 </body>
 </html>

@@ -5,14 +5,22 @@
     <title>Memoir</title>
 </head>
 <body>
-<div layout:fragment="content">
-<h1>Welcome</h1>
-    <div sec:authorize="!isAuthenticated()">
-        <p>Please log in to view your memories</p>
-        <a th:href="@{/oauth2/authorization/auth0}" class="btn btn-memoir">Login</a>
+    <th:block layout:fragment="styles">
+        <div th:replace="~{dashboard/index :: styles}"></div>
+    </th:block>
+
+    <div layout:fragment="content">
+
+
+        <div sec:authorize="!isAuthenticated()">
+            <h1>Welcome</h1>
+            <p>Please log in to view your memories</p>
+            <a th:href="@{/oauth2/authorization/auth0}" class="btn btn-memoir">Login</a>
+        </div>
+
+        <div sec:authorize="isAuthenticated()">
+            <div th:replace="~{dashboard/index :: dashboard}"></div>
+        </div>
     </div>
-
-
-</div>
 </body>
 </html>

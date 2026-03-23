@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<div th:fragment="newsletters(newsletters) " class="card border-0 rounded-3 mb-3"
+     style="border: 0.5px solid rgba(0,0,0,0.08) !important;">
+    <div class="card-body p-3">
+
+        <h6 class="mb-3" style="font-family:'Playfair Display',serif; font-weight:400; font-size:15px; color:#1a1a1a;">
+            Newsletters
+        </h6>
+
+        <p th:if="${newsletters == null or newsletters.isEmpty()}"
+           class="text-muted small mb-0">No newsletters yet.</p>
+
+        <ul th:unless="${newsletters == null or newsletters.isEmpty()}"
+            class="list-unstyled mb-0">
+            <li th:each="newsletter, iter : ${newsletters}"
+                class="d-flex justify-content-between align-items-center py-2"
+                th:classappend="${!iter.last} ? 'border-bottom' : ''"
+                style="border-color:rgba(0,0,0,0.06) !important;">
+
+                <a th:href="@{/newsletter/group/{id}(id=${newsletter.group.id})}"
+                   class="text-decoration-none"
+                   style="font-size:13px; color:#1a1a1a;"
+                   th:text="${newsletter.group.name}">Group name</a>
+
+                <!-- Badge shows week of date -->
+                <span class="badge rounded-pill"
+                      style="font-size:11px; background:#F5F0E8; color:#C4522A; font-weight:500; padding:3px 8px;"
+                      th:text="${'w/c ' + #temporals.format(newsletter.weekStart, 'd MMM')}">w/c 1 Jan</span>
+
+            </li>
+        </ul>
+
+        <div class="border-top mt-3 pt-2" style="border-color:rgba(0,0,0,0.07) !important;">
+            <a th:href="@{/groups}" class="text-decoration-none" style="color:#C4522A; font-size:12px;">
+                View all groups &rarr;
+            </a>
+        </div>
+
+    </div>
+</div>
+</html>
