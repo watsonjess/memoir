@@ -103,21 +103,21 @@ public class FriendController {
             friendRepository.save(f);
         });
 
-        return new RedirectView("/friends");
+        return new RedirectView("/profile/" + addressee.getUsername());
     }
 
-    @PostMapping("/decline/{username}")
-    public RedirectView declineRequest(@PathVariable String username, Principal principal) {
-        User addressee = userRepository.findByEmail(getUsernameFromPrincipal(principal));
-        User requester = userRepository.findByUsername(username).orElseThrow();
+@PostMapping("/decline/{username}")
+public RedirectView declineRequest(@PathVariable String username, Principal principal) {
+    User addressee = userRepository.findByEmail(getUsernameFromPrincipal(principal));
+    User requester = userRepository.findByUsername(username).orElseThrow();
 
-        Optional<Friend> friendship = friendRepository
-                .findByIdRequesterIdAndIdAddresseeId(requester.getId(), addressee.getId());
+    Optional<Friend> friendship = friendRepository
+            .findByIdRequesterIdAndIdAddresseeId(requester.getId(), addressee.getId());
 
-        friendship.ifPresent(f -> friendRepository.delete(f));
+    friendship.ifPresent(f -> friendRepository.delete(f));
 
-        return new RedirectView("/friends");
-    }
+    return new RedirectView("/profile/" + addressee.getUsername());
+}
 
     @PostMapping("/block/{username}")
     public RedirectView blockUser(@PathVariable String username, Principal principal) {
@@ -127,7 +127,6 @@ public class FriendController {
         Optional<Friend> existing = friendRepository
                 .findByIdRequesterIdAndIdAddresseeId(requester.getId(), addressee.getId());
 
-        // Also check reverse direction - fix from old project
         if (existing.isEmpty()) {
             existing = friendRepository
                     .findByIdRequesterIdAndIdAddresseeId(addressee.getId(), requester.getId());
@@ -162,6 +161,6 @@ public class FriendController {
 
         friendship.ifPresent(f -> friendRepository.delete(f));
 
-        return new RedirectView("/profile/" + username);
+        return new RedirectView("/profile/" + currentUser.getUsername());
     }
 }
