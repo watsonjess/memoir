@@ -81,6 +81,11 @@
             text-decoration: none;
             letter-spacing: 0.02em;
             text-shadow: 0 1px 4px rgba(0,0,0,0.25);
+            background: var(--accent);
+            color: #fff;
+            border: 1px solid var(--accent);
+            padding: 0.55rem 1.4rem;
+            border-radius: 2px;
         }
 
         .l-btn-outline {
@@ -291,17 +296,16 @@
         <div class="l-cta">
             <a th:href="@{/oauth2/authorization/auth0}"
                class="l-btn-primary"
-               sec:authorize="!isAuthenticated()">Begin →</a>
+               sec:authorize="!isAuthenticated()">Sign In</a>
             <a th:href="@{/dashboard}"
                class="l-btn-primary"
-               sec:authorize="isAuthenticated()">Open Memoir →</a>
+               sec:authorize="isAuthenticated()">Open Memoir</a>
         </div>
     </div>
 </main>
 
 <footer class="l-footer">
     <span class="l-footer-copy">Memoir © 2026</span>
-    <span class="l-footer-tagline">Remember everything</span>
 </footer>
 
 </body>
