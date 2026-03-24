@@ -1,8 +1,12 @@
 <!DOCTYPE html>
 <html lang="en"
-      xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout/layout}">
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/layout}">
 <head>
   <title>Memory</title>
+  <meta name="_csrf" th:content="${_csrf.token}"/>
+  <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
   <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;600&display=swap" rel="stylesheet"/>
 </head>
 <body>
@@ -48,18 +52,36 @@
               style="font-size: 0.65rem; color: var(--memoir-accent);">owner</span>
       </div>
 
-      <!-- placeholder for invite search box -->
-      <form th:if="${isOwner}"
-            th:action="@{/memories/{id}/invite(id=${memory.id})}" method="post"
-            class="d-flex gap-2 ms-auto">
-        <input type="text" class="form-control form-control-sm"
-               name="username" placeholder="Invite by username…" required
-               style="width: 180px;"/>
-        <button type="submit" class="btn btn-memoir btn-sm">
-          <i class="bi bi-person-plus me-1"></i> Invite
-        </button>
-      </form>
-    </div>
+      <div th:if="${isOwner}"
+           class="dropdown ms-auto"
+           id="memoirSearchInvite"
+           th:data-memory-id="${memory.id}">
+        <div class="memoir-search-trigger" id="memoirSearchTriggerInvite">
+          <i class="bi bi-search memoir-search-bi-icon"></i>
+          <input type="text"
+                 id="memoirSearchInputInvite"
+                 class="memoir-search-inline-input"
+                 placeholder="Invite someone…"
+                 autocomplete="off"
+                 aria-label="Search"/>
+        </div>
+        <div class="dropdown-menu memoir-search-dropdown w-100 mt-1 shadow-sm"
+             id="memoirSearchDropdownInvite"
+             aria-live="polite">
+          <div id="memoirDropBodyInvite">
+            <span class="dropdown-item-text text-muted small">Start typing to search…</span>
+          </div>
+          <div id="memoirDropFooterInvite" style="display:none;">
+            <div class="dropdown-divider"></div>
+            <a href="#" id="memoirSeeAllInvite" class="dropdown-item small text-memoir-accent">
+              <i class="bi bi-search me-1"></i>
+              <span class="memoir-see-all-text">See all results for "
+                <span id="memoirQueryLabelInvite"></span>"
+              </span>
+            </a>
+          </div>
+        </div>
+      </div>
 
     <div class="mb-4">
       <h6 class="mb-3" style="font-family: 'Playfair Display', serif;">Add a thought</h6>
@@ -558,8 +580,10 @@
       document.querySelector('.polaroid-strip .text-center')?.style.setProperty('display', 'none', 'important');
       document.querySelector('.nl-panel').style.top = '0';
       document.querySelector('.nl-panel').style.height = '100vh';
+
     }
   </script>
+  <script th:src="@{/scripts/search-invite-memory.js}" defer></script>
 </th:block>
 
 </body>
