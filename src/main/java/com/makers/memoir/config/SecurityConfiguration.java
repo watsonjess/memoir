@@ -51,6 +51,9 @@ public class SecurityConfiguration {
                             response.sendRedirect(issuer + "v2/logout?returnTo="
                                     + returnTo + "&client_id=" + clientId);
                         })
+                )
+                .headers(headers -> headers
+                        .frameOptions(frameOptions -> frameOptions.sameOrigin())
                 );
 
         return http.build();

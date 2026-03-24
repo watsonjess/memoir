@@ -487,6 +487,11 @@
       document.getElementById('thoughts-section').scrollIntoView({ behavior: 'smooth' });
 
     }
+    if (window.self !== window.top) {
+      document.querySelector('.memoir-nav')?.style.setProperty('display', 'none', 'important');
+      document.querySelector('.memoir-main').style.paddingTop = '0';
+      document.querySelector('.memoir-footer')?.style.setProperty('display', 'none', 'important');
+    }
   </script>
 </th:block>
 
