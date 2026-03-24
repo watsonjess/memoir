@@ -90,7 +90,7 @@
 <th:block layout:fragment="content">
     <div class="moment-form-card">
         <h1 class="moment-form-title">Edit Moment</h1>
-        <p class="moment-form-subtitle">You can edit moments on the day you created them</p>
+        <p class="moment-form-subtitle">You can edit today's moment</p>
 
         <form th:action="@{/moments/{id}/edit(id=${moment.id})}"
               method="post"
