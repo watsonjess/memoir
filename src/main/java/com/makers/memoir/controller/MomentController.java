@@ -5,16 +5,22 @@ import com.cloudinary.utils.ObjectUtils;
 import com.makers.memoir.model.*;
 import com.makers.memoir.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
+import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 
+import java.io.IOException;
 import java.security.Principal;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Controller
@@ -130,7 +136,11 @@ public class MomentController {
 	public String viewMoment(@PathVariable Long id, Model model, Principal principal) {
 		Moment moment = momentRepository.findById(id)
 				.orElseThrow(() -> new RuntimeException("Moment not found"));
+		User currentUser = userRepository.findByEmail(getUsernameFromPrincipal(principal));
+		boolean isEditable = moment.getCreatedBy().getId().equals(currentUser.getId())
+				&& moment.getCreatedAt().toLocalDate().equals(LocalDate.now());
 
+		model.addAttribute("isEditable", isEditable);
 		model.addAttribute("moment", moment);
 		return "moments/show";
 	}
@@ -140,7 +150,72 @@ public class MomentController {
 		User currentUser = userRepository.findByEmail(getUsernameFromPrincipal(principal));
 		List<Moment> moments = momentRepository.findByCreatedByIdOrderByCreatedAtDesc(currentUser.getId());
 		model.addAttribute("moments", moments);
+		Set<Long> editableMomentIds = moments.stream()
+				.filter(m -> m.getCreatedBy().getId().equals(currentUser.getId()))
+				.filter(m -> m.getCreatedAt().toLocalDate().equals(LocalDate.now()))
+				.map(Moment::getId)
+				.collect(Collectors.toSet());
+
+		model.addAttribute("editableMomentIds", editableMomentIds);
 		return "moments/index";
+	}
+
+	@GetMapping("/{id}/edit")
+	public ModelAndView editMoment(@PathVariable Long id,
+								   Principal principal) {
+		User user = userRepository.findByEmail(getUsernameFromPrincipal(principal));
+		Moment moment = momentRepository.findById(id)
+				.orElseThrow(() -> new RuntimeException("Moment not found"));
+
+		if (!moment.getCreatedBy().getId().equals(user.getId())) {
+			return new ModelAndView("redirect:/moments/" + id);
+		}
+
+		if (!moment.getCreatedAt().toLocalDate().equals(LocalDate.now())) {
+			return new ModelAndView("redirect:/moments/" + id);
+		}
+
+		ModelAndView modelAndView = new ModelAndView("moments/edit");
+		modelAndView.addObject("moment", moment);
+		return modelAndView;
+	}
+
+	@PostMapping("/{id}/edit")
+	public RedirectView updateMoment(@PathVariable Long id,
+									 @RequestParam String content,
+									 @RequestParam(required = false) String location,
+									 @RequestParam(required = false) Double latitude,
+									 @RequestParam(required = false) Double longitude,
+									 @RequestParam(required = false) MultipartFile image,
+									 Principal principal) {
+		User user = userRepository.findByEmail(getUsernameFromPrincipal(principal));
+		Moment moment = momentRepository.findById(id)
+				.orElseThrow(() -> new RuntimeException("Moment not found"));
+
+		if (!moment.getCreatedBy().getId().equals(user.getId())) {
+			return new RedirectView("/");
+		}
+		if (!moment.getCreatedAt().toLocalDate().equals(LocalDate.now())) {
+			return new RedirectView("/");
+		}
+
+		moment.setContent(content);
+		moment.setLocation(location);
+		moment.setLatitude(latitude);
+		moment.setLongitude(longitude);
+
+		if (image != null && !image.isEmpty()) {
+			try {
+				Map uploadResult = cloudinary.uploader().upload(image.getBytes(),
+						ObjectUtils.emptyMap());
+				moment.setImageUrl((String) uploadResult.get("secure_url"));
+			} catch (IOException e) {
+				throw new RuntimeException("Image upload failed", e);
+			}
+		}
+
+		momentRepository.save(moment);
+		return new RedirectView("/moments");
 	}
 
 	@RequestMapping(value = "/")

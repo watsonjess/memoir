@@ -16,7 +16,6 @@
       overflow: hidden;
       background: #fff;
       box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-      text-decoration: none;
       color: inherit;
       transition: transform 0.2s, box-shadow 0.2s;
       display: block;
@@ -31,7 +30,7 @@
       object-fit: cover;
     }
     .moment-tile-body {
-      padding: 16px;
+      padding: 16px 16px 8px;
     }
     .moment-tile-date {
       font-size: 0.8rem;
@@ -51,6 +50,22 @@
       font-size: 0.8rem;
       color: #aaa;
       margin-top: 8px;
+    }
+    .moment-tile-footer {
+      padding: 8px 16px 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-top: 1px solid #f5f5f5;
+    }
+    .edit-badge {
+      font-size: 0.7rem;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: var(--memoir-accent);
+      display: flex;
+      align-items: center;
+      gap: 4px;
     }
     .moments-header {
       display: flex;
@@ -89,23 +104,38 @@
   </div>
 
   <div th:unless="${moments.isEmpty()}" class="moments-grid">
-    <a th:each="moment : ${moments}"
-       th:href="@{/moments/{id}(id=${moment.id})}"
-       class="moment-tile">
-      <img th:src="${moment.imageUrl}"
-           th:alt="${moment.content}"
-           class="moment-tile-image"/>
-      <div class="moment-tile-body">
-        <p class="moment-tile-date"
-           th:text="${#temporals.format(moment.createdAt, 'dd MMMM yyyy')}"></p>
-        <p class="moment-tile-content" th:text="${moment.content}"></p>
-        <p class="moment-tile-location"
-           th:if="${moment.location != null}">
-          <i class="bi bi-geo-alt"></i>
-          <span th:text="${moment.location}"></span>
-        </p>
+    <div th:each="moment : ${moments}" class="moment-tile">
+
+      <!-- Main tile links to moment detail -->
+      <a th:href="@{/moments/{id}(id=${moment.id})}"
+         style="text-decoration:none; color:inherit; display:block;">
+        <img th:src="${moment.imageUrl}"
+             th:alt="${moment.content}"
+             class="moment-tile-image"/>
+        <div class="moment-tile-body">
+          <p class="moment-tile-date"
+             th:text="${#temporals.format(moment.createdAt, 'dd MMMM yyyy')}"></p>
+          <p class="moment-tile-content" th:text="${moment.content}"></p>
+          <p class="moment-tile-location" th:if="${moment.location != null}">
+            <i class="bi bi-geo-alt"></i>
+            <span th:text="${moment.location}"></span>
+          </p>
+        </div>
+      </a>
+
+      <!-- Edit footer — only shown if moment was created today -->
+      <div class="moment-tile-footer"
+           th:if="${editableMomentIds != null and editableMomentIds.contains(moment.id)}">
+        <span class="edit-badge">
+          <i class="bi bi-pencil"></i> Editable today
+        </span>
+        <a th:href="@{/moments/{id}/edit(id=${moment.id})}"
+           class="btn btn-sm btn-outline-secondary">
+          Edit
+        </a>
       </div>
-    </a>
+
+    </div>
   </div>
 </th:block>
 
