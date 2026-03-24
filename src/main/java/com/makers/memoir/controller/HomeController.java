@@ -38,6 +38,9 @@ public class HomeController {
 
     @GetMapping("/")
     public String home(Model model, @AuthenticationPrincipal OidcUser principal, @RequestParam(defaultValue = "0") int page) {
+        if (principal == null) {
+            return "landing";
+        }
         if (principal != null) {
             User currentUser = userRepository.findByEmail(principal.getEmail());
 
