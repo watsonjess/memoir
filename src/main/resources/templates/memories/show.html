@@ -1,8 +1,12 @@
 <!DOCTYPE html>
 <html lang="en"
-      xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout/layout}">
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/layout}">
 <head>
   <title>Memory</title>
+  <meta name="_csrf" th:content="${_csrf.token}"/>
+  <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
   <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;600&display=swap" rel="stylesheet"/>
 </head>
 <body>
@@ -20,6 +24,8 @@
   </div>
 
   <div class="polaroid-strip mb-4">
+
+    <!-- Title + delete -->
     <div class="text-center position-relative mb-4">
       <p class="polaroid-title" th:text="${memory.name}">Memory name</p>
       <p class="polaroid-subtitle" th:text="${memory.description}" th:if="${memory.description}"></p>
@@ -33,10 +39,12 @@
       </form>
     </div>
 
+    <!-- Members + invite -->
     <div class="mb-4 d-flex flex-wrap gap-2 align-items-center">
       <span class="small" style="color: var(--memoir-muted);">
         <i class="bi bi-people me-1"></i> Members:
       </span>
+
       <div th:each="member : ${members}"
            class="d-flex align-items-center gap-2 px-3 py-1 rounded-pill"
            style="background: var(--memoir-cream); border: 1px solid var(--memoir-border); font-size: 0.8rem;">
@@ -48,19 +56,41 @@
               style="font-size: 0.65rem; color: var(--memoir-accent);">owner</span>
       </div>
 
-      <!-- placeholder for invite search box -->
-      <form th:if="${isOwner}"
-            th:action="@{/memories/{id}/invite(id=${memory.id})}" method="post"
-            class="d-flex gap-2 ms-auto">
-        <input type="text" class="form-control form-control-sm"
-               name="username" placeholder="Invite by username…" required
-               style="width: 180px;"/>
-        <button type="submit" class="btn btn-memoir btn-sm">
-          <i class="bi bi-person-plus me-1"></i> Invite
-        </button>
-      </form>
+      <!-- Invite search (owners only) -->
+      <div th:if="${isOwner}"
+           class="dropdown ms-auto"
+           id="memoirSearchInvite"
+           th:data-memory-id="${memory.id}">
+        <div class="memoir-search-trigger" id="memoirSearchTriggerInvite">
+          <i class="bi bi-search memoir-search-bi-icon"></i>
+          <input type="text"
+                 id="memoirSearchInputInvite"
+                 class="memoir-search-inline-input"
+                 placeholder="Invite someone…"
+                 autocomplete="off"
+                 aria-label="Search"/>
+        </div>
+        <div class="dropdown-menu memoir-search-dropdown w-100 mt-1 shadow-sm"
+             id="memoirSearchDropdownInvite"
+             aria-live="polite">
+          <div id="memoirDropBodyInvite">
+            <span class="dropdown-item-text text-muted small">Start typing to search…</span>
+          </div>
+          <div id="memoirDropFooterInvite" style="display:none;">
+            <div class="dropdown-divider"></div>
+            <a href="#" id="memoirSeeAllInvite" class="dropdown-item small text-memoir-accent">
+              <i class="bi bi-search me-1"></i>
+              <span class="memoir-see-all-text">See all results for "
+                <span id="memoirQueryLabelInvite"></span>"
+              </span>
+            </a>
+          </div>
+        </div>
+      </div>
+
     </div>
 
+    <!-- Add a thought -->
     <div class="mb-4">
       <h6 class="mb-3" style="font-family: 'Playfair Display', serif;">Add a thought</h6>
       <form th:action="@{/memories/{id}/thoughts(id=${memory.id})}"
@@ -89,6 +119,7 @@
       </form>
     </div>
 
+    <!-- Feed controls -->
     <div class="feed-controls" id="thoughts-section">
       <span class="feed-week-label" th:text="${#lists.size(thoughts)} + ' thoughts'"></span>
       <div style="display:flex; gap:16px; align-items:center; flex-wrap:wrap;">
@@ -160,13 +191,16 @@
       </div>
     </div>
 
+    <!-- Empty state -->
     <div th:if="${#lists.isEmpty(thoughts)}" class="feed-empty">
       <i class="bi bi-chat-heart"></i>
       <p>No thoughts yet — add the first one!</p>
     </div>
 
+    <!-- Thoughts grid -->
     <div th:unless="${#lists.isEmpty(thoughts)}">
 
+      <!-- Grouped by person -->
       <div th:if="${groupBy == 'person'}">
         <div th:each="entry : ${thoughtsByUser}" class="user-group-section">
           <div class="user-group-header">
@@ -230,6 +264,7 @@
         </div>
       </div>
 
+      <!-- Grid view -->
       <div th:if="${groupBy != 'person' and layout == 'grid'}" class="moments-grid">
         <div th:each="thought : ${thoughts}"
              class="thought-card moment-card"
@@ -258,6 +293,7 @@
         </div>
       </div>
 
+      <!-- Masonry view -->
       <div th:if="${groupBy != 'person' and layout == 'masonry'}" class="moments-masonry">
         <div th:each="thought : ${thoughts}"
              class="thought-card moment-card"
@@ -287,6 +323,7 @@
         </div>
       </div>
 
+      <!-- Feed view -->
       <div th:if="${groupBy != 'person' and layout == 'feed'}" class="moments-feed">
         <div th:each="thought : ${thoughts}"
              class="thought-card moment-feed-card"
@@ -316,6 +353,7 @@
 
   </div>
 
+  <!-- Thought slide-out panel -->
   <div class="nl-panel-overlay" id="thoughtOverlay"></div>
   <div class="nl-panel" id="thoughtPanel">
     <button class="nl-panel-close" id="thoughtPanelClose">&times;</button>
@@ -482,13 +520,14 @@
     document.addEventListener('keydown', e => {
       if (e.key === 'Escape') closeThoughtPanel();
     });
-      if (window.location.search.includes('order=') ||
-            window.location.search.includes('filter=') ||
-            window.location.search.includes('groupBy=') ||
-            window.location.search.includes('layout=')) {
-      document.getElementById('thoughts-section').scrollIntoView({ behavior: 'smooth' });
 
+    if (window.location.search.includes('order=') ||
+        window.location.search.includes('filter=') ||
+        window.location.search.includes('groupBy=') ||
+        window.location.search.includes('layout=')) {
+      document.getElementById('thoughts-section').scrollIntoView({ behavior: 'smooth' });
     }
+
     if (window.self !== window.top) {
       document.querySelector('.memoir-nav')?.style.setProperty('display', 'none', 'important');
       document.querySelector('.memoir-footer')?.style.setProperty('display', 'none', 'important');
@@ -499,9 +538,9 @@
       document.querySelector('.polaroid-strip .text-center')?.style.setProperty('display', 'none', 'important');
       document.querySelector('.nl-panel').style.top = '0';
       document.querySelector('.nl-panel').style.height = '100vh';
-
     }
   </script>
+  <script th:src="@{/scripts/search-invite-memory.js}" defer></script>
 </th:block>
 
 </body>
