@@ -192,8 +192,10 @@
       <div th:if="${groupBy == 'person'}">
         <div th:each="entry : ${thoughtsByUser}" class="user-group-section">
           <div class="user-group-header">
-            <div class="user-group-avatar"
-                 th:text="${entry.key.firstname.substring(0,1).toUpperCase()}"></div>
+            <img th:src="${entry.key.profileImage != null and !#strings.isEmpty(entry.key.profileImage) ? entry.key.profileImage : '/images/default-picture.png'}"
+                 class="user-group-avatar"
+                 style="object-fit: cover;"
+                 alt="Profile picture">
             <span class="user-group-name"
                   th:text="${entry.key.firstname + ' ' + entry.key.lastname}"></span>
             <span class="user-group-count"
