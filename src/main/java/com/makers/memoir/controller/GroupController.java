@@ -12,11 +12,8 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.ModelAndView;
 
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
 
 @Controller
 @RequestMapping("/groups")
@@ -46,9 +43,35 @@ public class GroupController {
         User user = getCurrentUser(principal);
         List<GroupMember> memberships = groupMemberRepository.findByUserId(user.getId());
 
+        // Map of groupId -> most recent weekly for weekly groups
+        Map<Long, Weekly> weeklyMap = memberships.stream()
+                .filter(m -> m.getStatus().equals("joined"))
+                .filter(m -> m.getGroup().getType().equals("weekly"))
+                .collect(Collectors.toMap(
+                        m -> m.getGroup().getId(),
+                        m -> weeklyRepository
+                                .findByGroupIdOrderByWeekStartDesc(m.getGroup().getId())
+                                .stream().findFirst().orElse(null),
+                        (a, b) -> a
+                ));
+
+        // Map of groupId -> most recent event for event groups
+        Map<Long, Event> eventMap = memberships.stream()
+                .filter(m -> m.getStatus().equals("joined"))
+                .filter(m -> m.getGroup().getType().equals("event"))
+                .collect(Collectors.toMap(
+                        m -> m.getGroup().getId(),
+                        m -> eventRepository
+                                .findByGroupIdOrderByStartDateDesc(m.getGroup().getId())
+                                .stream().findFirst().orElse(null),
+                        (a, b) -> a
+                ));
+
         ModelAndView modelAndView = new ModelAndView("groups/index");
         modelAndView.addObject("pageTitle", "Groups");
         modelAndView.addObject("memberships", memberships);
+        modelAndView.addObject("weeklyMap", weeklyMap);
+        modelAndView.addObject("eventMap", eventMap);
         return modelAndView;
     }
 
@@ -74,8 +97,10 @@ public class GroupController {
         modelAndView.addObject("pendingMembers", pendingMembers);
 
         if (group.getType().equals("weekly")) {
-            weeklyRepository.findFirstByGroupIdAndStatusOrderByWeekStartDesc(id, "open")
-                    .ifPresent(w -> modelAndView.addObject("currentWeekly", w));
+            Weekly currentWeekly = weeklyRepository
+                    .findByGroupIdOrderByWeekStartDesc(id)
+                    .stream().findFirst().orElse(null);
+            modelAndView.addObject("currentWeekly", currentWeekly);
         } else {
             modelAndView.addObject("events", eventRepository.findByGroupIdOrderByStartDateDesc(id));
         }

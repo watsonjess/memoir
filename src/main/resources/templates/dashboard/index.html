@@ -187,7 +187,7 @@
                             <div class="moment-tile-location">
                                 <th:block th:if="${moment.location != null and !moment.location.isEmpty()}">
                                     <i class="bi bi-geo-alt"></i>
-                                    <span th:text="${moment.location}">London, UK</span>
+                                    <span th:text="${moment.location.split(',')[0]}">London, UK</span>
                                 </th:block>
                             </div>
                         </div>

@@ -16,6 +16,7 @@
       overflow: hidden;
       background: #fff;
       box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+      text-decoration: none;
       color: inherit;
       transition: transform 0.2s, box-shadow 0.2s;
       display: block;
@@ -118,7 +119,7 @@
           <p class="moment-tile-content" th:text="${moment.content}"></p>
           <p class="moment-tile-location" th:if="${moment.location != null}">
             <i class="bi bi-geo-alt"></i>
-            <span th:text="${moment.location}"></span>
+            <span th:text="${moment.location.split(',')[0]}"></span>
           </p>
         </div>
       </a>
@@ -136,6 +137,23 @@
       </div>
 
     </div>
+    <a th:each="moment : ${moments}"
+       th:href="@{/moments/{id}(id=${moment.id})}"
+       class="moment-tile">
+      <img th:src="${moment.imageUrl}"
+           th:alt="${moment.content}"
+           class="moment-tile-image"/>
+      <div class="moment-tile-body">
+        <p class="moment-tile-date"
+           th:text="${#temporals.format(moment.createdAt, 'dd MMMM yyyy')}"></p>
+        <p class="moment-tile-content" th:text="${moment.content}"></p>
+        <p class="moment-tile-location"
+           th:if="${moment.location != null}">
+          <i class="bi bi-geo-alt"></i>
+          <span th:text="${moment.location.split(',')[0]}"></span>
+        </p>
+      </div>
+    </a>
   </div>
 </th:block>
 

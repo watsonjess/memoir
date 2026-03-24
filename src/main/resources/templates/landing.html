@@ -75,17 +75,12 @@
 
         .l-brand {
             font-family: 'Playfair Display', serif;
-            font-size: 1.5rem;
+            font-size: 2.7rem;
             font-weight: 600;
             color: #fff;
             text-decoration: none;
             letter-spacing: 0.02em;
             text-shadow: 0 1px 4px rgba(0,0,0,0.25);
-            background: var(--accent);
-            color: #fff;
-            border: 1px solid var(--accent);
-            padding: 0.55rem 1.4rem;
-            border-radius: 2px;
         }
 
         .l-btn-outline {
@@ -293,14 +288,7 @@
             Share them with the people who matter.
             Never lose what made today worth remembering.
         </p>
-        <div class="l-cta">
-            <a th:href="@{/oauth2/authorization/auth0}"
-               class="l-btn-primary"
-               sec:authorize="!isAuthenticated()">Sign In</a>
-            <a th:href="@{/dashboard}"
-               class="l-btn-primary"
-               sec:authorize="isAuthenticated()">Open Memoir</a>
-        </div>
+
     </div>
 </main>
 
