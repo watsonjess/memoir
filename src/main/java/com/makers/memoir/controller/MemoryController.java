@@ -97,7 +97,7 @@ public class MemoryController {
         MemoryMember ownerMembership = new MemoryMember(memory, currentUser, "owner");
         memoryMemberRepository.save(ownerMembership);
 
-        return "redirect:/memories/" + memory.getId();
+        return "redirect:/memories";
     }
 
     // View a single memory and its thoughts

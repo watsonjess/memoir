@@ -387,6 +387,7 @@
                 data[key].push({
                     group: /*[[${nl.group.name}]]*/ '',
                     groupId: /*[[${nl.group.id}]]*/ 0,
+                    weeklyId: /*[[${nl.id}]]*/ 0,
                     pdfUrl: /*[[${nl.pdfUrl}]]*/ ''
                 });
             })();
@@ -504,7 +505,7 @@
                         links.className = "nl-panel-links";
 
                         const htmlLink = document.createElement("a");
-                        htmlLink.href = `/newsletter/group/${ev.groupId}`;
+                        htmlLink.href = `/newsletter/weekly/${ev.weeklyId}`;
                         htmlLink.className = "nl-panel-link nl-panel-link--html";
                         htmlLink.textContent = "View newsletter";
                         links.appendChild(htmlLink);
