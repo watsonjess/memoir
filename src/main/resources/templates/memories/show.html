@@ -437,12 +437,12 @@
       const authorRow = document.createElement('div');
       authorRow.style.cssText = 'display:flex; align-items:center; gap:10px; margin-bottom:16px;';
       authorRow.innerHTML = `
-        <img src="${avatarSrc}" alt=""
-             style="width:32px; height:32px; border-radius:50%; object-fit:cover; border:2px solid #f0d9c8;"/>
-        <div>
-          <div style="font-size:0.88rem; font-weight:600; color:var(--memoir-accent);">${t.author}</div>
-          <div style="font-size:0.75rem; color:var(--memoir-muted);">${t.date}</div>
-        </div>`;
+      <img src="${avatarSrc}" alt=""
+           style="width:32px; height:32px; border-radius:50%; object-fit:cover; border:2px solid #f0d9c8;"/>
+      <div>
+        <div style="font-size:0.88rem; font-weight:600; color:var(--memoir-accent);">${t.author}</div>
+        <div style="font-size:0.75rem; color:var(--memoir-muted);">${t.date}</div>
+      </div>`;
       content.appendChild(authorRow);
 
       if (t.content) {
@@ -482,13 +482,72 @@
     document.addEventListener('keydown', e => {
       if (e.key === 'Escape') closeThoughtPanel();
     });
-      if (window.location.search.includes('order=') ||
-            window.location.search.includes('filter=') ||
-            window.location.search.includes('groupBy=') ||
-            window.location.search.includes('layout=')) {
-      document.getElementById('thoughts-section').scrollIntoView({ behavior: 'smooth' });
 
+    // AJAX filter handling (NO PAGE RELOAD WHICH FIXES THE SCROLL ISSUE)
+    document.querySelectorAll('.feed-btn').forEach(btn => {
+      btn.addEventListener('click', function (e) {
+        const href = this.getAttribute('href');
+        if (!href) return;
+
+        e.preventDefault();
+
+        const scrollY = window.scrollY;
+
+        fetch(href, {
+          headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+                .then(res => res.text())
+                .then(html => {
+                  const parser = new DOMParser();
+                  const doc = parser.parseFromString(html, 'text/html');
+
+                  const newSection = doc.querySelector('#thoughts-section').parentElement;
+                  const currentSection = document.querySelector('#thoughts-section').parentElement;
+
+                  currentSection.innerHTML = newSection.innerHTML;
+
+                  window.history.pushState({}, '', href);
+                  window.scrollTo({ top: scrollY });
+
+                  // re-bind clicks after DOM replace
+                  bindFeedButtons();
+                });
+      });
+    });
+
+    function bindFeedButtons() {
+      document.querySelectorAll('.feed-btn').forEach(btn => {
+        btn.addEventListener('click', function (e) {
+          const href = this.getAttribute('href');
+          if (!href) return;
+
+          e.preventDefault();
+
+          const scrollY = window.scrollY;
+
+          fetch(href, {
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+          })
+                  .then(res => res.text())
+                  .then(html => {
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(html, 'text/html');
+
+                    const newSection = doc.querySelector('#thoughts-section').parentElement;
+                    const currentSection = document.querySelector('#thoughts-section').parentElement;
+
+                    currentSection.innerHTML = newSection.innerHTML;
+
+                    window.history.pushState({}, '', href);
+                    window.scrollTo({ top: scrollY });
+
+                    bindFeedButtons();
+                  });
+        });
+      });
     }
+
+    // iframe logic (unchanged)
     if (window.self !== window.top) {
       document.querySelector('.memoir-nav')?.style.setProperty('display', 'none', 'important');
       document.querySelector('.memoir-footer')?.style.setProperty('display', 'none', 'important');
@@ -499,7 +558,6 @@
       document.querySelector('.polaroid-strip .text-center')?.style.setProperty('display', 'none', 'important');
       document.querySelector('.nl-panel').style.top = '0';
       document.querySelector('.nl-panel').style.height = '100vh';
-
     }
   </script>
 </th:block>
