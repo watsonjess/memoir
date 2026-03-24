@@ -18,9 +18,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 //GET /memories Pinboard view all your memories
 // GET /memories/new Create a new memory
@@ -103,7 +101,11 @@ public class MemoryController {
     // View a single memory and its thoughts
     @GetMapping("/{id}")
     public String show(@PathVariable Long id, Model model,
+                       @RequestParam(defaultValue = "desc") String order,
+                       @RequestParam(defaultValue = "grid") String layout,
+                       @RequestParam(defaultValue = "none") String groupBy,
                        @AuthenticationPrincipal OAuth2User principal) {
+
         User currentUser = getCurrentUser(principal);
         Memory memory = memoryRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Memory not found"));
@@ -115,7 +117,22 @@ public class MemoryController {
             return "redirect:/memories";
         }
 
-        List<Thought> thoughts = thoughtRepository.findByMemoryIdOrderByCreatedAtDesc(id);
+        List<Thought> thoughts;
+        if (order.equals("asc")) {
+            thoughts = thoughtRepository.findByMemoryIdOrderByCreatedAtAsc(id);
+        } else {
+            thoughts = thoughtRepository.findByMemoryIdOrderByCreatedAtDesc(id);
+        }
+
+        if (groupBy.equals("person") && !thoughts.isEmpty()) {
+            LinkedHashMap<User, List<Thought>> thoughtsByUser = new LinkedHashMap<>();
+            for (Thought thought : thoughts) {
+                thoughtsByUser
+                        .computeIfAbsent(thought.getCreatedBy(), k -> new ArrayList<>())
+                        .add(thought);
+            }
+            model.addAttribute("thoughtsByUser", thoughtsByUser);
+        }
         List<MemoryMember> members = memoryMemberRepository.findByMemoryId(id);
 
         MemoryMember currentMembership = memoryMemberRepository
@@ -128,6 +145,9 @@ public class MemoryController {
         model.addAttribute("currentMembership", currentMembership);
         model.addAttribute("isOwner", currentMembership != null
                 && currentMembership.getRole().equals("owner"));
+        model.addAttribute("order", order);
+        model.addAttribute("layout", layout);
+        model.addAttribute("groupBy", groupBy);
 
         return "memories/show";
     }
