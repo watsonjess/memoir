@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/layout}">
+
+<th:block layout:fragment="styles">
+  <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;600;700&display=swap"
+        rel="stylesheet"/>
+  <style>
+    .pinboard-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 32px;
+      margin-bottom: 24px;
+    }
+    .pinboard-kicker {
+      font-size: 0.7rem;
+      font-weight: 500;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--memoir-accent);
+      margin-bottom: 0.35rem;
+    }
+    .pinboard {
+      position: relative;
+      width: 100%;
+      min-height: 80vh;
+      background-color: #f0ebe3;
+      background-image: radial-gradient(circle, #c8bfb0 1px, transparent 1px);
+      background-size: 28px 28px;
+      border-radius: 16px;
+      border: 1px solid #ddd5c8;
+      overflow: hidden;
+    }
+    .pinboard-empty {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      text-align: center;
+      color: #b0a898;
+      pointer-events: none;
+    }
+    .pinboard-empty i {
+      font-size: 3rem;
+      margin-bottom: 12px;
+      display: block;
+    }
+
+    /* Base polaroid — small is default */
+    .polaroid {
+      position: absolute;
+      background: #fff;
+      width: 100px;
+      padding: 6px 6px 24px 6px;
+      box-shadow: 2px 4px 16px rgba(0,0,0,0.18);
+      cursor: grab;
+      user-select: none;
+      transition: box-shadow 0.2s, transform 0.1s;
+      border-radius: 2px;
+    }
+    .polaroid:hover {
+      box-shadow: 4px 8px 28px rgba(0,0,0,0.25);
+      z-index: 10;
+    }
+    .polaroid.dragging {
+      box-shadow: 8px 16px 40px rgba(0,0,0,0.3);
+      cursor: grabbing;
+      z-index: 100;
+    }
+    .polaroid-img {
+      width: 100%;
+      height: 80px;
+      object-fit: cover;
+      display: block;
+      background: #e8e0d8;
+    }
+    .polaroid-img-placeholder {
+      width: 100%;
+      height: 80px;
+      background: linear-gradient(135deg, #e8e0d8, #d5ccc2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #b0a898;
+      font-size: 1.2rem;
+    }
+    .polaroid-title {
+      font-family: 'Caveat', cursive;
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: #333;
+      text-align: center;
+      margin-top: 6px;
+      line-height: 1.2;
+      word-break: break-word;
+    }
+
+    /* Medium */
+    [data-size="medium"] .polaroid {
+      width: 140px !important;
+      padding: 8px 8px 32px 8px !important;
+    }
+    [data-size="medium"] .polaroid-img,
+    [data-size="medium"] .polaroid-img-placeholder {
+      height: 110px !important;
+    }
+    [data-size="medium"] .polaroid-title {
+      font-size: 0.95rem !important;
+    }
+
+    /* Large */
+    [data-size="large"] .polaroid {
+      width: 190px !important;
+      padding: 12px 12px 42px 12px !important;
+    }
+    [data-size="large"] .polaroid-img,
+    [data-size="large"] .polaroid-img-placeholder {
+      height: 150px !important;
+    }
+    [data-size="large"] .polaroid-title {
+      font-size: 1.15rem !important;
+    }
+
+    /* Size toggle buttons */
+    .size-toggle {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .size-btn {
+      padding: 5px 12px;
+      border-radius: 20px;
+      border: 1px solid var(--memoir-border);
+      background: var(--memoir-surface);
+      color: var(--memoir-muted);
+      font-size: 0.75rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .size-btn:hover {
+      border-color: var(--memoir-accent);
+      color: var(--memoir-accent);
+    }
+    .size-btn.active {
+      background: var(--memoir-accent);
+      border-color: var(--memoir-accent);
+      color: #fff;
+    }
+
+    .polaroid-pin {
+      position: absolute;
+      top: -10px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 40% 35%, #ff6b6b, #c0392b);
+      box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+      z-index: 1;
+    }
+    .polaroid-pin::after {
+      content: '';
+      position: absolute;
+      bottom: -3px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 2px;
+      height: 6px;
+      background: #999;
+      border-radius: 0 0 2px 2px;
+    }
+
+    .pinboard-add-btn {
+      position: fixed;
+      bottom: 32px;
+      right: 32px;
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      background: var(--memoir-accent);
+      color: #fff;
+      border: none;
+      font-size: 1.5rem;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-decoration: none;
+      transition: transform 0.15s, box-shadow 0.15s;
+      z-index: 50;
+    }
+    .pinboard-add-btn:hover {
+      transform: scale(1.08);
+      box-shadow: 0 6px 24px rgba(0,0,0,0.25);
+      color: #fff;
+    }
+
+    .memory-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 200;
+      align-items: center;
+      justify-content: center;
+    }
+    .memory-overlay.active {
+      display: flex;
+    }
+    .memory-expanded {
+      background: #fff;
+      border-radius: 16px;
+      width: 90vw;
+      max-width: 800px;
+      max-height: 85vh;
+      overflow-y: auto;
+      box-shadow: 0 24px 80px rgba(0,0,0,0.3);
+      position: relative;
+      animation: expandIn 0.25s ease;
+    }
+    @keyframes expandIn {
+      from { transform: scale(0.85); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+    .memory-expanded-cover {
+      width: 100%;
+      height: 240px;
+      object-fit: cover;
+      border-radius: 16px 16px 0 0;
+    }
+    .memory-expanded-cover-placeholder {
+      width: 100%;
+      height: 240px;
+      background: linear-gradient(135deg, #e8e0d8, #d5ccc2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #b0a898;
+      font-size: 3rem;
+      border-radius: 16px 16px 0 0;
+    }
+    .memory-expanded-body {
+      padding: 28px 32px 32px;
+    }
+    .memory-expanded-title {
+      font-family: 'Caveat', cursive;
+      font-size: 2rem;
+      font-weight: 700;
+      color: #222;
+      margin-bottom: 8px;
+    }
+    .memory-expanded-description {
+      color: var(--memoir-muted);
+      font-size: 0.95rem;
+      line-height: 1.7;
+      margin-bottom: 20px;
+    }
+    .memory-expanded-meta {
+      font-size: 0.8rem;
+      color: var(--memoir-muted);
+      margin-bottom: 20px;
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    .memory-expanded-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .memory-expanded-close {
+      position: absolute;
+      top: 14px;
+      right: 14px;
+      background: rgba(0,0,0,0.4);
+      color: #fff;
+      border: none;
+      border-radius: 50%;
+      width: 32px;
+      height: 32px;
+      font-size: 1.1rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      line-height: 1;
+      z-index: 10;
+    }
+    .memory-expanded-close:hover {
+      background: rgba(0,0,0,0.65);
+    }
+  </style>
+</th:block>
+
+<th:block layout:fragment="content">
+
+  <div class="pinboard-header">
+    <div>
+      <p class="pinboard-kicker">Your memories</p>
+      <h1 class="memoir-page-title">Pinboard</h1>
+      <p class="memoir-page-subtitle">Drag your memories around the board.</p>
+    </div>
+    <div class="size-toggle">
+      <span style="font-size:0.75rem;color:var(--memoir-muted);margin-right:4px;">Size</span>
+      <button class="size-btn active" data-size="small">S</button>
+      <button class="size-btn" data-size="medium">M</button>
+      <button class="size-btn" data-size="large">L</button>
+    </div>
+  </div>
+
+  <div class="pinboard" id="pinboard">
+
+    <div th:if="${memories.isEmpty()}" class="pinboard-empty">
+      <i class="bi bi-image"></i>
+      <p>No memories yet — add your first one!</p>
+    </div>
+
+    <div th:each="memory : ${memories}"
+         class="polaroid"
+         th:id="'polaroid-' + ${memory.id}"
+         th:attr="data-id=${memory.id},
+                      data-x=${memory.pinX},
+                      data-y=${memory.pinY},
+                      data-name=${memory.name},
+                      data-description=${memory.description},
+                      data-cover=${memory.coverImageUrl},
+                      data-members=${memory.members.size()},
+                      data-url=@{/memories/{id}(id=${memory.id})}">
+
+      <div class="polaroid-pin"></div>
+
+      <img th:if="${memory.coverImageUrl != null}"
+           th:src="${memory.coverImageUrl}"
+           th:alt="${memory.name}"
+           class="polaroid-img"/>
+      <div th:unless="${memory.coverImageUrl != null}"
+           class="polaroid-img-placeholder">
+        <i class="bi bi-image"></i>
+      </div>
+
+      <div class="polaroid-title" th:text="${memory.name}"></div>
+    </div>
+
+  </div>
+
+  <div class="memory-overlay" id="memoryOverlay">
+    <div class="memory-expanded" id="memoryExpanded">
+      <button class="memory-expanded-close" id="overlayClose">&times;</button>
+      <img id="expandedCover" src="" alt="" class="memory-expanded-cover"
+           style="display:none;"/>
+      <div id="expandedCoverPlaceholder" class="memory-expanded-cover-placeholder">
+        <i class="bi bi-image"></i>
+      </div>
+      <div class="memory-expanded-body">
+        <div class="memory-expanded-title" id="expandedTitle"></div>
+        <p class="memory-expanded-description" id="expandedDescription"></p>
+        <div class="memory-expanded-meta">
+                    <span>
+                        <i class="bi bi-people me-1"></i>
+                        <span id="expandedMembers"></span> members
+                    </span>
+        </div>
+        <div class="memory-expanded-actions">
+          <a id="expandedViewLink" href="#" class="btn btn-memoir">
+            <i class="bi bi-journal-text"></i> View thoughts
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <a th:href="@{/memories/new}" class="pinboard-add-btn" title="New memory">
+    <i class="bi bi-plus-lg"></i>
+  </a>
+
+</th:block>
+
+<th:block layout:fragment="scripts">
+  <script>
+    (() => {
+      const pinboard = document.getElementById('pinboard');
+      const overlay = document.getElementById('memoryOverlay');
+      const overlayClose = document.getElementById('overlayClose');
+
+      // Size toggle
+      const savedSize = localStorage.getItem('pinboardSize') || 'small';
+      pinboard.dataset.size = savedSize;
+
+      document.querySelectorAll('.size-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.size === savedSize);
+
+        btn.addEventListener('click', () => {
+          const size = btn.dataset.size;
+          pinboard.dataset.size = size;
+          localStorage.setItem('pinboardSize', size);
+          document.querySelectorAll('.size-btn').forEach(b => {
+            b.classList.toggle('active', b.dataset.size === size);
+          });
+        });
+      });
+
+      const rotations = [-4, -3, -2, -1, 0, 1, 2, 3, 4];
+
+      document.querySelectorAll('.polaroid').forEach(card => {
+        const x = parseFloat(card.dataset.x) || 0;
+        const y = parseFloat(card.dataset.y) || 0;
+        const rot = rotations[Math.floor(Math.random() * rotations.length)];
+
+        card.style.left = x + 'px';
+        card.style.top = y + 'px';
+        card.style.transform = `rotate(${rot}deg)`;
+        card.dataset.rot = rot;
+
+        makeDraggable(card);
+        card.addEventListener('click', () => {
+          if (!card.dataset.dragged || card.dataset.dragged === 'false') {
+            openOverlay(card);
+          }
+        });
+      });
+
+      // Scatter memories that haven't been positioned yet
+      let col = 0, row = 0;
+      document.querySelectorAll('.polaroid').forEach(card => {
+        if (parseFloat(card.dataset.x) === 0 && parseFloat(card.dataset.y) === 0) {
+          const x = 40 + col * 160;
+          const y = 40 + row * 200;
+          card.style.left = x + 'px';
+          card.style.top = y + 'px';
+          col++;
+          if (col > 5) { col = 0; row++; }
+        }
+      });
+
+      function makeDraggable(card) {
+        let startX, startY, startLeft, startTop, moved;
+
+        card.addEventListener('mousedown', (e) => {
+          if (e.button !== 0) return;
+          moved = false;
+          startX = e.clientX;
+          startY = e.clientY;
+          startLeft = parseInt(card.style.left) || 0;
+          startTop = parseInt(card.style.top) || 0;
+          card.classList.add('dragging');
+          card.dataset.dragged = 'false';
+          e.preventDefault();
+
+          function onMouseMove(e) {
+            const dx = e.clientX - startX;
+            const dy = e.clientY - startY;
+            if (Math.abs(dx) > 4 || Math.abs(dy) > 4) {
+              moved = true;
+              card.dataset.dragged = 'true';
+            }
+            card.style.left = (startLeft + dx) + 'px';
+            card.style.top = (startTop + dy) + 'px';
+          }
+
+          function onMouseUp() {
+            card.classList.remove('dragging');
+            card.style.transform = `rotate(${card.dataset.rot}deg)`;
+            document.removeEventListener('mousemove', onMouseMove);
+            document.removeEventListener('mouseup', onMouseUp);
+
+            if (moved) {
+              savePosition(card.dataset.id,
+                      parseInt(card.style.left),
+                      parseInt(card.style.top));
+              setTimeout(() => { card.dataset.dragged = 'false'; }, 100);
+            }
+          }
+
+          document.addEventListener('mousemove', onMouseMove);
+          document.addEventListener('mouseup', onMouseUp);
+        });
+      }
+
+      function savePosition(id, x, y) {
+        const csrfToken = document.cookie
+                .split('; ')
+                .find(row => row.startsWith('XSRF-TOKEN='))
+                ?.split('=')[1];
+
+        fetch(`/memories/${id}/position`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-XSRF-TOKEN': csrfToken || ''
+          },
+          body: `x=${x}&y=${y}`
+        }).catch(err => console.error('Failed to save position:', err));
+      }
+
+      function openOverlay(card) {
+        const cover = document.getElementById('expandedCover');
+        const placeholder = document.getElementById('expandedCoverPlaceholder');
+
+        if (card.dataset.cover && card.dataset.cover !== 'null') {
+          cover.src = card.dataset.cover;
+          cover.style.display = 'block';
+          placeholder.style.display = 'none';
+        } else {
+          cover.style.display = 'none';
+          placeholder.style.display = 'flex';
+        }
+
+        document.getElementById('expandedTitle').textContent = card.dataset.name;
+        document.getElementById('expandedDescription').textContent =
+                card.dataset.description && card.dataset.description !== 'null'
+                        ? card.dataset.description : '';
+        document.getElementById('expandedMembers').textContent = card.dataset.members;
+        document.getElementById('expandedViewLink').href = card.dataset.url;
+
+        overlay.classList.add('active');
+      }
+
+      overlayClose.addEventListener('click', () => overlay.classList.remove('active'));
+      overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) overlay.classList.remove('active');
+      });
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') overlay.classList.remove('active');
+      });
+    })();
+  </script>
+</th:block>
+
+</html>
