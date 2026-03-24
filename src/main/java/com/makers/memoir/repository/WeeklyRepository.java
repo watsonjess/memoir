@@ -15,7 +15,7 @@ public interface WeeklyRepository extends JpaRepository<Weekly, Long> {
     List<Weekly> findByGroupIdOrderByWeekStartDesc(Long groupId);
     Optional<Weekly> findFirstByGroupIdAndStatusOrderByWeekStartDesc(Long groupId, String status);
     List<Weekly> findByStatus(String status);
-
+    List<Weekly> findByGroupIdAndStatus(Long groupId, String status);
     Optional<Weekly> findByGroupAndWeekStart(Group group, LocalDateTime weekStart);
     List<Weekly> findByGroupIdInAndStatus(List<Long> groupIds, String status);
 

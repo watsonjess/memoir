@@ -4,15 +4,9 @@
 <th:block th:fragment="styles">
     <style>
         .dashboard-container {
-            height: calc(100vh - 100px);
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
         }
 
         .moments-grid-container {
-            flex-grow: 1;
-            overflow-y: auto;
             padding-right: 10px;
         }
 
@@ -151,20 +145,68 @@
         .pagination-right {
             text-align: right;
         }
+
+        .dial-container {
+            position: relative;
+            width: 100px;
+            height: 100px;
+            margin: 0 auto;
+        }
+
+        .dial-svg {
+            width: 100%;
+            height: 100%;
+            transform: rotate(-90deg);
+        }
+
+        .dial-bg {
+            fill: none;
+            stroke: var(--memoir-border);
+            stroke-width: 8;
+        }
+
+        .dial-progress {
+            fill: none;
+            stroke: var(--memoir-accent);
+            stroke-width: 8;
+            stroke-linecap: round;
+            stroke-dasharray: 251.2;
+            transition: stroke-dashoffset 1s ease-out;
+        }
+
+        .dial-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+        }
+
+        .dial-percentage {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.2rem;
+            color: var(--memoir-ink);
+            line-height: 1;
+            margin-bottom: 2px;
+        }
+
+        .dial-label {
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.65rem;
+            color: var(--memoir-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
     </style>
 </th:block>
 <th:block th:fragment="dashboard">
     <div class="row g-4 align-items-start dashboard-container">
-
-
         <div class="col-12 col-lg-8">
             <h1 class="welcome" th:text="'Hello, ' + ${firstName} + '!'">Hello!</h1>
 
             <div class="d-flex justify-content-between align-items-baseline mt-4 mb-2">
                 <h2>Recent moments</h2>
-                <a th:href="@{/moments}" class="show-all">
-                    View all &rarr;
-                </a>
+                <a th:href="@{/moments}" class="show-all">View all &rarr;</a>
             </div>
             <div th:if="${moments.isEmpty()}" class="empty-state">
                 <i class="bi bi-camera"></i>
@@ -218,6 +260,7 @@
             </div>
         </div>
         <div class="col-12 col-lg-4 mt-4 mt-lg-5">
+            <div th:replace="~{sidebar/activity-dial :: dial(${activityPercentage})}"></div>
             <div th:replace="~{sidebar/reminder :: reminder(${groupsMissingToday})}"></div>
             <div th:replace="~{sidebar/upcoming-events :: upcoming-events(${events})}"></div>
             <div th:replace="~{sidebar/groups :: groups(${userGroups})}"></div>

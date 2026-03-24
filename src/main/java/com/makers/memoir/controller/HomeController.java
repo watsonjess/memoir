@@ -2,6 +2,7 @@ package com.makers.memoir.controller;
 
 import com.makers.memoir.model.*;
 import com.makers.memoir.repository.*;
+import com.makers.memoir.service.StatusService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -35,6 +36,8 @@ public class HomeController {
     private EventRepository eventRepository;
     @Autowired
     private WeeklyRepository weeklyRepository;
+    @Autowired
+    private StatusService statusService;
 
     @GetMapping("/")
     public String home(Model model, @AuthenticationPrincipal OidcUser principal, @RequestParam(defaultValue = "0") int page) {
@@ -63,6 +66,9 @@ public class HomeController {
                 model.addAttribute("totalPages", momentPage.getTotalPages());
                 model.addAttribute("hasNext", momentPage.hasNext());
                 model.addAttribute("hasPrev", momentPage.hasPrevious());
+
+                int allTimeScore = statusService.calculateAllTimeMomentPosts(currentUser);
+                model.addAttribute("activityPercentage", allTimeScore);
 
 
                 List<GroupMember> userGroups = groupMemberRepository.findByUserId(currentUser.getId());
