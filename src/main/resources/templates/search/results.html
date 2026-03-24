@@ -59,9 +59,9 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        font-family: 'Playfair Display', serif;
+        font-family: 'DM Sans', sans-serif;
         font-size: 1.4rem;
-        font-weight: 600;
+        font-weight: 500;
         color: var(--memoir-accent, #C1603A);
         margin-bottom: 0.85rem;
         flex-shrink: 0;
@@ -127,7 +127,14 @@
         <a th:each="user : ${users}" class="person-card"
         th:href="@{/profile/{username}(username=${user.username})}">
           <div class="person-card-img">
-            <img th:if="${user.profileImage != null}" th:src="${user.profileImage}" th:alt="${user.firstname + ' ' + user.lastname}"/>
+            <img th:if="${user.profileImage != null and !#strings.isEmpty(user.profileImage)}"
+                 th:src="${user.profileImage}"
+                 th:alt="${user.firstname + ' ' + user.lastname}"/>
+
+            <span th:unless="${user.profileImage != null and !#strings.isEmpty(user.profileImage)}"
+                  th:text="${#strings.substring(user.firstname, 0, 1) + #strings.substring(user.lastname, 0, 1)}">
+    JD
+  </span>
           </div>
           <div th:text="${user.firstname + ' ' + user.lastname}" class="person-card-name">
             Name
