@@ -24,8 +24,6 @@
   </div>
 
   <div class="polaroid-strip mb-4">
-
-    <!-- Title + delete -->
     <div class="text-center position-relative mb-4">
       <p class="polaroid-title" th:text="${memory.name}">Memory name</p>
       <p class="polaroid-subtitle" th:text="${memory.description}" th:if="${memory.description}"></p>
@@ -39,12 +37,10 @@
       </form>
     </div>
 
-    <!-- Members + invite -->
     <div class="mb-4 d-flex flex-wrap gap-2 align-items-center">
       <span class="small" style="color: var(--memoir-muted);">
         <i class="bi bi-people me-1"></i> Members:
       </span>
-
       <div th:each="member : ${members}"
            class="d-flex align-items-center gap-2 px-3 py-1 rounded-pill"
            style="background: var(--memoir-cream); border: 1px solid var(--memoir-border); font-size: 0.8rem;">
@@ -56,7 +52,6 @@
               style="font-size: 0.65rem; color: var(--memoir-accent);">owner</span>
       </div>
 
-      <!-- Invite search (owners only) -->
       <div th:if="${isOwner}"
            class="dropdown ms-auto"
            id="memoirSearchInvite"
@@ -88,9 +83,6 @@
         </div>
       </div>
 
-    </div>
-
-    <!-- Add a thought -->
     <div class="mb-4">
       <h6 class="mb-3" style="font-family: 'Playfair Display', serif;">Add a thought</h6>
       <form th:action="@{/memories/{id}/thoughts(id=${memory.id})}"
@@ -467,12 +459,12 @@
       const authorRow = document.createElement('div');
       authorRow.style.cssText = 'display:flex; align-items:center; gap:10px; margin-bottom:16px;';
       authorRow.innerHTML = `
-        <img src="${avatarSrc}" alt=""
-             style="width:32px; height:32px; border-radius:50%; object-fit:cover; border:2px solid #f0d9c8;"/>
-        <div>
-          <div style="font-size:0.88rem; font-weight:600; color:var(--memoir-accent);">${t.author}</div>
-          <div style="font-size:0.75rem; color:var(--memoir-muted);">${t.date}</div>
-        </div>`;
+      <img src="${avatarSrc}" alt=""
+           style="width:32px; height:32px; border-radius:50%; object-fit:cover; border:2px solid #f0d9c8;"/>
+      <div>
+        <div style="font-size:0.88rem; font-weight:600; color:var(--memoir-accent);">${t.author}</div>
+        <div style="font-size:0.75rem; color:var(--memoir-muted);">${t.date}</div>
+      </div>`;
       content.appendChild(authorRow);
 
       if (t.content) {
@@ -513,13 +505,71 @@
       if (e.key === 'Escape') closeThoughtPanel();
     });
 
-    if (window.location.search.includes('order=') ||
-        window.location.search.includes('filter=') ||
-        window.location.search.includes('groupBy=') ||
-        window.location.search.includes('layout=')) {
-      document.getElementById('thoughts-section').scrollIntoView({ behavior: 'smooth' });
+    // AJAX filter handling (NO PAGE RELOAD WHICH FIXES THE SCROLL ISSUE)
+    document.querySelectorAll('.feed-btn').forEach(btn => {
+      btn.addEventListener('click', function (e) {
+        const href = this.getAttribute('href');
+        if (!href) return;
+
+        e.preventDefault();
+
+        const scrollY = window.scrollY;
+
+        fetch(href, {
+          headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+                .then(res => res.text())
+                .then(html => {
+                  const parser = new DOMParser();
+                  const doc = parser.parseFromString(html, 'text/html');
+
+                  const newSection = doc.querySelector('#thoughts-section').parentElement;
+                  const currentSection = document.querySelector('#thoughts-section').parentElement;
+
+                  currentSection.innerHTML = newSection.innerHTML;
+
+                  window.history.pushState({}, '', href);
+                  window.scrollTo({ top: scrollY });
+
+                  // re-bind clicks after DOM replace
+                  bindFeedButtons();
+                });
+      });
+    });
+
+    function bindFeedButtons() {
+      document.querySelectorAll('.feed-btn').forEach(btn => {
+        btn.addEventListener('click', function (e) {
+          const href = this.getAttribute('href');
+          if (!href) return;
+
+          e.preventDefault();
+
+          const scrollY = window.scrollY;
+
+          fetch(href, {
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+          })
+                  .then(res => res.text())
+                  .then(html => {
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(html, 'text/html');
+
+                    const newSection = doc.querySelector('#thoughts-section').parentElement;
+                    const currentSection = document.querySelector('#thoughts-section').parentElement;
+
+                    currentSection.innerHTML = newSection.innerHTML;
+
+                    window.history.pushState({}, '', href);
+                    window.scrollTo({ top: scrollY });
+
+                    bindFeedButtons();
+                  });
+        });
+      });
     }
 
+    // iframe logic (unchanged)
     if (window.self !== window.top) {
       document.querySelector('.memoir-nav')?.style.setProperty('display', 'none', 'important');
       document.querySelector('.memoir-footer')?.style.setProperty('display', 'none', 'important');
@@ -530,6 +580,7 @@
       document.querySelector('.polaroid-strip .text-center')?.style.setProperty('display', 'none', 'important');
       document.querySelector('.nl-panel').style.top = '0';
       document.querySelector('.nl-panel').style.height = '100vh';
+
     }
   </script>
   <script th:src="@{/scripts/search-invite-memory.js}" defer></script>

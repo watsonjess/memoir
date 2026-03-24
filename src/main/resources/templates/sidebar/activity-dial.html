@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<div th:fragment="dial(activityPercentage)"
+     style="background: var(--memoir-surface); border: 1px solid var(--memoir-border); border-radius: 14px; padding: 16px; margin-bottom: 12px;">
+
+  <div style="display: flex; align-items: center; justify-content: space-between;"
+       th:with="pct=${activityPercentage != null ? activityPercentage : 0},
+                offset=${251.2 - (251.2 * pct / 100)},
+                dialColor=${pct < 35 ? '#ff4d4d' : (pct < 70 ? '#ffbf00' : '#2ecc71')}">
+
+    <div class="dial-container" style="position: relative; width: 100px; height: 100px; flex-shrink: 0;">
+      <svg viewBox="0 0 100 100" style="transform: rotate(-90deg); width: 100%; height: 100%;">
+        <circle cx="50" cy="50" r="40" stroke="var(--memoir-border)" stroke-width="8" fill="transparent"></circle>
+
+        <circle cx="50" cy="50" r="40"
+                stroke-width="8"
+                fill="transparent"
+                stroke-linecap="round"
+                th:attr="stroke=${dialColor}"
+                th:style="'stroke-dasharray: 251.2; stroke-dashoffset: ' + ${offset} + '; transition: stroke-dashoffset 0.5s ease, stroke 0.3s ease;'"></circle>
+      </svg>
+
+      <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; width: 100%;">
+        <div th:text="${pct} + '%'" style="font-weight: bold; font-size: 1.2rem;">0%</div>
+        <div style="font-size: 0.65rem; text-transform: uppercase; opacity: 0.7;">All Time</div>
+      </div>
+    </div>
+
+    <div style="flex: 1; padding-left: 25px;">
+      <h4 style="margin: 0; color: var(--memoir-ink);">Memoir Status</h4>
+      <p style="margin: 4px 0 0; font-size: 0.85rem; color: var(--memoir-muted);">
+        This tracks how consistently you’ve shared moments across all your groups.
+      </p>
+    </div>
+
+
+
+  </div>
+</div>
+</html>
