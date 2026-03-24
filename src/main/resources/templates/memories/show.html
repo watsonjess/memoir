@@ -47,6 +47,8 @@
         <span th:if="${member.role == 'owner'}"
               style="font-size: 0.65rem; color: var(--memoir-accent);">owner</span>
       </div>
+
+      <!-- placeholder for invite search box -->
       <form th:if="${isOwner}"
             th:action="@{/memories/{id}/invite(id=${memory.id})}" method="post"
             class="d-flex gap-2 ms-auto">
@@ -495,6 +497,8 @@
       document.querySelector('.memoir-main').style.minHeight = '0';
       document.querySelector('.polaroid-photo-wrap')?.style.setProperty('display', 'none', 'important');
       document.querySelector('.polaroid-strip .text-center')?.style.setProperty('display', 'none', 'important');
+      document.querySelector('.nl-panel').style.top = '0';
+      document.querySelector('.nl-panel').style.height = '100vh';
 
     }
   </script>
