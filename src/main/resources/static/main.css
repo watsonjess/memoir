@@ -282,3 +282,67 @@ h1, h2, h3, h4, h5 {
     left: 50%;
     transform: translateX(-50%);
 }
+
+#memoryModal {
+    background: #fffef8;
+    border-radius: 3px;
+    padding: 12px 12px 12px 12px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.15),
+    0 12px 28px rgba(0,0,0,0.1),
+    0 0 0 1px rgba(0,0,0,0.05);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.polaroid-photo-wrap {
+    width: 100%;
+    aspect-ratio: 4/3;
+    max-height: 400px;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.polaroid-photo {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    filter: contrast(1.03) saturate(0.95);
+}
+
+.polaroid-photo-placeholder {
+    width: 100%;
+    height: 100%;
+    background: var(--memoir-cream);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.polaroid-strip {
+    padding: 16px 12px 12px;
+    flex-shrink: 0;
+    border-bottom: 1px solid #ede8df;
+}
+
+.polaroid-title {
+    font-family: 'Caveat', cursive;
+    font-size: 1.8rem;
+    color: #2a2a2a;
+    margin: 0 0 4px;
+    line-height: 1.2;
+}
+
+.polaroid-subtitle {
+    font-family: 'Caveat', cursive;
+    font-size: 1.1rem;
+    color: var(--memoir-muted);
+    margin: 0;
+}
+
+.polaroid-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px 12px;
+}
