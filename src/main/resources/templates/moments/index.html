@@ -102,7 +102,7 @@
         <p class="moment-tile-location"
            th:if="${moment.location != null}">
           <i class="bi bi-geo-alt"></i>
-          <span th:text="${moment.location}"></span>
+          <span th:text="${moment.location.split(',')[0]}"></span>
         </p>
       </div>
     </a>

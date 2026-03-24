@@ -64,7 +64,7 @@
                     </a>
                     <span class="badge rounded-pill"
                           th:classappend="${m.group.type == 'weekly'} ? 'bg-success' : 'bg-warning text-dark'"
-                          th:text="${m.group.type == 'weekly'} ? 'Weekly' : 'Event'">
+                          th:text="${m.group.type == 'weekly'} ? 'Newsletter' : 'Event'">
                 Type
             </span>
                 </div>
@@ -75,6 +75,28 @@
                    th:text="${m.group.description}"
                    th:if="${m.group.description}">
                 </p>
+
+                <div th:if="${m.group.type == 'weekly' and weeklyMap[m.group.id] != null}"
+                     class="small mb-3 d-flex align-items-center gap-1"
+                     style="color: #2d6a4f;">
+                    <i class="bi bi-calendar-check"></i>
+                    <span th:with="w=${weeklyMap[m.group.id]}">
+                    <span th:text="${#temporals.format(w.sendDate, 'd MMM yyyy')}"></span>
+                </span>
+                </div>
+
+                <!-- Event date range -->
+                <div th:if="${m.group.type == 'event' and eventMap[m.group.id] != null}"
+                     class="small mb-3 d-flex align-items-center gap-1"
+                     style="color: var(--memoir-muted);">
+                    <i class="bi bi-calendar-event"></i>
+                    <span th:with="e=${eventMap[m.group.id]}">
+                    <span th:text="${#temporals.format(e.startDate, 'd MMM yyyy')}"></span>
+                    <span th:if="${e.endDate != null}">
+                        → <span th:text="${#temporals.format(e.endDate, 'd MMM yyyy')}"></span>
+                    </span>
+                    </span>
+                </div>
 
                 <!-- Member count -->
                 <p class="small mb-3" style="color: var(--memoir-muted)">

@@ -75,7 +75,7 @@
 
         .l-brand {
             font-family: 'Playfair Display', serif;
-            font-size: 1.5rem;
+            font-size: 2.7rem;
             font-weight: 600;
             color: #fff;
             text-decoration: none;
@@ -288,14 +288,7 @@
             Share them with the people who matter.
             Never lose what made today worth remembering.
         </p>
-        <div class="l-cta">
-            <a th:href="@{/oauth2/authorization/auth0}"
-               class="l-btn-primary"
-               sec:authorize="!isAuthenticated()">Begin →</a>
-            <a th:href="@{/dashboard}"
-               class="l-btn-primary"
-               sec:authorize="isAuthenticated()">Open Memoir →</a>
-        </div>
+
     </div>
 </main>
 
