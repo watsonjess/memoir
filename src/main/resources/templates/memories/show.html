@@ -119,7 +119,6 @@
       </form>
     </div>
 
-    <!-- Feed controls -->
     <div class="feed-controls" id="thoughts-section">
       <span class="feed-week-label" th:text="${#lists.size(thoughts)} + ' thoughts'"></span>
       <div style="display:flex; gap:16px; align-items:center; flex-wrap:wrap;">
@@ -191,16 +190,13 @@
       </div>
     </div>
 
-    <!-- Empty state -->
     <div th:if="${#lists.isEmpty(thoughts)}" class="feed-empty">
       <i class="bi bi-chat-heart"></i>
       <p>No thoughts yet — add the first one!</p>
     </div>
 
-    <!-- Thoughts grid -->
     <div th:unless="${#lists.isEmpty(thoughts)}">
 
-      <!-- Grouped by person -->
       <div th:if="${groupBy == 'person'}">
         <div th:each="entry : ${thoughtsByUser}" class="user-group-section">
           <div class="user-group-header">
@@ -264,7 +260,6 @@
         </div>
       </div>
 
-      <!-- Grid view -->
       <div th:if="${groupBy != 'person' and layout == 'grid'}" class="moments-grid">
         <div th:each="thought : ${thoughts}"
              class="thought-card moment-card"
@@ -293,7 +288,6 @@
         </div>
       </div>
 
-      <!-- Masonry view -->
       <div th:if="${groupBy != 'person' and layout == 'masonry'}" class="moments-masonry">
         <div th:each="thought : ${thoughts}"
              class="thought-card moment-card"
@@ -323,7 +317,6 @@
         </div>
       </div>
 
-      <!-- Feed view -->
       <div th:if="${groupBy != 'person' and layout == 'feed'}" class="moments-feed">
         <div th:each="thought : ${thoughts}"
              class="thought-card moment-feed-card"
@@ -353,7 +346,6 @@
 
   </div>
 
-  <!-- Thought slide-out panel -->
   <div class="nl-panel-overlay" id="thoughtOverlay"></div>
   <div class="nl-panel" id="thoughtPanel">
     <button class="nl-panel-close" id="thoughtPanelClose">&times;</button>
