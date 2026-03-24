@@ -187,36 +187,40 @@ public class NewsletterController {
     @GetMapping("/group/{groupId}")
     public String viewNewsletter(@PathVariable Long groupId, Model model,
                                  Principal principal) {
-        LocalDateTime weekStart = LocalDateTime.now()
-                .with(DayOfWeek.MONDAY)
-                .truncatedTo(ChronoUnit.DAYS);
-        LocalDateTime weekEnd = weekStart.plusDays(7);
+        // Find the most recent sent weekly for this group
+        Optional<Weekly> weeklyOpt = weeklyRepository
+                .findFirstByGroupIdAndStatusOrderByWeekStartDesc(groupId, "sent");
 
-        Group group = groupRepository.findById(groupId).orElseThrow();
-        Optional<Weekly> existingWeekly = weeklyRepository
-                .findByGroupAndWeekStart(group, weekStart);
+        if (weeklyOpt.isEmpty()) {
+            model.addAttribute("summaries", null);
+            model.addAttribute("groupId", groupId);
+            model.addAttribute("weekStart", LocalDateTime.now());
+            return "newsletter/index";
+        }
+
+        Weekly weekly = weeklyOpt.get();
+        LocalDateTime weekStart = weekly.getWeekStart();
+        LocalDateTime weekEnd = weekly.getSendDate();
 
         // Serve cached version if it exists
-        if (existingWeekly.isPresent() && existingWeekly.get().getHtmlContent() != null) {
-            Weekly cached = existingWeekly.get();
-            model.addAttribute("cachedHtml", cached.getHtmlContent());
+        if (weekly.getHtmlContent() != null) {
+            model.addAttribute("cachedHtml", weekly.getHtmlContent());
             model.addAttribute("groupId", groupId);
             model.addAttribute("weekStart", weekStart);
             return "newsletter/cached";
         }
 
         // Generate fresh newsletter
+        Group group = groupRepository.findById(groupId).orElseThrow();
         NewsletterData data = buildNewsletterData(groupId, weekStart, weekEnd);
         populateWebContext(model, data, groupId, weekStart);
 
         try {
-            // Build PDF context with base64 images
             Context pdfContext = new Context();
             populatePdfContext(pdfContext, data, groupId, weekStart);
             String pdfHtml = templateEngine.process("newsletter/pdf", pdfContext);
             byte[] pdfBytes = pdfService.generatePdf(pdfHtml);
 
-            // Build web HTML for caching
             Context webContext = new Context();
             webContext.setVariable("summaries", data.summaries);
             webContext.setVariable("memberMoments", data.memberMoments);
@@ -229,7 +233,6 @@ public class NewsletterController {
             webContext.setVariable("weekStart", weekStart);
             String webHtml = templateEngine.process("newsletter/index", webContext);
 
-            // Upload PDF to Cloudinary
             Map<String, Object> uploadOptions = new HashMap<>();
             uploadOptions.put("resource_type", "raw");
             uploadOptions.put("public_id", "newsletters/group_" + groupId + "_"
@@ -238,19 +241,75 @@ public class NewsletterController {
             Map pdfUploadResult = cloudinary.uploader().upload(pdfBytes, uploadOptions);
             String pdfUrl = (String) pdfUploadResult.get("secure_url");
 
-            // Save Weekly record with cached HTML and PDF URL
-            Weekly weekly = existingWeekly.orElse(
-                    new Weekly(group, weekStart, weekStart.plusDays(6)));
             weekly.setStatus("sent");
             weekly.setSentAt(LocalDateTime.now());
             weekly.setPdfUrl(pdfUrl);
             weekly.setHtmlContent(webHtml);
             weeklyRepository.save(weekly);
 
-            // Email sending will be handled by scheduler on release day
-
         } catch (Exception e) {
             System.err.println("Failed to generate newsletter: " + e.getMessage());
+        }
+
+        return "newsletter/index";
+    }
+
+    @GetMapping("/weekly/{weeklyId}")
+    public String viewWeeklyById(@PathVariable Long weeklyId, Model model) {
+        Weekly weekly = weeklyRepository.findById(weeklyId).orElseThrow();
+
+        Long groupId = weekly.getGroup().getId();
+        LocalDateTime weekStart = weekly.getWeekStart();
+        LocalDateTime weekEnd = weekly.getSendDate();
+
+        // Serve cached version if it exists
+        if (weekly.getHtmlContent() != null) {
+            model.addAttribute("cachedHtml", weekly.getHtmlContent());
+            model.addAttribute("groupId", groupId);
+            model.addAttribute("weekStart", weekStart);
+            return "newsletter/cached";
+        }
+
+        // Generate fresh newsletter
+        NewsletterData data = buildNewsletterData(groupId, weekStart, weekEnd);
+        populateWebContext(model, data, groupId, weekStart);
+
+        try {
+            Context pdfContext = new Context();
+            populatePdfContext(pdfContext, data, groupId, weekStart);
+            String pdfHtml = templateEngine.process("newsletter/pdf", pdfContext);
+            byte[] pdfBytes = pdfService.generatePdf(pdfHtml);
+
+            Context webContext = new Context();
+            webContext.setVariable("summaries", data.summaries);
+            webContext.setVariable("memberMoments", data.memberMoments);
+            webContext.setVariable("allImageUrls", data.allImageUrls);
+            webContext.setVariable("imageRows", data.imageRows);
+            webContext.setVariable("colWidth", data.colWidth);
+            webContext.setVariable("imageHeight", data.imageHeight);
+            webContext.setVariable("groupSummary", data.groupSummary);
+            webContext.setVariable("groupId", groupId);
+            webContext.setVariable("weekStart", weekStart);
+            String webHtml = templateEngine.process("newsletter/index", webContext);
+
+            Map<String, Object> uploadOptions = new HashMap<>();
+            uploadOptions.put("resource_type", "raw");
+            uploadOptions.put("public_id", "newsletters/group_" + groupId + "_"
+                    + weekStart.toLocalDate());
+            uploadOptions.put("overwrite", true);
+            Map pdfUploadResult = cloudinary.uploader().upload(pdfBytes, uploadOptions);
+            String pdfUrl = (String) pdfUploadResult.get("secure_url");
+
+            weekly.setPdfUrl(pdfUrl);
+            weekly.setHtmlContent(webHtml);
+            weeklyRepository.save(weekly);
+
+            System.out.println("Newsletter regenerated for weekly ID: " + weeklyId);
+            System.out.println("Summaries count: " + data.summaries.size());
+
+        } catch (Exception e) {
+            System.err.println("Failed to regenerate newsletter: " + e.getMessage());
+            e.printStackTrace();
         }
 
         return "newsletter/index";
