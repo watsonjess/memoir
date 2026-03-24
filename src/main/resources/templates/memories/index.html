@@ -214,15 +214,19 @@
       display: flex;
     }
     .memory-expanded {
-      background: #fff;
-      border-radius: 16px;
+      background: #fffef8;
+      border-radius: 3px;
       width: 90vw;
-      max-width: 800px;
-      max-height: 85vh;
-      overflow-y: auto;
-      box-shadow: 0 24px 80px rgba(0,0,0,0.3);
+      max-width: 900px;
+      height: 85vh
+      box-shadow: 4px 8px 28px rgba(0,0,0,0.25),
+      0 0 0 1px rgba(0,0,0,0.05);
       position: relative;
       animation: expandIn 0.25s ease;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      padding-bottom: 60px;
     }
     @keyframes expandIn {
       from { transform: scale(0.85); opacity: 0; }
@@ -386,7 +390,6 @@
     (() => {
       const pinboard = document.getElementById('pinboard');
       const overlay = document.getElementById('memoryOverlay');
-      const overlayClose = document.getElementById('overlayClose');
 
       // Size toggle
       const savedSize = localStorage.getItem('pinboardSize') || 'small';
@@ -499,29 +502,22 @@
       }
 
       function openOverlay(card) {
-        const cover = document.getElementById('expandedCover');
-        const placeholder = document.getElementById('expandedCoverPlaceholder');
-
-        if (card.dataset.cover && card.dataset.cover !== 'null') {
-          cover.src = card.dataset.cover;
-          cover.style.display = 'block';
-          placeholder.style.display = 'none';
-        } else {
-          cover.style.display = 'none';
-          placeholder.style.display = 'flex';
-        }
-
-        document.getElementById('expandedTitle').textContent = card.dataset.name;
-        document.getElementById('expandedDescription').textContent =
-                card.dataset.description && card.dataset.description !== 'null'
-                        ? card.dataset.description : '';
-        document.getElementById('expandedMembers').textContent = card.dataset.members;
-        document.getElementById('expandedViewLink').href = card.dataset.url;
-
+        const expanded = document.getElementById('memoryExpanded');
+        expanded.innerHTML = `
+        <button class="memory-expanded-close"
+                onclick="document.getElementById('memoryOverlay').classList.remove('active')"
+                style="z-index:10;">&times;</button>
+        <iframe src="${card.dataset.url}"
+        style="width:100%; flex:1; height:calc(85vh - 60px); border:none; display:block; min-height:0;"></iframe>
+        <div style="position:absolute; bottom:0; left:0; right:0; height:60px;
+                    background:#fffef8; display:flex; align-items:center;
+                    justify-content:center; border-top:1px solid #e8e0d0;">
+            <span style="font-family:'Caveat',cursive; font-size:1.4rem; color:#2a2a2a;">
+                ${card.dataset.name}
+            </span>
+        </div>`;
         overlay.classList.add('active');
       }
-
-      overlayClose.addEventListener('click', () => overlay.classList.remove('active'));
       overlay.addEventListener('click', (e) => {
         if (e.target === overlay) overlay.classList.remove('active');
       });

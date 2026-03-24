@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 //GET /memories Pinboard view all your memories
 // GET /memories/new Create a new memory
@@ -104,6 +105,7 @@ public class MemoryController {
                        @RequestParam(defaultValue = "desc") String order,
                        @RequestParam(defaultValue = "grid") String layout,
                        @RequestParam(defaultValue = "none") String groupBy,
+                       @RequestParam(defaultValue = "all") String filter,
                        @AuthenticationPrincipal OAuth2User principal) {
 
         User currentUser = getCurrentUser(principal);
@@ -133,6 +135,16 @@ public class MemoryController {
             }
             model.addAttribute("thoughtsByUser", thoughtsByUser);
         }
+
+        if (filter.equals("photo")) {
+            thoughts = thoughts.stream()
+                    .filter(t -> t.getImageUrl() != null)
+                    .collect(Collectors.toList());
+        } else if (filter.equals("text")) {
+            thoughts = thoughts.stream()
+                    .filter(t -> t.getImageUrl() == null)
+                    .collect(Collectors.toList());
+        }
         List<MemoryMember> members = memoryMemberRepository.findByMemoryId(id);
 
         MemoryMember currentMembership = memoryMemberRepository
@@ -148,6 +160,7 @@ public class MemoryController {
         model.addAttribute("order", order);
         model.addAttribute("layout", layout);
         model.addAttribute("groupBy", groupBy);
+        model.addAttribute("filter", filter);
 
         return "memories/show";
     }
