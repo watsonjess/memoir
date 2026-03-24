@@ -72,7 +72,6 @@
         bsDropdown.show();
     });
 
-    elements.inputInvite.addEventListener('focus', () => bsDropdown.show());
 
     elements.inputInvite.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') { bsDropdown.hide(); elements.inputInvite.blur(); }
@@ -116,5 +115,18 @@
                 }
             }
         }, 250);
+    });let suppressOpen = false;
+
+    elements.inputInvite.addEventListener('focus', () => {
+        if (!suppressOpen) bsDropdown.show();
     });
+
+    document.addEventListener('click', (e) => {
+        if (!elements.boxInvite.contains(e.target)) {
+            suppressOpen = true;
+            bsDropdown.hide();
+            setTimeout(() => suppressOpen = false, 200);
+        }
+    });
+
 })();
