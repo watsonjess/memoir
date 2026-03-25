@@ -89,231 +89,233 @@
       </form>
     </div>
 
-    <div class="feed-controls" id="thoughts-section">
-      <span class="feed-week-label" th:text="${#lists.size(thoughts)} + ' thoughts'"></span>
-      <div style="display:flex; gap:16px; align-items:center; flex-wrap:wrap;">
+    <div id="thoughts-container">
+      <div class="feed-controls" id="thoughts-section">
+        <span class="feed-week-label" th:text="${#lists.size(thoughts)} + ' thoughts'"></span>
+        <div style="display:flex; gap:16px; align-items:center; flex-wrap:wrap;">
 
-        <div class="feed-toggle-group" th:if="${groupBy != 'person'}">
-          <span class="feed-toggle-label">Order</span>
-          <a th:href="@{/memories/{id}(id=${memory.id},order='desc',layout=${layout},groupBy=${groupBy},filter=${filter})}"
-             th:classappend="${order == 'desc'} ? 'active' : ''"
-             class="feed-btn">
-            <i class="bi bi-sort-down"></i> Newest
-          </a>
-          <a th:href="@{/memories/{id}(id=${memory.id},order='asc',layout=${layout},groupBy=${groupBy},filter=${filter})}"
-             th:classappend="${order == 'asc'} ? 'active' : ''"
-             class="feed-btn">
-            <i class="bi bi-sort-up"></i> Oldest
-          </a>
-        </div>
-
-        <div class="feed-toggle-group">
-          <span class="feed-toggle-label">Filter</span>
-          <a th:href="@{/memories/{id}(id=${memory.id},order=${order},layout=${layout},groupBy=${groupBy},filter='all')}"
-             th:classappend="${filter == 'all'} ? 'active' : ''"
-             class="feed-btn">All</a>
-          <a th:href="@{/memories/{id}(id=${memory.id},order=${order},layout=${layout},groupBy=${groupBy},filter='photo')}"
-             th:classappend="${filter == 'photo'} ? 'active' : ''"
-             class="feed-btn">
-            <i class="bi bi-image"></i> Photos
-          </a>
-          <a th:href="@{/memories/{id}(id=${memory.id},order=${order},layout=${layout},groupBy=${groupBy},filter='text')}"
-             th:classappend="${filter == 'text'} ? 'active' : ''"
-             class="feed-btn">
-            <i class="bi bi-chat-text"></i> Text
-          </a>
-        </div>
-
-        <div class="feed-toggle-group">
-          <span class="feed-toggle-label">Group</span>
-          <a th:href="@{/memories/{id}(id=${memory.id},order=${order},layout=${layout},groupBy='none',filter=${filter})}"
-             th:classappend="${groupBy == 'none'} ? 'active' : ''"
-             class="feed-btn">
-            <i class="bi bi-calendar3"></i> By date
-          </a>
-          <a th:href="@{/memories/{id}(id=${memory.id},order=${order},layout=${layout},groupBy='person',filter=${filter})}"
-             th:classappend="${groupBy == 'person'} ? 'active' : ''"
-             class="feed-btn">
-            <i class="bi bi-person"></i> By person
-          </a>
-        </div>
-
-        <div class="feed-toggle-group">
-          <span class="feed-toggle-label">View</span>
-          <a th:href="@{/memories/{id}(id=${memory.id},order=${order},layout='grid',groupBy=${groupBy},filter=${filter})}"
-             th:classappend="${layout == 'grid'} ? 'active' : ''"
-             class="feed-btn">
-            <i class="bi bi-grid"></i> Grid
-          </a>
-          <a th:href="@{/memories/{id}(id=${memory.id},order=${order},layout='masonry',groupBy=${groupBy},filter=${filter})}"
-             th:classappend="${layout == 'masonry'} ? 'active' : ''"
-             class="feed-btn">
-            <i class="bi bi-columns-gap"></i> Masonry
-          </a>
-          <a th:href="@{/memories/{id}(id=${memory.id},order=${order},layout='feed',groupBy=${groupBy},filter=${filter})}"
-             th:classappend="${layout == 'feed'} ? 'active' : ''"
-             class="feed-btn">
-            <i class="bi bi-list"></i> Feed
-          </a>
-        </div>
-
-      </div>
-    </div>
-
-    <div th:if="${#lists.isEmpty(thoughts)}" class="feed-empty">
-      <i class="bi bi-chat-heart"></i>
-      <p>No thoughts yet — add the first one!</p>
-    </div>
-
-    <div th:unless="${#lists.isEmpty(thoughts)}">
-
-      <div th:if="${groupBy == 'person'}">
-        <div th:each="entry : ${thoughtsByUser}" class="user-group-section">
-          <div class="user-group-header">
-            <img th:src="${entry.key.profileImage != null and !#strings.isEmpty(entry.key.profileImage) ? entry.key.profileImage : '/images/default-picture.png'}"
-                 class="user-group-avatar"
-                 style="object-fit: cover;"
-                 alt="Profile picture">
-            <span class="user-group-name"
-                  th:text="${entry.key.firstname + ' ' + entry.key.lastname}"></span>
-            <span class="user-group-count"
-                  th:text="${entry.value.size() + ' thought' + (entry.value.size() == 1 ? '' : 's')}"></span>
+          <div class="feed-toggle-group" th:if="${groupBy != 'person'}">
+            <span class="feed-toggle-label">Order</span>
+            <a th:href="@{/memories/{id}(id=${memory.id},order='desc',layout=${layout},groupBy=${groupBy},filter=${filter})}"
+               th:classappend="${order == 'desc'} ? 'active' : ''"
+               class="feed-btn">
+              <i class="bi bi-sort-down"></i> Newest
+            </a>
+            <a th:href="@{/memories/{id}(id=${memory.id},order='asc',layout=${layout},groupBy=${groupBy},filter=${filter})}"
+               th:classappend="${order == 'asc'} ? 'active' : ''"
+               class="feed-btn">
+              <i class="bi bi-sort-up"></i> Oldest
+            </a>
           </div>
 
-          <div th:if="${layout == 'grid' or layout == 'masonry'}"
-               th:class="${layout == 'masonry'} ? 'moments-masonry' : 'moments-grid'">
-            <div th:each="thought : ${entry.value}"
-                 class="thought-card moment-card"
-                 th:data-thought-id="${thought.id}"
-                 onclick="openThoughtPanel(this)">
-              <img th:if="${thought.imageUrl != null}"
-                   th:src="${thought.imageUrl}"
-                   class="moment-card-img"
-                   th:alt="${thought.content}"/>
-              <div th:unless="${thought.imageUrl != null}"
-                   style="background: var(--memoir-cream); height: 120px; display: flex; align-items: center; padding: 20px;">
-                <i class="bi bi-quote" style="font-size: 1.5rem; color: var(--memoir-accent); opacity: 0.4; margin-right: 10px; flex-shrink: 0;"></i>
-                <p class="small mb-0" th:text="${thought.content}"
-                   style="overflow: hidden; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical;"></p>
+          <div class="feed-toggle-group">
+            <span class="feed-toggle-label">Filter</span>
+            <a th:href="@{/memories/{id}(id=${memory.id},order=${order},layout=${layout},groupBy=${groupBy},filter='all')}"
+               th:classappend="${filter == 'all'} ? 'active' : ''"
+               class="feed-btn">All</a>
+            <a th:href="@{/memories/{id}(id=${memory.id},order=${order},layout=${layout},groupBy=${groupBy},filter='photo')}"
+               th:classappend="${filter == 'photo'} ? 'active' : ''"
+               class="feed-btn">
+              <i class="bi bi-image"></i> Photos
+            </a>
+            <a th:href="@{/memories/{id}(id=${memory.id},order=${order},layout=${layout},groupBy=${groupBy},filter='text')}"
+               th:classappend="${filter == 'text'} ? 'active' : ''"
+               class="feed-btn">
+              <i class="bi bi-chat-text"></i> Text
+            </a>
+          </div>
+
+          <div class="feed-toggle-group">
+            <span class="feed-toggle-label">Group</span>
+            <a th:href="@{/memories/{id}(id=${memory.id},order=${order},layout=${layout},groupBy='none',filter=${filter})}"
+               th:classappend="${groupBy == 'none'} ? 'active' : ''"
+               class="feed-btn">
+              <i class="bi bi-calendar3"></i> By date
+            </a>
+            <a th:href="@{/memories/{id}(id=${memory.id},order=${order},layout=${layout},groupBy='person',filter=${filter})}"
+               th:classappend="${groupBy == 'person'} ? 'active' : ''"
+               class="feed-btn">
+              <i class="bi bi-person"></i> By person
+            </a>
+          </div>
+
+          <div class="feed-toggle-group">
+            <span class="feed-toggle-label">View</span>
+            <a th:href="@{/memories/{id}(id=${memory.id},order=${order},layout='grid',groupBy=${groupBy},filter=${filter})}"
+               th:classappend="${layout == 'grid'} ? 'active' : ''"
+               class="feed-btn">
+              <i class="bi bi-grid"></i> Grid
+            </a>
+            <a th:href="@{/memories/{id}(id=${memory.id},order=${order},layout='masonry',groupBy=${groupBy},filter=${filter})}"
+               th:classappend="${layout == 'masonry'} ? 'active' : ''"
+               class="feed-btn">
+              <i class="bi bi-columns-gap"></i> Masonry
+            </a>
+            <a th:href="@{/memories/{id}(id=${memory.id},order=${order},layout='feed',groupBy=${groupBy},filter=${filter})}"
+               th:classappend="${layout == 'feed'} ? 'active' : ''"
+               class="feed-btn">
+              <i class="bi bi-list"></i> Feed
+            </a>
+          </div>
+
+        </div>
+      </div>
+
+      <div th:if="${#lists.isEmpty(thoughts)}" class="feed-empty">
+        <i class="bi bi-chat-heart"></i>
+        <p>No thoughts yet — add the first one!</p>
+      </div>
+
+      <div th:unless="${#lists.isEmpty(thoughts)}">
+
+        <div th:if="${groupBy == 'person'}">
+          <div th:each="entry : ${thoughtsByUser}" class="user-group-section">
+            <div class="user-group-header">
+              <img th:src="${entry.key.profileImage != null and !#strings.isEmpty(entry.key.profileImage) ? entry.key.profileImage : '/images/default-picture.png'}"
+                   class="user-group-avatar"
+                   style="object-fit: cover;"
+                   alt="Profile picture">
+              <span class="user-group-name"
+                    th:text="${entry.key.firstname + ' ' + entry.key.lastname}"></span>
+              <span class="user-group-count"
+                    th:text="${entry.value.size() + ' thought' + (entry.value.size() == 1 ? '' : 's')}"></span>
+            </div>
+
+            <div th:if="${layout == 'grid' or layout == 'masonry'}"
+                 th:class="${layout == 'masonry'} ? 'moments-masonry' : 'moments-grid'">
+              <div th:each="thought : ${entry.value}"
+                   class="thought-card moment-card"
+                   th:data-thought-id="${thought.id}"
+                   onclick="openThoughtPanel(this)">
+                <img th:if="${thought.imageUrl != null}"
+                     th:src="${thought.imageUrl}"
+                     class="moment-card-img"
+                     th:alt="${thought.content}"/>
+                <div th:unless="${thought.imageUrl != null}"
+                     style="background: var(--memoir-cream); height: 120px; display: flex; align-items: center; padding: 20px;">
+                  <i class="bi bi-quote" style="font-size: 1.5rem; color: var(--memoir-accent); opacity: 0.4; margin-right: 10px; flex-shrink: 0;"></i>
+                  <p class="small mb-0" th:text="${thought.content}"
+                     style="overflow: hidden; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical;"></p>
+                </div>
+                <div class="moment-card-body">
+                  <p class="moment-card-content" th:text="${thought.content}"></p>
+                  <div class="moment-card-meta">
+                    <span th:text="${#temporals.format(thought.createdAt, 'd MMM yyyy')}"></span>
+                  </div>
+                </div>
               </div>
-              <div class="moment-card-body">
-                <p class="moment-card-content" th:text="${thought.content}"></p>
-                <div class="moment-card-meta">
-                  <span th:text="${#temporals.format(thought.createdAt, 'd MMM yyyy')}"></span>
+            </div>
+
+            <div th:if="${layout == 'feed'}" class="moments-feed">
+              <div th:each="thought : ${entry.value}"
+                   class="thought-card moment-feed-card"
+                   th:data-thought-id="${thought.id}"
+                   onclick="openThoughtPanel(this)">
+                <div class="moment-feed-header">
+                  <div class="moment-feed-avatar"
+                       th:text="${entry.key.firstname.substring(0,1).toUpperCase()}"></div>
+                  <div>
+                    <div class="moment-feed-user"
+                         th:text="${entry.key.firstname + ' ' + entry.key.lastname}"></div>
+                    <div class="moment-feed-date"
+                         th:text="${#temporals.format(thought.createdAt, 'd MMMM yyyy')}"></div>
+                  </div>
+                </div>
+                <img th:if="${thought.imageUrl != null}"
+                     th:src="${thought.imageUrl}"
+                     class="moment-feed-img"
+                     th:alt="${thought.content}"/>
+                <div class="moment-feed-body" th:if="${thought.content}">
+                  <p class="moment-feed-content" th:text="${thought.content}"></p>
                 </div>
               </div>
             </div>
           </div>
-
-          <div th:if="${layout == 'feed'}" class="moments-feed">
-            <div th:each="thought : ${entry.value}"
-                 class="thought-card moment-feed-card"
-                 th:data-thought-id="${thought.id}"
-                 onclick="openThoughtPanel(this)">
-              <div class="moment-feed-header">
-                <div class="moment-feed-avatar"
-                     th:text="${entry.key.firstname.substring(0,1).toUpperCase()}"></div>
-                <div>
-                  <div class="moment-feed-user"
-                       th:text="${entry.key.firstname + ' ' + entry.key.lastname}"></div>
-                  <div class="moment-feed-date"
-                       th:text="${#temporals.format(thought.createdAt, 'd MMMM yyyy')}"></div>
-                </div>
-              </div>
-              <img th:if="${thought.imageUrl != null}"
-                   th:src="${thought.imageUrl}"
-                   class="moment-feed-img"
-                   th:alt="${thought.content}"/>
-              <div class="moment-feed-body" th:if="${thought.content}">
-                <p class="moment-feed-content" th:text="${thought.content}"></p>
-              </div>
-            </div>
-          </div>
         </div>
-      </div>
 
-      <div th:if="${groupBy != 'person' and layout == 'grid'}" class="moments-grid">
-        <div th:each="thought : ${thoughts}"
-             class="thought-card moment-card"
-             th:data-thought-id="${thought.id}"
-             onclick="openThoughtPanel(this)">
-          <img th:if="${thought.imageUrl != null}"
-               th:src="${thought.imageUrl}"
-               class="moment-card-img"
-               th:alt="${thought.content}"/>
-          <div th:unless="${thought.imageUrl != null}"
-               style="background: var(--memoir-cream); height: 120px; display: flex; align-items: center; padding: 20px;">
-            <i class="bi bi-quote" style="font-size: 1.5rem; color: var(--memoir-accent); opacity: 0.4; margin-right: 10px; flex-shrink: 0;"></i>
-            <p class="small mb-0" th:text="${thought.content}"
-               style="overflow: hidden; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical;"></p>
-          </div>
-          <div class="moment-card-body">
-            <div class="moment-card-user"
-                 th:text="${thought.createdBy.firstname + ' ' + thought.createdBy.lastname}"></div>
-            <p class="moment-card-content"
-               th:if="${thought.content != null and thought.imageUrl != null}"
-               th:text="${thought.content}"></p>
-            <div class="moment-card-meta">
-              <span th:text="${#temporals.format(thought.createdAt, 'd MMM yyyy')}"></span>
+        <div th:if="${groupBy != 'person' and layout == 'grid'}" class="moments-grid">
+          <div th:each="thought : ${thoughts}"
+               class="thought-card moment-card"
+               th:data-thought-id="${thought.id}"
+               onclick="openThoughtPanel(this)">
+            <img th:if="${thought.imageUrl != null}"
+                 th:src="${thought.imageUrl}"
+                 class="moment-card-img"
+                 th:alt="${thought.content}"/>
+            <div th:unless="${thought.imageUrl != null}"
+                 style="background: var(--memoir-cream); height: 120px; display: flex; align-items: center; padding: 20px;">
+              <i class="bi bi-quote" style="font-size: 1.5rem; color: var(--memoir-accent); opacity: 0.4; margin-right: 10px; flex-shrink: 0;"></i>
+              <p class="small mb-0" th:text="${thought.content}"
+                 style="overflow: hidden; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical;"></p>
             </div>
-          </div>
-        </div>
-      </div>
-
-      <div th:if="${groupBy != 'person' and layout == 'masonry'}" class="moments-masonry">
-        <div th:each="thought : ${thoughts}"
-             class="thought-card moment-card"
-             th:data-thought-id="${thought.id}"
-             onclick="openThoughtPanel(this)">
-          <img th:if="${thought.imageUrl != null}"
-               th:src="${thought.imageUrl}"
-               class="moment-card-img"
-               style="height: auto;"
-               th:alt="${thought.content}"/>
-          <div th:unless="${thought.imageUrl != null}"
-               style="background: var(--memoir-cream); min-height: 100px; display: flex; align-items: center; padding: 20px;">
-            <i class="bi bi-quote" style="font-size: 1.5rem; color: var(--memoir-accent); opacity: 0.4; margin-right: 10px; flex-shrink: 0;"></i>
-            <p class="small mb-0" th:text="${thought.content}"
-               style="overflow: hidden; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical;"></p>
-          </div>
-          <div class="moment-card-body">
-            <div class="moment-card-user"
-                 th:text="${thought.createdBy.firstname + ' ' + thought.createdBy.lastname}"></div>
-            <p class="moment-card-content"
-               th:if="${thought.content != null and thought.imageUrl != null}"
-               th:text="${thought.content}"></p>
-            <div class="moment-card-meta">
-              <span th:text="${#temporals.format(thought.createdAt, 'd MMM yyyy')}"></span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div th:if="${groupBy != 'person' and layout == 'feed'}" class="moments-feed">
-        <div th:each="thought : ${thoughts}"
-             class="thought-card moment-feed-card"
-             th:data-thought-id="${thought.id}"
-             onclick="openThoughtPanel(this)">
-          <div class="moment-feed-header">
-            <div class="moment-feed-avatar"
-                 th:text="${thought.createdBy.firstname.substring(0,1).toUpperCase()}"></div>
-            <div>
-              <div class="moment-feed-user"
+            <div class="moment-card-body">
+              <div class="moment-card-user"
                    th:text="${thought.createdBy.firstname + ' ' + thought.createdBy.lastname}"></div>
-              <div class="moment-feed-date"
-                   th:text="${#temporals.format(thought.createdAt, 'd MMMM yyyy')}"></div>
+              <p class="moment-card-content"
+                 th:if="${thought.content != null and thought.imageUrl != null}"
+                 th:text="${thought.content}"></p>
+              <div class="moment-card-meta">
+                <span th:text="${#temporals.format(thought.createdAt, 'd MMM yyyy')}"></span>
+              </div>
             </div>
           </div>
-          <img th:if="${thought.imageUrl != null}"
-               th:src="${thought.imageUrl}"
-               class="moment-feed-img"
-               th:alt="${thought.content}"/>
-          <div class="moment-feed-body" th:if="${thought.content}">
-            <p class="moment-feed-content" th:text="${thought.content}"></p>
+        </div>
+
+        <div th:if="${groupBy != 'person' and layout == 'masonry'}" class="moments-masonry">
+          <div th:each="thought : ${thoughts}"
+               class="thought-card moment-card"
+               th:data-thought-id="${thought.id}"
+               onclick="openThoughtPanel(this)">
+            <img th:if="${thought.imageUrl != null}"
+                 th:src="${thought.imageUrl}"
+                 class="moment-card-img"
+                 style="height: auto;"
+                 th:alt="${thought.content}"/>
+            <div th:unless="${thought.imageUrl != null}"
+                 style="background: var(--memoir-cream); min-height: 100px; display: flex; align-items: center; padding: 20px;">
+              <i class="bi bi-quote" style="font-size: 1.5rem; color: var(--memoir-accent); opacity: 0.4; margin-right: 10px; flex-shrink: 0;"></i>
+              <p class="small mb-0" th:text="${thought.content}"
+                 style="overflow: hidden; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical;"></p>
+            </div>
+            <div class="moment-card-body">
+              <div class="moment-card-user"
+                   th:text="${thought.createdBy.firstname + ' ' + thought.createdBy.lastname}"></div>
+              <p class="moment-card-content"
+                 th:if="${thought.content != null and thought.imageUrl != null}"
+                 th:text="${thought.content}"></p>
+              <div class="moment-card-meta">
+                <span th:text="${#temporals.format(thought.createdAt, 'd MMM yyyy')}"></span>
+              </div>
+            </div>
           </div>
         </div>
-      </div>
 
+        <div th:if="${groupBy != 'person' and layout == 'feed'}" class="moments-feed">
+          <div th:each="thought : ${thoughts}"
+               class="thought-card moment-feed-card"
+               th:data-thought-id="${thought.id}"
+               onclick="openThoughtPanel(this)">
+            <div class="moment-feed-header">
+              <div class="moment-feed-avatar"
+                   th:text="${thought.createdBy.firstname.substring(0,1).toUpperCase()}"></div>
+              <div>
+                <div class="moment-feed-user"
+                     th:text="${thought.createdBy.firstname + ' ' + thought.createdBy.lastname}"></div>
+                <div class="moment-feed-date"
+                     th:text="${#temporals.format(thought.createdAt, 'd MMMM yyyy')}"></div>
+              </div>
+            </div>
+            <img th:if="${thought.imageUrl != null}"
+                 th:src="${thought.imageUrl}"
+                 class="moment-feed-img"
+                 th:alt="${thought.content}"/>
+            <div class="moment-feed-body" th:if="${thought.content}">
+              <p class="moment-feed-content" th:text="${thought.content}"></p>
+            </div>
+          </div>
+        </div>
+
+      </div>
     </div>
 
   </div>
@@ -486,68 +488,36 @@
     });
 
     // AJAX filter handling (NO PAGE RELOAD WHICH FIXES THE SCROLL ISSUE)
-    document.querySelectorAll('.feed-btn').forEach(btn => {
-      btn.addEventListener('click', function (e) {
-        const href = this.getAttribute('href');
-        if (!href) return;
+    document.addEventListener('click', function (e) {
+      const btn = e.target.closest('.feed-btn');
+      if (!btn) return;
 
-        e.preventDefault();
+      const href = btn.getAttribute('href');
+      if (!href) return;
 
-        const scrollY = window.scrollY;
+      e.preventDefault();
 
-        fetch(href, {
-          headers: { 'X-Requested-With': 'XMLHttpRequest' }
-        })
-                .then(res => res.text())
-                .then(html => {
-                  const parser = new DOMParser();
-                  const doc = parser.parseFromString(html, 'text/html');
+      const scrollY = window.scrollY;
 
-                  const newSection = doc.querySelector('#thoughts-section').parentElement;
-                  const currentSection = document.querySelector('#thoughts-section').parentElement;
+      fetch(href, {
+        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+      })
+              .then(res => res.text())
+              .then(html => {
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
 
-                  currentSection.innerHTML = newSection.innerHTML;
+                const newSection = doc.querySelector('#thoughts-container');
+                const currentSection = document.querySelector('#thoughts-container');
 
-                  window.history.pushState({}, '', href);
-                  window.scrollTo({ top: scrollY });
+                if (!newSection || !currentSection) return;
 
-                  // re-bind clicks after DOM replace
-                  bindFeedButtons();
-                });
-      });
+                currentSection.innerHTML = newSection.innerHTML;
+
+                window.history.pushState({}, '', href);
+                window.scrollTo({ top: scrollY });
+              });
     });
-
-    function bindFeedButtons() {
-      document.querySelectorAll('.feed-btn').forEach(btn => {
-        btn.addEventListener('click', function (e) {
-          const href = this.getAttribute('href');
-          if (!href) return;
-
-          e.preventDefault();
-
-          const scrollY = window.scrollY;
-
-          fetch(href, {
-            headers: { 'X-Requested-With': 'XMLHttpRequest' }
-          })
-                  .then(res => res.text())
-                  .then(html => {
-                    const parser = new DOMParser();
-                    const doc = parser.parseFromString(html, 'text/html');
-
-                    const newSection = doc.querySelector('#thoughts-section').parentElement;
-                    const currentSection = document.querySelector('#thoughts-section').parentElement;
-
-                    currentSection.innerHTML = newSection.innerHTML;
-
-                    window.history.pushState({}, '', href);
-                    window.scrollTo({ top: scrollY });
-
-                    bindFeedButtons();
-                  });
-        });
-      });
-    }
 
     // iframe logic (unchanged)
     if (window.self !== window.top) {
