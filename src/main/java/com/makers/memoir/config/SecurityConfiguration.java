@@ -38,7 +38,7 @@ public class SecurityConfiguration {
                         .ignoringRequestMatchers("/memories/*/position")
                 )
                 .authorizeHttpRequests(authorize -> authorize
-                        .requestMatchers("/", "/images/**", "/main.css").permitAll()
+                        .requestMatchers("/", "/images/**", "/main.css", "/favicon.ico").permitAll()
                         .anyRequest().authenticated()
                 )
                 .oauth2Login(oauth -> oauth

@@ -161,6 +161,7 @@ public class MemoryController {
         model.addAttribute("layout", layout);
         model.addAttribute("groupBy", groupBy);
         model.addAttribute("filter", filter);
+        model.addAttribute("currentUserId", currentUser.getId());
 
         return "memories/show";
     }
@@ -202,11 +203,10 @@ public class MemoryController {
     // Invite a user to a memory by username
     @PostMapping("/{id}/invite")
     public String invite(@PathVariable Long id,
-                         @RequestParam("username") String username,
+                         @RequestParam("userId") Long userId,
                          @AuthenticationPrincipal OAuth2User principal) {
         User currentUser = getCurrentUser(principal);
 
-        // Only owners can invite
         MemoryMember membership = memoryMemberRepository
                 .findByMemoryIdAndUserId(id, currentUser.getId())
                 .orElseThrow(() -> new RuntimeException("Not a member"));
@@ -218,7 +218,7 @@ public class MemoryController {
         Memory memory = memoryRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Memory not found"));
 
-        User invitee = userRepository.findByUsername(username)
+        User invitee = userRepository.findById(userId)
                 .orElse(null);
 
         if (invitee != null && !memoryMemberRepository
@@ -270,5 +270,20 @@ public class MemoryController {
         }
 
         return "redirect:/memories";
+    }
+
+    @PostMapping("/{id}/thoughts/{thoughtId}/delete")
+    public String deleteThought(@PathVariable Long id,
+                                @PathVariable Long thoughtId,
+                                @AuthenticationPrincipal OAuth2User principal) {
+        User currentUser = getCurrentUser(principal);
+        Thought thought = thoughtRepository.findById(thoughtId)
+                .orElseThrow(() -> new RuntimeException("Thought not found"));
+
+        if (thought.getCreatedBy().getId().equals(currentUser.getId())) {
+            thoughtRepository.deleteById(thoughtId);
+        }
+
+        return "redirect:/memories/" + id;
     }
 }

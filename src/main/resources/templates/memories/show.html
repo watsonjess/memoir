@@ -1,8 +1,12 @@
 <!DOCTYPE html>
 <html lang="en"
-      xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout/layout}">
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/layout}">
 <head>
   <title>Memory</title>
+  <meta name="_csrf" th:content="${_csrf.token}"/>
+  <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
   <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;600&display=swap" rel="stylesheet"/>
 </head>
 <body>
@@ -22,16 +26,9 @@
   <div class="polaroid-strip mb-4">
     <div class="text-center position-relative mb-4">
       <p class="polaroid-title" th:text="${memory.name}">Memory name</p>
-      <p class="polaroid-subtitle" th:text="${memory.description}" th:if="${memory.description}"></p>
-      <form th:if="${isOwner}"
-            th:action="@{/memories/{id}/delete(id=${memory.id})}" method="post"
-            onsubmit="return confirm('Are you sure you want to delete this memory?')"
-            style="position: absolute; top: 0; right: 0;">
-        <button type="submit" class="btn btn-sm btn-outline-danger">
-          <i class="bi bi-trash"></i>
-        </button>
-      </form>
-    </div>
+      </div>
+
+    <p th:if="${memory.description}" class="small text-muted text-center mb-4" th:text="${memory.description}"></p>
 
     <div class="mb-4 d-flex flex-wrap gap-2 align-items-center">
       <span class="small" style="color: var(--memoir-muted);">
@@ -48,18 +45,46 @@
               style="font-size: 0.65rem; color: var(--memoir-accent);">owner</span>
       </div>
 
-      <!-- placeholder for invite search box -->
+      <div th:if="${isOwner}"
+           class="dropdown ms-auto"
+           id="memoirSearchInvite"
+           th:data-memory-id="${memory.id}">
+        <div class="memoir-search-trigger" id="memoirSearchTriggerInvite">
+          <i class="bi bi-search memoir-search-bi-icon"></i>
+          <input type="text"
+                 id="memoirSearchInputInvite"
+                 class="memoir-search-inline-input"
+                 placeholder="Invite someone…"
+                 autocomplete="off"
+                 aria-label="Search"/>
+        </div>
+        <div class="dropdown-menu memoir-search-dropdown w-100 mt-1 shadow-sm"
+             id="memoirSearchDropdownInvite"
+             aria-live="polite">
+          <div id="memoirDropBodyInvite">
+            <span class="dropdown-item-text text-muted small">Start typing to search…</span>
+          </div>
+          <div id="memoirDropFooterInvite" style="display:none;">
+            <div class="dropdown-divider"></div>
+            <a href="#" id="memoirSeeAllInvite" class="dropdown-item small text-memoir-accent">
+              <i class="bi bi-search me-1"></i>
+              <span class="memoir-see-all-text">See all results for "
+                <span id="memoirQueryLabelInvite"></span>"
+              </span>
+            </a>
+          </div>
+        </div>
+      </div>
       <form th:if="${isOwner}"
-            th:action="@{/memories/{id}/invite(id=${memory.id})}" method="post"
-            class="d-flex gap-2 ms-auto">
-        <input type="text" class="form-control form-control-sm"
-               name="username" placeholder="Invite by username…" required
-               style="width: 180px;"/>
-        <button type="submit" class="btn btn-memoir btn-sm">
-          <i class="bi bi-person-plus me-1"></i> Invite
+            th:action="@{/memories/{id}/delete(id=${memory.id})}" method="post"
+            onsubmit="return confirm('Are you sure you want to delete this memory?')"
+            target="_top">
+        <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete memory">
+          <i class="bi bi-trash"></i>
         </button>
       </form>
     </div>
+
 
     <div class="mb-4">
       <h6 class="mb-3" style="font-family: 'Playfair Display', serif;">Add a thought</h6>
@@ -408,9 +433,12 @@
       imageUrl:  /*[[${thought.imageUrl}]]*/ null,
       author:    /*[[${thought.createdBy.firstname + ' ' + thought.createdBy.lastname}]]*/ '',
       authorImg: /*[[${thought.createdBy.profileImage}]]*/ null,
-      date:      /*[[${#temporals.format(thought.createdAt, 'd MMMM yyyy')}]]*/ ''
+      date:      /*[[${#temporals.format(thought.createdAt, 'd MMMM yyyy')}]]*/ '',
+      createdById: /*[[${thought.createdBy.id}]]*/ 0
     });
     /*[/]*/
+
+    const currentUserId = /*[[${currentUserId}]]*/ 0;
 
     const thoughtLookup = {};
     thoughtData.forEach(t => thoughtLookup[t.id] = t);
@@ -441,12 +469,12 @@
       const authorRow = document.createElement('div');
       authorRow.style.cssText = 'display:flex; align-items:center; gap:10px; margin-bottom:16px;';
       authorRow.innerHTML = `
-      <img src="${avatarSrc}" alt=""
-           style="width:32px; height:32px; border-radius:50%; object-fit:cover; border:2px solid #f0d9c8;"/>
-      <div>
-        <div style="font-size:0.88rem; font-weight:600; color:var(--memoir-accent);">${t.author}</div>
-        <div style="font-size:0.75rem; color:var(--memoir-muted);">${t.date}</div>
-      </div>`;
+    <img src="${avatarSrc}" alt=""
+         style="width:32px; height:32px; border-radius:50%; object-fit:cover; border:2px solid #f0d9c8;"/>
+    <div>
+      <div style="font-size:0.88rem; font-weight:600; color:var(--memoir-accent);">${t.author}</div>
+      <div style="font-size:0.75rem; color:var(--memoir-muted);">${t.date}</div>
+    </div>`;
       content.appendChild(authorRow);
 
       if (t.content) {
@@ -454,6 +482,24 @@
         p.style.cssText = 'font-size:0.95rem; line-height:1.75; color:var(--memoir-ink); white-space:pre-wrap;';
         p.textContent = t.content;
         content.appendChild(p);
+      }
+
+      const memoryId = /*[[${memory.id}]]*/ 0;
+
+      const csrfToken = document.querySelector('meta[name="_csrf"]')?.content;
+
+      if (t.createdById === currentUserId) {
+        const deleteForm = document.createElement('form');
+        deleteForm.method = 'post';
+        deleteForm.action = `/memories/${memoryId}/thoughts/${t.id}/delete`;
+        deleteForm.style.cssText = 'margin-top: 16px;';
+        deleteForm.innerHTML = `
+        <input type="hidden" name="_csrf" value="${csrfToken}"/>
+        <button type="submit" class="btn btn-sm btn-outline-danger"
+              onclick="return confirm('Delete this thought?')">
+          <i class="bi bi-trash me-1"></i> Delete thought
+        </button>`;
+        content.appendChild(deleteForm);
       }
 
       panel.classList.add('active');
@@ -530,8 +576,10 @@
       document.querySelector('.polaroid-strip .text-center')?.style.setProperty('display', 'none', 'important');
       document.querySelector('.nl-panel').style.top = '0';
       document.querySelector('.nl-panel').style.height = '100vh';
+
     }
   </script>
+  <script th:src="@{/scripts/search-invite-memory.js}" defer></script>
 </th:block>
 
 </body>
