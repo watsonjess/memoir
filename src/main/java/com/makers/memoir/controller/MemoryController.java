@@ -161,6 +161,7 @@ public class MemoryController {
         model.addAttribute("layout", layout);
         model.addAttribute("groupBy", groupBy);
         model.addAttribute("filter", filter);
+        model.addAttribute("currentUserId", currentUser.getId());
 
         return "memories/show";
     }
@@ -269,5 +270,20 @@ public class MemoryController {
         }
 
         return "redirect:/memories";
+    }
+
+    @PostMapping("/{id}/thoughts/{thoughtId}/delete")
+    public String deleteThought(@PathVariable Long id,
+                                @PathVariable Long thoughtId,
+                                @AuthenticationPrincipal OAuth2User principal) {
+        User currentUser = getCurrentUser(principal);
+        Thought thought = thoughtRepository.findById(thoughtId)
+                .orElseThrow(() -> new RuntimeException("Thought not found"));
+
+        if (thought.getCreatedBy().getId().equals(currentUser.getId())) {
+            thoughtRepository.deleteById(thoughtId);
+        }
+
+        return "redirect:/memories/" + id;
     }
 }
