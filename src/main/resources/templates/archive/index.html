@@ -399,12 +399,17 @@
             /*[# th:each="ev : ${events}"]*/
             /*[# th:if="${ev.startDate != null}"]*/
             (function() {
-                const start = new Date(/*[[${ev.startDate.year}]]*/ 0,
-                                       /*[[${ev.startDate.monthValue}]]*/ 0 - 1,
-                                       /*[[${ev.startDate.dayOfMonth}]]*/ 0);
-                const end   = new Date(/*[[${ev.endDate != null ? ev.endDate.year : ev.startDate.year}]]*/ 0,
-                                       /*[[${ev.endDate != null ? ev.endDate.monthValue : ev.startDate.monthValue}]]*/ 0 - 1,
-                                       /*[[${ev.endDate != null ? ev.endDate.dayOfMonth : ev.startDate.dayOfMonth}]]*/ 0);
+                const start = new Date(
+                /*[[${ev.startDate.year}]]*/ 0,
+                (/*[[${ev.startDate.monthValue}]]*/ 0) - 1,
+                /*[[${ev.startDate.dayOfMonth}]]*/ 0
+            );
+
+            const end = new Date(
+                /*[[${ev.endDate != null ? ev.endDate.year : ev.startDate.year}]]*/ 0,
+                (/*[[${ev.endDate != null ? ev.endDate.monthValue : ev.startDate.monthValue}]]*/ 0) - 1,
+                /*[[${ev.endDate != null ? ev.endDate.dayOfMonth : ev.startDate.dayOfMonth}]]*/ 0
+            );
 
                 const eventObj = {
                     name:    /*[[${ev.name}]]*/ '',
