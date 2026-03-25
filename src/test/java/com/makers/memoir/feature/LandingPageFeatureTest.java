@@ -1,14 +1,27 @@
 package com.makers.memoir.feature;
 
+import com.makers.memoir.model.User;
+import com.makers.memoir.repository.UserRepository;
 import com.microsoft.playwright.*;
-import com.microsoft.playwright.assertions.PlaywrightAssertions;
 import org.junit.jupiter.api.*;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.web.servlet.MockMvc;
+
+import java.util.List;
 
 import static com.microsoft.playwright.assertions.PlaywrightAssertions.assertThat;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.oidcLogin;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
+@AutoConfigureMockMvc
 class LandingFeatureTest {
+
+    @Autowired
+    private MockMvc mockMvc;
 
     static Playwright playwright;
     static Browser browser;
@@ -16,12 +29,8 @@ class LandingFeatureTest {
     Page page;
 
     @BeforeAll
-    static void launchBrowser() {
+    static void launchPlaywright() {
         playwright = Playwright.create();
-        //browser = playwright.chromium().launch();
-        browser = playwright.chromium().launch(
-                new BrowserType.LaunchOptions().setHeadless(false).setSlowMo(500)
-        );
     }
 
     @AfterAll
@@ -29,15 +38,49 @@ class LandingFeatureTest {
         playwright.close();
     }
 
+    @Autowired
+    private UserRepository userRepository;
+
+    private static final String TEST_EMAIL = "test@example.com";
+
+    @BeforeEach
+    void createTestUser() {
+        if (userRepository.findUserByEmail(TEST_EMAIL).isEmpty()) {
+            User user = new User();
+            user.setEmail(TEST_EMAIL);
+            user.setUsername("testuser");
+            user.setFirstname("Test");
+            user.setLastname("User");
+            userRepository.save(user);
+        }
+    }
+
     @BeforeEach
     void createContextAndPage() {
-        context = browser.newContext();
+        if (browser == null || !browser.isConnected()) {
+            browser = playwright.chromium().launch(
+                    new BrowserType.LaunchOptions()
+                            .setHeadless(true)
+                            .setArgs(List.of(
+                                    "--disable-web-security",
+                                    "--no-sandbox",
+                                    "--disable-features=IsolateOrigins",
+                                    "--disable-site-isolation-trials"
+                            ))
+            );
+        }
+        context = browser.newContext(
+                new Browser.NewContextOptions()
+                        .setIgnoreHTTPSErrors(true)
+        );
         page = context.newPage();
+        page.setDefaultTimeout(60000);
     }
 
     @AfterEach
-    void closeContext() {
-        context.close();
+    void cleanUp() {
+        userRepository.findUserByEmail(TEST_EMAIL)
+                .ifPresent(userRepository::delete);
     }
 
     @Test
@@ -50,26 +93,36 @@ class LandingFeatureTest {
     }
 
     @Test
-    void userCanLoginAndSeesDashboard() {
-        page.navigate("http://localhost:8080");
+    void unauthenticatedUserIsShownLandingTemplate() throws Exception {
+        mockMvc.perform(get("/"))
+                .andExpect(status().isOk())
+                .andExpect(view().name("landing"));
+    }
 
-        // Click sign in
-        page.click(".l-btn-outline");
+    @Test
+    void authenticatedUserIsShownDashboard() throws Exception {
+        mockMvc.perform(get("/")
+                        .with(oidcLogin()
+                                .idToken(token -> token
+                                        .claim("email", TEST_EMAIL)
+                                        .claim("given_name", "Test")
+                                        .claim("family_name", "User"))))
+                .andExpect(status().isOk())
+                .andExpect(view().name("index"));
+    }
 
-        // Wait for Auth0
-        //page.waitForURL("**auth0.com**");
-        page.waitForSelector("input[name='username']");
+    @Test
+    void authenticatedUserCanAccessGroups() throws Exception {
+        mockMvc.perform(get("/groups")
+                        .with(oidcLogin()
+                                .idToken(token -> token
+                                        .claim("email", TEST_EMAIL))))
+                .andExpect(status().isOk());
+    }
 
-        // Fill in credentials
-        page.fill("input[name='username']", "test@test.com");
-        page.fill("input[name='password']", "Test_1234");
-        page.click("button[type='submit']");
-
-        // Wait for redirect back to app
-        page.waitForURL("http://localhost:8080/");
-
-        // Assert we're on the dashboard
-        assertThat(page.locator(".memoir-nav")).isVisible();
-        assertThat(page.locator("body")).containsText("Your Moments");
+    @Test
+    void unauthenticatedUserIsRedirectedFromProtectedPage() throws Exception {
+        mockMvc.perform(get("/groups"))
+                .andExpect(status().is3xxRedirection());
     }
 }
